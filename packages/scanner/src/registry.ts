@@ -8,7 +8,12 @@ export type RuleContext = {
   options?: ScanOptions;
 }
 
-export type RuleFn = (ctx: RuleContext) => Promise<Issue | Issue[] | null> | Issue | Issue[] | null;
+export abstract class BaseRule {
+  meta!: RuleMeta;
+  abstract execute(ctx: RuleContext): Promise<Issue | Issue[] | null> | Issue | Issue[] | null;
+}
+
+export type RuleConstructor<T extends BaseRule = BaseRule> = new (...args: any[]) => T;
 
 export type RuleMeta = {
   id: string;
@@ -22,14 +27,14 @@ export type RuleMeta = {
 
 export type RegisteredRule = {
   meta: RuleMeta;
-  fn: RuleFn;
+  ctor: RuleConstructor;
 };
 
 // Registry to hold all registered rules
 const RULES: RegisteredRule[] = [];
 
-export function registerRule(meta: RuleMeta, fn: RuleFn) {
-  RULES.push({ meta, fn });
+export function registerRule(meta: RuleMeta, ctor: RuleConstructor) {
+  RULES.push({ meta, ctor });
 
   RULES.sort((a, b) => ((a.meta.priority ?? 100) - (b.meta.priority ?? 100)));
 }
@@ -39,12 +44,8 @@ export function getRegisteredRules(): RegisteredRule[] {
 }
 
 export function Rule(meta: RuleMeta) {
-  return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
-    const fn: RuleFn = descriptor ? descriptor.value : target;
-    if (typeof fn !== 'function') {
-      throw new Error('Rule decorator can only be applied to functions');
-    }
-    registerRule(meta, fn);
-    return descriptor;
-  }
+  return function (target: RuleConstructor) {
+    registerRule(meta, target);
+    return target;
+  };
 }
