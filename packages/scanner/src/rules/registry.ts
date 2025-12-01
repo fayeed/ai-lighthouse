@@ -1,5 +1,5 @@
 import * as cheerio from 'cheerio';
-import { Issue, ScanOptions, SEVERITY } from './types';
+import { Issue, ScanOptions, SEVERITY } from '../types';
 
 export type RuleContext = {
   url: string;
@@ -9,8 +9,8 @@ export type RuleContext = {
 }
 
 export abstract class BaseRule {
-  meta!: RuleMeta;
-  abstract execute(ctx: RuleContext): Promise<Issue | Issue[] | null> | Issue | Issue[] | null;
+  meta?: RuleMeta;
+  abstract execute(ctx: RuleContext): Promise<Issue | Issue[] | null>;
 }
 
 export type RuleConstructor<T extends BaseRule = BaseRule> = new (...args: any[]) => T;
