@@ -4,7 +4,7 @@ import { Issue, ScanOptions, SEVERITY } from './types';
 export type RuleContext = {
   url: string;
   html: string;
-  $: cheerio.Cheerio<any>;
+  $: cheerio.CheerioAPI;
   options?: ScanOptions;
 }
 
