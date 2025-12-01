@@ -32,7 +32,7 @@ export interface IssueLocation {
 }
 
 export interface Issue {
-  id: CATEGORY;
+  id: string;
   title: string;
   serverity: SEVERITY;
   description: string;
