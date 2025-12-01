@@ -43,12 +43,13 @@ export interface Issue {
   tags?: string[];
   confidence?: number;
   timestamp?: string; // ISO timestamp
+  category: CATEGORY;
 }
 
 export interface ScanOptions {
   html?: string;
   timeoutMs?: number;
-  maxChunTokens?: number;
+  maxChunkTokens?: number;
   userAgent?: string;
 }
 

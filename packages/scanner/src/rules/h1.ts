@@ -20,6 +20,7 @@ export class H1Rule extends BaseRule {
         id: `${CATEGORY.AIREAD}-001`,
         title: "Missing H1",
         serverity: SEVERITY.CRITICAL,
+        category: CATEGORY.AIREAD,
         description: "The HTML document does not contain any H1 headings.",
         remediation: "Add at least one H1 heading to the HTML document to improve accessibility and SEO.",
         impactScore: 40,
