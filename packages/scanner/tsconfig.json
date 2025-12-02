@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ES2022",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+
+    "strict": true,
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+
+    "allowImportingTsExtensions": false,
+    "isolatedModules": true,
+
+    "outDir": "dist",
+    "noEmit": true
+  },
+  "include": ["src"]
+}
