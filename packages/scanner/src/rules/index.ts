@@ -8,5 +8,8 @@ import './content-quality.js';
 import './token-optimization.js';
 import './formatting.js';
 import './context-clarity.js';
+import './images.js';
+import './performance.js';
+import './links.js';
 
 export * from './registry.js';
