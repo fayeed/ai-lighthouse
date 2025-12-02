@@ -1,8 +1,8 @@
 // packages/scanner/src/scan_with_rules.ts
 
-import { CATEGORY, Issue, ScanOptions, ScanResult, SEVERITY } from "../types";
-import { fetchHtml, parseHtml, estimateTokenCount } from "../utils";
-import { runRegisteredRules } from "./runner";
+import { CATEGORY, Issue, ScanOptions, ScanResult, SEVERITY } from "./types.js";
+import { fetchHtml, parseHtml, estimateTokenCount } from "./utils.js";
+import { runRegisteredRules } from "./rules/runner.js";
 
 export async function analyzeUrlWithRules(url: string, opts?: ScanOptions): Promise<ScanResult> {
   const options: ScanOptions = { timeoutMs: 15000, maxChunkTokens: 1200, ...opts };
