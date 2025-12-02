@@ -6,6 +6,7 @@ export type RuleContext = {
   html: string;
   $: cheerio.CheerioAPI;
   options?: ScanOptions;
+  response?: Response;
 }
 
 export abstract class BaseRule {

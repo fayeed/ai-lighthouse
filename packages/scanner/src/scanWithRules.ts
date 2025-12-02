@@ -31,7 +31,13 @@ const fetched = await fetchHtml(url, options.timeoutMs!, options.userAgent);
 
   const $ = parseHtml(html || '');
 
-  const ctx = { url, html: html || '', $, options };
+  const ctx = { 
+    url, 
+    html: html || '', 
+    $, 
+    options,
+    response: fetched.response
+  };
   const rulesIssues = await runRegisteredRules(ctx);
   if (rulesIssues && rulesIssues.length) issues.push(...rulesIssues);
 

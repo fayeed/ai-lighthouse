@@ -31,10 +31,18 @@ export async function fetchHtml(url: string, timeoutMs: number, userAgent?: stri
     const contentType = response.headers.get('content-type') || '';
     const text = await response.text();
 
+    // Convert headers to a plain object
+    const headers: Record<string, string> = {};
+    response.headers.forEach((value, key) => {
+      headers[key] = value;
+    });
+
     return {
       text,
       contentType,
-      status: response.status
+      status: response.status,
+      headers,
+      response
     }
   } finally {
     clearTimeout(id);
