@@ -1,5 +1,5 @@
-import { CATEGORY, Issue, SEVERITY } from '../types';
-import { Rule, BaseRule, RuleContext } from './registry';
+import { CATEGORY, Issue, SEVERITY } from '../types.js';
+import { Rule, BaseRule, RuleContext } from './registry.js';
 import ubdici from 'undici';
 
 @Rule({

@@ -1,5 +1,5 @@
-import { Rule, RuleContext, BaseRule } from './registry';
-import { Issue, CATEGORY, SEVERITY } from '../types';
+import { Rule, RuleContext, BaseRule } from './registry.js';
+import { Issue, CATEGORY, SEVERITY } from '../types.js';
 // import { BaseRule } from './base';
 
 @Rule({

@@ -1,6 +1,6 @@
-import { CATEGORY, Issue, SEVERITY } from "../types";
-import { estimateTokenCount } from "../utils";
-import { BaseRule, Rule, RuleContext } from "./registry";
+import { CATEGORY, Issue, SEVERITY } from "../types.js";
+import { estimateTokenCount } from "../utils.js";
+import { BaseRule, Rule, RuleContext } from "./registry.js";
 
 @Rule({
   id: `${CATEGORY.CHUNK}-001`,

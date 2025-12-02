@@ -1,5 +1,5 @@
-import { RuleContext, RuleMeta } from "./registry";
-import { Issue } from "../types";
+import { RuleContext, RuleMeta } from "./registry.js";
+import { Issue } from "../types.js";
 
 export abstract class BaseRule {
   public static meta?: RuleMeta;

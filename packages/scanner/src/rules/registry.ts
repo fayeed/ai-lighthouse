@@ -1,5 +1,5 @@
 import * as cheerio from 'cheerio';
-import { Issue, ScanOptions, SEVERITY } from '../types';
+import { Issue, ScanOptions, SEVERITY } from '../types.js';
 
 export type RuleContext = {
   url: string;

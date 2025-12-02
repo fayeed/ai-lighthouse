@@ -1,5 +1,5 @@
-import { CATEGORY, Issue, SEVERITY } from "../types";
-import { BaseRule, Rule, RuleContext } from "./registry";
+import { CATEGORY, Issue, SEVERITY } from "../types.js";
+import { BaseRule, Rule, RuleContext } from "./registry.js";
 
 @Rule({
   id: `${CATEGORY.EXTRACT}-001`,

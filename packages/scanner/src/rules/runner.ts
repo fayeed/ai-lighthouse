@@ -1,7 +1,7 @@
 // packages/scanner/src/rules/runner.ts
-import { CATEGORY, Issue, SEVERITY } from '../types';
-import { getRegisteredRules } from './registry';
-import type { RuleContext } from './registry';
+import { CATEGORY, Issue, SEVERITY } from '../types.js';
+import { getRegisteredRules } from './registry.js';
+import type { RuleContext } from './registry.js';
 
 export async function runRegisteredRules(ctx: RuleContext) {
   const regs = getRegisteredRules();
