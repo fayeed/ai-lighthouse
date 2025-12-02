@@ -1,5 +1,6 @@
 import { CATEGORY, Issue, SEVERITY } from '../types.js';
 import { Rule, BaseRule, RuleContext } from './registry.js';
+import { extractJsonLd, JsonLdExtractor } from '../json-ld-extractor.js';
 
 @Rule({
   id: `${CATEGORY.KG}-001`,
@@ -15,9 +16,10 @@ export class KnowledgeGraphRule extends BaseRule {
     const { url, $ } = ctx;
     const issues: Issue[] = [];
 
-    // Check for JSON-LD structured data
-    const jsonLdScripts = $('script[type="application/ld+json"]');
-    const schemaCount = jsonLdScripts.length;
+    // Extract and parse all JSON-LD using the extractor
+    const extractor = new JsonLdExtractor($);
+    const jsonLd = extractor.extract();
+    const schemaCount = jsonLd.schemas.length;
     
     if (schemaCount === 0) {
       issues.push({
@@ -35,28 +37,8 @@ export class KnowledgeGraphRule extends BaseRule {
         timestamp: new Date().toISOString()
       } as Issue);
     } else {
-      // Parse JSON-LD to check quality
-      const schemas: string[] = [];
-      let hasMainEntity = false;
-      
-      jsonLdScripts.each((_, el) => {
-        try {
-          const content = $(el).html();
-          if (content) {
-            const data = JSON.parse(content);
-            const types = Array.isArray(data) ? data.map(d => d['@type']).filter(Boolean) : [data['@type']].filter(Boolean);
-            schemas.push(...types);
-            
-            if (data['@type'] === 'Organization' || data['@type'] === 'Person' || data['@type'] === 'Article' || data['@type'] === 'WebPage') {
-              hasMainEntity = true;
-            }
-          }
-        } catch (e) {
-          // Invalid JSON-LD
-        }
-      });
-
-      if (!hasMainEntity) {
+      // Check for main entity
+      if (!jsonLd.hasMainEntity) {
         issues.push({
           id: `${CATEGORY.KG}-002`,
           title: 'Schema.org data lacks main entity',
@@ -66,9 +48,27 @@ export class KnowledgeGraphRule extends BaseRule {
           remediation: 'Add a primary Schema.org type that describes the main content or purpose of the page.',
           impactScore: 20,
           location: { url },
-          evidence: [`Schema types found: ${schemas.join(', ') || 'none'}`],
+          evidence: [`Schema types found: ${extractor.getAllTypes().join(', ') || 'none'}`],
           tags: ['schema', 'entities', 'knowledge-graph'],
           confidence: 0.9,
+          timestamp: new Date().toISOString()
+        } as Issue);
+      }
+
+      // Report parsing errors if any
+      if (jsonLd.errors.length > 0) {
+        issues.push({
+          id: `${CATEGORY.KG}-003`,
+          title: 'Invalid JSON-LD blocks detected',
+          serverity: SEVERITY.MEDIUM,
+          category: CATEGORY.KG,
+          description: `Found ${jsonLd.errors.length} JSON-LD script(s) with parsing errors. Invalid structured data is ignored by AI crawlers.`,
+          remediation: 'Validate your JSON-LD using Google\'s Structured Data Testing Tool or schema.org validator.',
+          impactScore: 18,
+          location: { url },
+          evidence: jsonLd.errors.map(e => `Block ${e.index + 1}: ${e.error}`),
+          tags: ['schema', 'validation', 'json-ld'],
+          confidence: 1,
           timestamp: new Date().toISOString()
         } as Issue);
       }
@@ -101,19 +101,11 @@ export class KnowledgeGraphRule extends BaseRule {
       } as Issue);
     }
 
-    // Check for relationship markup (sameAs, relatedTo, etc.)
-    const sameAsLinks = jsonLdScripts.filter((_, el) => {
-      const content = $(el).html();
-      return !!(content && content.includes('sameAs'));
-    }).length;
+    // Check for relationship markup (sameAs)
+    if (schemaCount > 0 && !jsonLd.hasSameAs) {
+      const schemasNeedingSameAs = extractor.getSchemasNeedingSameAs();
 
-    if (schemaCount > 0 && sameAsLinks === 0) {
-      const orgOrPerson = jsonLdScripts.filter((_, el) => {
-        const content = $(el).html();
-        return !!(content && (content.includes('"@type":"Organization"') || content.includes('"@type":"Person"')));
-      }).length;
-
-      if (orgOrPerson > 0) {
+      if (schemasNeedingSameAs.length > 0) {
         issues.push({
           id: `${CATEGORY.KG}-005`,
           title: 'Missing sameAs relationships',
@@ -123,7 +115,7 @@ export class KnowledgeGraphRule extends BaseRule {
           remediation: 'Add "sameAs" property with URLs to social media profiles, Wikipedia, or other authoritative sources.',
           impactScore: 10,
           location: { url },
-          evidence: ['No sameAs relationships found'],
+          evidence: [`${schemasNeedingSameAs.length} identity schema(s) without sameAs`],
           tags: ['relationships', 'schema', 'identity'],
           confidence: 0.8,
           timestamp: new Date().toISOString()
@@ -132,15 +124,10 @@ export class KnowledgeGraphRule extends BaseRule {
     }
 
     // Check for breadcrumb schema
-    const hasBreadcrumbs = jsonLdScripts.filter((_, el) => {
-      const content = $(el).html();
-      return !!(content && content.includes('BreadcrumbList'));
-    }).length > 0;
-
     const breadcrumbNav = $('[itemtype*="BreadcrumbList"], nav[aria-label*="breadcrumb" i]').length > 0;
     const pathDepth = new URL(url).pathname.split('/').filter(p => p.length > 0).length;
 
-    if (pathDepth > 1 && !hasBreadcrumbs && breadcrumbNav) {
+    if (pathDepth > 1 && !jsonLd.hasBreadcrumbs && breadcrumbNav) {
       issues.push({
         id: `${CATEGORY.KG}-006`,
         title: 'Breadcrumbs lack structured data',
@@ -158,17 +145,12 @@ export class KnowledgeGraphRule extends BaseRule {
     }
 
     // Check for FAQ schema
-    const hasFaqSchema = jsonLdScripts.filter((_, el) => {
-      const content = $(el).html();
-      return !!(content && content.includes('FAQPage'));
-    }).length > 0;
-
     const faqHeaders = $('h2, h3, h4').filter((_, el) => {
       const text = $(el).text().toLowerCase();
       return text.endsWith('?') || text.includes('how to') || text.includes('what is');
     }).length;
 
-    if (faqHeaders > 2 && !hasFaqSchema) {
+    if (faqHeaders > 2 && !jsonLd.hasFAQ) {
       issues.push({
         id: `${CATEGORY.KG}-007`,
         title: 'FAQ content lacks schema markup',
@@ -188,3 +170,4 @@ export class KnowledgeGraphRule extends BaseRule {
     return issues.length > 0 ? issues : null;
   }
 }
+
