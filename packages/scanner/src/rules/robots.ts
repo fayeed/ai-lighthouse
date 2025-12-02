@@ -2,14 +2,31 @@ import { CATEGORY, Issue, SEVERITY } from '../types.js';
 import { Rule, BaseRule, RuleContext } from './registry.js';
 import ubdici from 'undici';
 
+const AI_CRAWLERS = [
+  { name: 'GPTBot', agent: 'gptbot' },
+  { name: 'ClaudeBot', agent: 'claudebot' },
+  { name: 'Claude-Web', agent: 'claude-web' },
+  { name: 'Anthropic-AI', agent: 'anthropic-ai' },
+  { name: 'PerplexityBot', agent: 'perplexitybot' },
+  { name: 'Perplexity', agent: 'perplexity' },
+  { name: 'Google-Extended', agent: 'google-extended' },
+  { name: 'CCBot', agent: 'ccbot' },
+  { name: 'Cohere-AI', agent: 'cohere-ai' },
+  { name: 'Omgilibot', agent: 'omgilibot' },
+  { name: 'FacebookBot', agent: 'facebookbot' },
+  { name: 'Diffbot', agent: 'diffbot' },
+  { name: 'Bytespider', agent: 'bytespider' },
+  { name: 'ImagesiftBot', agent: 'imagesiftbot' }
+]
+
 @Rule({
   id: `${CATEGORY.AIREAD}-009`,
-  title: 'robots.txt blocks GPTBot/known AI crawlers',
+  title: 'robots.txt blocks AI crawlers',
   category: CATEGORY.AIREAD,
   defaultSeverity: SEVERITY.CRITICAL,
-  tags: ['crawl','robots'],
+  tags: ['crawl','robots', 'ai-agents'],
   priority: 5,
-  description: 'Detects robots directives that block popular AI crawlers such as GPTBot or Perplexity.'
+  description: 'Detects robots directives that block popular AI crawlers such as GPTBot, ClaudeBot, Perplexity, and others.'
 })
 export class RobotsRule extends BaseRule {
   async execute(ctx: RuleContext): Promise<Issue | Issue[] | null> {
@@ -22,22 +39,31 @@ export class RobotsRule extends BaseRule {
       if (!res || res.status >= 400) return null;
       const txt = await res.text();
       const lower = txt.toLowerCase();
-      const blocksGPT = lower.includes('gptbot') && lower.includes('disallow');
-      const blocksPerplex = lower.includes('perplexity') && lower.includes('disallow');
 
-      if (blocksGPT || blocksPerplex) {
+      const blockedCrawlers: string[] = [];
+      
+      for (const crawler of AI_CRAWLERS) {
+        if (lower.includes(crawler.agent) && lower.includes('disallow')) {
+          blockedCrawlers.push(crawler.name);
+        }
+      }
+
+      if (blockedCrawlers.length > 0) {
         return {
           id: `${CATEGORY.AIREAD}-009`,
-          title: 'robots.txt blocks GPTBot/known AI crawlers',
+          title: 'robots.txt blocks AI crawlers',
           serverity: SEVERITY.CRITICAL,
           category: CATEGORY.AIREAD,
-          description: 'robots.txt appears to disallow one or more known AI crawler user-agents (e.g., GPTBot, Perplexity). This prevents AI indexers from accessing content.',
-          remediation: 'Allow desired AI crawlers in robots.txt or provide an alternative feed for AI ingestion.',
+          description: `robots.txt disallows ${blockedCrawlers.length} known AI crawler(s): ${blockedCrawlers.join(', ')}. This prevents AI indexers from accessing content for training and search.`,
+          remediation: 'Consider allowing AI crawlers in robots.txt if you want your content indexed by AI systems. Review which crawlers should have access and update robots.txt accordingly.',
           impactScore: 40,
           location: { url: robotsUrl },
-          evidence: [txt.slice(0, 1000)],
-          tags: ['crawl','robots'],
-          confidence: 0.9,
+          evidence: [
+            `Blocked crawlers: ${blockedCrawlers.join(', ')}`,
+            `robots.txt preview: ${txt.slice(0, 800)}`
+          ],
+          tags: ['crawl','robots', 'ai-agents'],
+          confidence: 0.95,
           timestamp: new Date().toISOString()
         } as Issue;
       }
