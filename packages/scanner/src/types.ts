@@ -10,6 +10,7 @@ export enum CATEGORY {
   AIREAD = 'AIREAD',
   EXTRACT = 'EXTRACT',
   CHUNK = 'CHUNK',
+  CRAWL = 'CRAWL',
   LLMLOCAL = 'LLMLOCAL',
   LLMAPI = 'LLMAPI',
   HALL = 'HALL',

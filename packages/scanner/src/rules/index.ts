@@ -16,5 +16,6 @@ import './readability.js';
 import './knowledge-graph.js';
 import './security.js';
 import './multimedia.js';
+import './crawlability.js';
 
 export * from './registry.js';
