@@ -10,6 +10,14 @@ export {
   generateScoringSummary 
 } from './scoring.js';
 
+// Output formatting
+export {
+  formatAuditReport,
+  exportAuditReport
+} from './output-formatter.js';
+
+export type { AuditReport } from './output-formatter.js';
+
 // Types
 export type {
   Issue,

@@ -14,9 +14,11 @@
   "dependencies": {
     "cheerio": "^1.1.2",
     "gpt-tokenizer": "^3.4.0",
-    "undici": "^7.16.0"
+    "undici": "^7.16.0",
+    "uuid": "^13.0.0"
   },
   "devDependencies": {
+    "@types/uuid": "^11.0.0",
     "ts-node": "^10.9.2",
     "tsx": "^4.21.0",
     "typescript": "5.9.2"
