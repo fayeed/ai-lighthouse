@@ -5,7 +5,13 @@ import { exportAuditReport } from './output-formatter.js';
 const result = await analyzeUrlWithRules('https://www.janus.com/', { 
   maxChunkTokens: 1200,
   enableChunking: true,
-  enableExtractability: true
+  enableExtractability: true,
+  enableLLM: true,
+  llmConfig: {
+    provider: 'ollama',
+    baseUrl: 'http://localhost:11434',
+    model: 'qwen2.5:0.5b',
+  }
 });
 
 console.log('=== Legacy Output ===');

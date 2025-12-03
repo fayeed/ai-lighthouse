@@ -42,6 +42,31 @@ export {
 
 export type { AuditReport } from './output-formatter.js';
 
+// LLM comprehension
+export {
+  generateLLMComprehension,
+  generateQuickSummary
+} from './llm/comprehension.js';
+
+export type {
+  Entity,
+  Question,
+  FAQItem,
+  LLMComprehension
+} from './llm/comprehension.js';
+
+export {
+  LLMRunner,
+  createLLMRunnerFromEnv
+} from './llm/runner.js';
+
+export type {
+  LLMConfig,
+  LLMMessage,
+  LLMResponse,
+  LLMProvider
+} from './llm/runner.js';
+
 // Types
 export type {
   Issue,

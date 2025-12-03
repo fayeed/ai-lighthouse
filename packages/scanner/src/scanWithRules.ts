@@ -6,6 +6,7 @@ import { runRegisteredRules } from "./rules/runner.js";
 import { calculateScore } from "./scoring.js";
 import { chunkContent } from "./chunker.js";
 import { buildExtractabilityMap, analyzeContentTypeExtractability } from "./extractability.js";
+import { generateLLMComprehension } from "./llm/comprehension.js";
 import "./rules/index.js";
 
 export async function analyzeUrlWithRules(url: string, opts?: ScanOptions): Promise<ScanResult> {
@@ -121,6 +122,48 @@ const fetched = await fetchHtml(url, options.timeoutMs!, options.userAgent);
     };
   }
 
+  // LLM comprehension analysis (if enabled)
+  let llm;
+  if (options.enableLLM && options.llmConfig) {
+    try {
+      const comprehension = await generateLLMComprehension($, url, {
+        provider: options.llmConfig.provider,
+        apiKey: options.llmConfig.apiKey,
+        baseUrl: options.llmConfig.baseUrl,
+        model: options.llmConfig.model,
+        maxTokens: options.llmConfig.maxTokens,
+        temperature: options.llmConfig.temperature
+      });
+
+      llm = {
+        summary: comprehension.summary,
+        topEntities: comprehension.topEntities,
+        questions: comprehension.questions,
+        suggestedFAQ: comprehension.suggestedFAQ,
+        readingLevel: comprehension.readingLevel,
+        keyTopics: comprehension.keyTopics,
+        sentiment: comprehension.sentiment,
+        technicalDepth: comprehension.technicalDepth
+      };
+    } catch (error) {
+      console.error('LLM comprehension failed:', error);
+      // Add issue about LLM failure
+      issues.push({
+        id: 'LLMAPI-001',
+        title: 'LLM Comprehension Failed',
+        serverity: SEVERITY.LOW,
+        category: CATEGORY.LLMAPI,
+        description: `Failed to generate LLM comprehension: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        remediation: 'Check LLM API credentials and configuration.',
+        impactScore: 5,
+        location: { url },
+        tags: ['llm', 'api'],
+        confidence: 0.9,
+        timestamp: new Date().toISOString()
+      } as Issue);
+    }
+  }
+
   return {
     url,
     timestamp: new Date().getTime(),
@@ -128,6 +171,7 @@ const fetched = await fetchHtml(url, options.timeoutMs!, options.userAgent);
     scores,
     scoring,
     chunking,
-    extractability
+    extractability,
+    llm
   };
 }

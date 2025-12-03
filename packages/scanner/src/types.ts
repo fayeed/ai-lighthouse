@@ -54,6 +54,15 @@ export interface ScanOptions {
   userAgent?: string;
   enableChunking?: boolean; // Enable detailed content chunking analysis
   enableExtractability?: boolean; // Enable extractability mapping
+  enableLLM?: boolean; // Enable LLM comprehension analysis
+  llmConfig?: {
+    provider: 'openai' | 'anthropic' | 'ollama' | 'local';
+    apiKey?: string;
+    baseUrl?: string;
+    model?: string;
+    maxTokens?: number;
+    temperature?: number;
+  };
 }
 
 export interface ContentChunk {
@@ -143,5 +152,31 @@ export interface ScanResult {
   scoring?: ScoringResult; // New comprehensive scoring
   chunking?: ChunkingAnalysis; // Detailed chunking analysis
   extractability?: ExtractabilityAnalysis; // Extractability mapping
+  llm?: {
+    summary: string;
+    topEntities: Array<{
+      name: string;
+      type: string;
+      relevance: number;
+      mentions?: number;
+    }>;
+    questions: Array<{
+      question: string;
+      category: 'what' | 'why' | 'how' | 'when' | 'where' | 'who';
+      difficulty: 'basic' | 'intermediate' | 'advanced';
+    }>;
+    suggestedFAQ: Array<{
+      question: string;
+      suggestedAnswer: string;
+      importance: 'high' | 'medium' | 'low';
+    }>;
+    readingLevel?: {
+      grade: number;
+      description: string;
+    };
+    keyTopics?: string[];
+    sentiment?: 'positive' | 'neutral' | 'negative';
+    technicalDepth?: 'beginner' | 'intermediate' | 'advanced' | 'expert';
+  };
 }
 
