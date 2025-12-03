@@ -1,4 +1,4 @@
-import './h1.js';
+import './h1/index.js';
 import './chunk.js';
 import './extract.js';
 import './robots.js';
