@@ -2,7 +2,7 @@ import { CATEGORY, Issue, SEVERITY } from '../../types.js';
 import { Rule, BaseRule, RuleContext } from '../registry.js';
 
 @Rule({
-  id: `${CATEGORY.AIREAD}-028`,
+  id: `${CATEGORY.AIREAD}-035`,
   title: 'Missing or inadequate page title',
   category: CATEGORY.AIREAD,
   defaultSeverity: SEVERITY.HIGH,

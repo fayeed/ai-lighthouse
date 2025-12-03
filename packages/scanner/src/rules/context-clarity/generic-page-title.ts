@@ -2,7 +2,7 @@ import { CATEGORY, Issue, SEVERITY } from '../../types.js';
 import { Rule, BaseRule, RuleContext } from '../registry.js';
 
 @Rule({
-  id: `${CATEGORY.AIREAD}-029`,
+  id: `${CATEGORY.AIREAD}-036`,
   title: 'Page title too long or generic',
   category: CATEGORY.AIREAD,
   defaultSeverity: SEVERITY.LOW,
@@ -23,7 +23,7 @@ export class GenericPageTitleRule extends BaseRule {
     const genericTitles = ['home', 'welcome', 'untitled', 'new page', 'page'];
     if (genericTitles.includes(title.toLowerCase())) {
       return {
-        id: `${CATEGORY.AIREAD}-029`,
+        id: `${CATEGORY.AIREAD}-036`,
         title: 'Generic page title',
         serverity: SEVERITY.MEDIUM,
         category: CATEGORY.AIREAD,
@@ -39,9 +39,9 @@ export class GenericPageTitleRule extends BaseRule {
     }
 
     // Check for overly long titles
-    if (title.length > 100) {
+    if (title.length > 60) {
       return {
-        id: `${CATEGORY.AIREAD}-029`,
+        id: `${CATEGORY.AIREAD}-036`,
         title: 'Page title too long',
         serverity: SEVERITY.LOW,
         category: CATEGORY.AIREAD,
