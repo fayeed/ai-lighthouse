@@ -1,6 +1,7 @@
 import './h1/index.js';
 import './chunk.js';
 import './extract.js';
+import './entity-detector/index.js';
 import './robots.js';
 import './meta-tags/index.js';
 import './semantic-structure/index.js';
