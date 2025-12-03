@@ -3,6 +3,7 @@
 import { CATEGORY, Issue, ScanOptions, ScanResult, SEVERITY } from "./types.js";
 import { fetchHtml, parseHtml, estimateTokenCount } from "./utils.js";
 import { runRegisteredRules } from "./rules/runner.js";
+import { calculateScore } from "./scoring.js";
 import "./rules/index.js";
 
 export async function analyzeUrlWithRules(url: string, opts?: ScanOptions): Promise<ScanResult> {
@@ -78,6 +79,7 @@ const fetched = await fetchHtml(url, options.timeoutMs!, options.userAgent);
     categoryMap[it.category].push(it.impactScore);
   }
 
+  // Legacy simple scores (for backward compatibility)
   const scores: Record<string, number> = {};
   for (const cat of Object.keys(categoryMap)) {
     const sum = categoryMap[cat].reduce((a, b) => a + b, 0);
@@ -85,10 +87,14 @@ const fetched = await fetchHtml(url, options.timeoutMs!, options.userAgent);
     scores[cat] = Math.max(0, Math.round(100 - penalty));
   }
 
+  // New comprehensive scoring system
+  const scoring = calculateScore(issues);
+
   return {
     url,
     timestamp: new Date().getTime(),
     issues,
-    scores
+    scores,
+    scoring
   };
 }

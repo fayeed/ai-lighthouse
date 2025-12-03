@@ -54,10 +54,33 @@ export interface ScanOptions {
   userAgent?: string;
 }
 
+export interface CategoryScore {
+  category: CATEGORY;
+  score: number;
+  issueCount: number;
+  totalImpact: number;
+  weight: number;
+  issues: {
+    severity: SEVERITY;
+    count: number;
+    impact: number;
+  }[];
+}
+
+export interface ScoringResult {
+  overallScore: number;
+  categoryScores: CategoryScore[];
+  totalIssues: number;
+  severityBreakdown: Record<SEVERITY, number>;
+  maxPossibleScore: number;
+  normalizedScore: number;
+}
+
 export interface ScanResult {
   url: string;
   timestamp?: number; // ISO timestamp
   issues: Issue[];
-  scores: Record<string, number>;
+  scores: Record<string, number>; // Legacy simple scores
+  scoring?: ScoringResult; // New comprehensive scoring
 }
 
