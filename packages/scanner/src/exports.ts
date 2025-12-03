@@ -10,6 +10,17 @@ export {
   generateScoringSummary 
 } from './scoring.js';
 
+// Chunking utilities
+export {
+  chunkContent,
+  analyzeChunkQuality
+} from './chunker.js';
+
+export type {
+  ContentChunk,
+  ChunkingResult
+} from './chunker.js';
+
 // Output formatting
 export {
   formatAuditReport,
@@ -25,7 +36,8 @@ export type {
   ScanOptions,
   ScanResult,
   ScoringResult,
-  CategoryScore
+  CategoryScore,
+  ChunkingAnalysis
 } from './types.js';
 
 export { SEVERITY, CATEGORY } from './types.js';

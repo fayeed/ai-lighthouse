@@ -4,6 +4,7 @@ import { CATEGORY, Issue, ScanOptions, ScanResult, SEVERITY } from "./types.js";
 import { fetchHtml, parseHtml, estimateTokenCount } from "./utils.js";
 import { runRegisteredRules } from "./rules/runner.js";
 import { calculateScore } from "./scoring.js";
+import { chunkContent } from "./chunker.js";
 import "./rules/index.js";
 
 export async function analyzeUrlWithRules(url: string, opts?: ScanOptions): Promise<ScanResult> {
@@ -90,11 +91,21 @@ const fetched = await fetchHtml(url, options.timeoutMs!, options.userAgent);
   // New comprehensive scoring system
   const scoring = calculateScore(issues);
 
+  // Detailed chunking analysis (if enabled)
+  let chunking;
+  if (options.enableChunking !== false) { // Enabled by default
+    chunking = chunkContent($, {
+      maxTokensPerChunk: options.maxChunkTokens || 500,
+      includeHtml: false
+    });
+  }
+
   return {
     url,
     timestamp: new Date().getTime(),
     issues,
     scores,
-    scoring
+    scoring,
+    chunking
   };
 }

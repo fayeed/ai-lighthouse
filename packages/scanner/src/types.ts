@@ -52,6 +52,32 @@ export interface ScanOptions {
   timeoutMs?: number;
   maxChunkTokens?: number;
   userAgent?: string;
+  enableChunking?: boolean; // Enable detailed content chunking analysis
+}
+
+export interface ContentChunk {
+  id: string;
+  startSelector: string;
+  endSelector?: string;
+  tokenCount: number;
+  text: string;
+  heading?: string;
+  headingLevel?: number;
+  noiseRatio: number;
+  wordCount: number;
+  characterCount: number;
+  hasCode: boolean;
+  hasLists: boolean;
+  hasTables: boolean;
+}
+
+export interface ChunkingAnalysis {
+  chunks: ContentChunk[];
+  totalTokens: number;
+  totalChunks: number;
+  averageTokensPerChunk: number;
+  averageNoiseRatio: number;
+  chunkingStrategy: string;
 }
 
 export interface CategoryScore {
@@ -82,5 +108,6 @@ export interface ScanResult {
   issues: Issue[];
   scores: Record<string, number>; // Legacy simple scores
   scoring?: ScoringResult; // New comprehensive scoring
+  chunking?: ChunkingAnalysis; // Detailed chunking analysis
 }
 
