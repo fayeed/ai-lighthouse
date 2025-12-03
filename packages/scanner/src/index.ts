@@ -2,7 +2,7 @@ import { analyzeUrlWithRules } from './scanWithRules.js';
 import { generateScoringSummary, getLetterGrade } from './scoring.js';
 import { exportAuditReport } from './output-formatter.js';
 
-const result = await analyzeUrlWithRules('https://www.janus.com/', { 
+const result = await analyzeUrlWithRules('https://github.com', { 
   maxChunkTokens: 1200,
   enableChunking: true,
   enableExtractability: true,
@@ -83,6 +83,29 @@ if (result.hallucinationReport) {
     result.hallucinationReport.recommendations.forEach(rec => {
       console.log(` - ${rec}`);
     });
+  }
+}
+
+if (result.aiSummary) {
+  console.log('\n\n=== AI-Readable Summary ===');
+  console.log('📝 Short Summary:');
+  console.log(result.aiSummary.summaryShort);
+  console.log();
+  
+  console.log('📄 Long Summary:');
+  console.log(result.aiSummary.summaryLong);
+  console.log();
+  
+  console.log('🏷️  Suggested Title:', result.aiSummary.suggestedTitle);
+  console.log('📋 Suggested Meta:', result.aiSummary.suggestedMeta);
+  console.log('🔑 Keywords:', result.aiSummary.keywords.join(', '));
+  
+  if (result.aiSummary.readabilityScore !== undefined) {
+    console.log('📊 Readability:', result.aiSummary.readabilityScore + '/100');
+  }
+  
+  if (result.aiSummary.structureQuality) {
+    console.log('🏗️  Structure:', result.aiSummary.structureQuality);
   }
 }
 

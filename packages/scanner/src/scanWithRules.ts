@@ -8,6 +8,7 @@ import { chunkContent } from "./chunker.js";
 import { buildExtractabilityMap, analyzeContentTypeExtractability } from "./extractability.js";
 import { generateLLMComprehension } from "./llm/comprehension.js";
 import { detectHallucinations, hallucinationTriggersToIssues } from "./llm/hallucination.js";
+import { generateAISummaries, generateLocalAISummary } from "./llm/summary.js";
 import "./rules/index.js";
 
 export async function analyzeUrlWithRules(url: string, opts?: ScanOptions): Promise<ScanResult> {
@@ -200,6 +201,55 @@ const fetched = await fetchHtml(url, options.timeoutMs!, options.userAgent);
     }
   }
 
+  // AI-readable summaries (always enabled - uses local heuristics if no LLM)
+  let aiSummary;
+  try {
+    if (options.enableLLM && options.llmConfig) {
+      // Generate with LLM for best quality
+      const summary = await generateAISummaries($, url, {
+        provider: options.llmConfig.provider,
+        apiKey: options.llmConfig.apiKey,
+        baseUrl: options.llmConfig.baseUrl,
+        model: options.llmConfig.model
+      });
+      
+      aiSummary = {
+        summaryShort: summary.summaryShort,
+        summaryLong: summary.summaryLong,
+        suggestedTitle: summary.suggestedTitle,
+        suggestedMeta: summary.suggestedMeta,
+        keywords: summary.keywords,
+        readabilityScore: summary.readabilityScore,
+        structureQuality: summary.structureQuality
+      };
+    } else {
+      // Use local heuristic-based summaries
+      const localSummary = generateLocalAISummary($);
+      aiSummary = {
+        summaryShort: localSummary.summaryShort || '',
+        summaryLong: localSummary.summaryLong || '',
+        suggestedTitle: localSummary.suggestedTitle || '',
+        suggestedMeta: localSummary.suggestedMeta || '',
+        keywords: localSummary.keywords || [],
+        readabilityScore: localSummary.readabilityScore,
+        structureQuality: localSummary.structureQuality
+      };
+    }
+  } catch (error) {
+    console.error('AI summary generation failed:', error);
+    // Fallback to local
+    const localSummary = generateLocalAISummary($);
+    aiSummary = {
+      summaryShort: localSummary.summaryShort || '',
+      summaryLong: localSummary.summaryLong || '',
+      suggestedTitle: localSummary.suggestedTitle || '',
+      suggestedMeta: localSummary.suggestedMeta || '',
+      keywords: localSummary.keywords || [],
+      readabilityScore: localSummary.readabilityScore,
+      structureQuality: localSummary.structureQuality
+    };
+  }
+
   return {
     url,
     timestamp: new Date().getTime(),
@@ -209,6 +259,7 @@ const fetched = await fetchHtml(url, options.timeoutMs!, options.userAgent);
     chunking,
     extractability,
     llm,
-    hallucinationReport
+    hallucinationReport,
+    aiSummary
   };
 }

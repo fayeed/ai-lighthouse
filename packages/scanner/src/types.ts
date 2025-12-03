@@ -196,5 +196,14 @@ export interface ScanResult {
     };
     recommendations: string[];
   };
+  aiSummary?: {
+    summaryShort: string;      // 2-3 sentences for quick LLM understanding
+    summaryLong: string;       // 1-2 paragraphs comprehensive overview
+    suggestedTitle: string;    // SEO-optimized title
+    suggestedMeta: string;     // Meta description (150-160 chars)
+    keywords: string[];        // Key terms for indexing
+    readabilityScore?: number; // 0-100, content clarity
+    structureQuality?: 'excellent' | 'good' | 'fair' | 'poor';
+  };
 }
 

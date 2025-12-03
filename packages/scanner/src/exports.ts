@@ -80,6 +80,17 @@ export type {
   MisunderstandingReport
 } from './llm/hallucination.js';
 
+// AI-readable summaries
+export {
+  generateAISummaries,
+  generateQuickAISummary,
+  generateLocalAISummary
+} from './llm/summary.js';
+
+export type {
+  AISummary
+} from './llm/summary.js';
+
 // Types
 export type {
   Issue,
