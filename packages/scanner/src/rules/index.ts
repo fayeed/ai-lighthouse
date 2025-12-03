@@ -11,7 +11,7 @@ import './context-clarity.js';
 import './images.js';
 import './performance.js';
 import './links.js';
-import './accessibility.js';
+import './a11y/index.js';
 import './readability.js';
 import './knowledge-graph.js';
 import './security.js';
