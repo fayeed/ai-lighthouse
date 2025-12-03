@@ -10,7 +10,7 @@ import { Rule, BaseRule, RuleContext } from '../registry.js';
   priority: 15,
   description: 'Found hreflang tag(s) with invalid language codes. Use ISO 639-1 format (e.g., "en", "en-US").'
 })
-export class MissingBreadcrumbsRule extends BaseRule {
+export class InvalidHreflangSyntaxRule extends BaseRule {
   async execute(ctx: RuleContext): Promise<Issue | Issue[] | null> {
     const { url, $ } = ctx;
 

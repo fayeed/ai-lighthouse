@@ -8,7 +8,7 @@ export { MissingSitemapRule } from './missing-sitemap.js';
 export { RobotsTxtBlocksAllRule } from './robots-txt-blocks-all.js';
 export { RobotsMetaNoindexRule } from './robots-meta-noindex.js';
 export { SlowPageLoadRule } from './slow-page-load.js';
-export { MissingBreadcrumbsRule } from './missing-breadcrumbs.js';
+export { InvalidHreflangSyntaxRule } from './invalid-hreflang-syntax.js';
 export { OrphanPageRule } from './orphan-page.js';
 export { DeepPageLevelRule } from './deep-page-level.js';
 export { DuplicateH1Rule } from './duplicate-h1.js';
