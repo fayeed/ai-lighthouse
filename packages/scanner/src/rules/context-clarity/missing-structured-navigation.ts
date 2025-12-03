@@ -11,7 +11,7 @@ import { Rule, BaseRule, RuleContext } from '../registry.js';
   description: 'Checks for proper navigation structure to help AI agents understand site organization.'
 })
 export class MissingStructuredNavigationRule extends BaseRule {
-  async execute(ctx: RuleContext): Promise<Issue | null> {
+  async execute(ctx: RuleContext): Promise<Issue | Issue[] | null> {
     const { url, $ } = ctx;
 
     // Check for navigation elements

@@ -11,7 +11,7 @@ import { Rule, BaseRule, RuleContext } from '../registry.js';
   description: 'Checks for language declaration. Language helps AI agents apply appropriate language processing.'
 })
 export class MissingPrimaryLanguageRule extends BaseRule {
-  async execute(ctx: RuleContext): Promise<Issue | null> {
+  async execute(ctx: RuleContext): Promise<Issue | Issue[] | null> {
     const { url, $ } = ctx;
 
     // Check for language declaration
