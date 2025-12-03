@@ -53,6 +53,7 @@ export interface ScanOptions {
   maxChunkTokens?: number;
   userAgent?: string;
   enableChunking?: boolean; // Enable detailed content chunking analysis
+  enableExtractability?: boolean; // Enable extractability mapping
 }
 
 export interface ContentChunk {
@@ -78,6 +79,38 @@ export interface ChunkingAnalysis {
   averageTokensPerChunk: number;
   averageNoiseRatio: number;
   chunkingStrategy: string;
+}
+
+export interface ExtractabilityAnalysis {
+  score: {
+    extractabilityScore: number;
+    serverRenderedPercent: number;
+    hiddenContentPercent: number;
+    interactiveContentPercent: number;
+    iframeContentPercent: number;
+  };
+  summary: {
+    totalNodes: number;
+    extractableNodes: number;
+    hiddenNodes: number;
+    interactiveNodes: number;
+    iframeNodes: number;
+    clientRenderedNodes: number;
+    serverRenderedNodes: number;
+  };
+  contentTypes: {
+    text: { extractable: number; total: number; percentage: number };
+    images: { extractable: number; total: number; percentage: number };
+    links: { extractable: number; total: number; percentage: number };
+    structured: { extractable: number; total: number; percentage: number };
+  };
+  issues: Array<{
+    type: string;
+    severity: 'low' | 'medium' | 'high';
+    description: string;
+    count: number;
+  }>;
+  recommendations: string[];
 }
 
 export interface CategoryScore {
@@ -109,5 +142,6 @@ export interface ScanResult {
   scores: Record<string, number>; // Legacy simple scores
   scoring?: ScoringResult; // New comprehensive scoring
   chunking?: ChunkingAnalysis; // Detailed chunking analysis
+  extractability?: ExtractabilityAnalysis; // Extractability mapping
 }
 

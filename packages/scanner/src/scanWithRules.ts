@@ -5,6 +5,7 @@ import { fetchHtml, parseHtml, estimateTokenCount } from "./utils.js";
 import { runRegisteredRules } from "./rules/runner.js";
 import { calculateScore } from "./scoring.js";
 import { chunkContent } from "./chunker.js";
+import { buildExtractabilityMap, analyzeContentTypeExtractability } from "./extractability.js";
 import "./rules/index.js";
 
 export async function analyzeUrlWithRules(url: string, opts?: ScanOptions): Promise<ScanResult> {
@@ -100,12 +101,33 @@ const fetched = await fetchHtml(url, options.timeoutMs!, options.userAgent);
     });
   }
 
+  // Extractability mapping (if enabled)
+  let extractability;
+  if (options.enableExtractability !== false) { // Enabled by default
+    const map = buildExtractabilityMap($, {
+      maxNodes: 500,
+      includeHidden: true,
+      minTextLength: 5
+    });
+    
+    const contentTypes = analyzeContentTypeExtractability($);
+    
+    extractability = {
+      score: map.score,
+      summary: map.summary,
+      contentTypes,
+      issues: map.issues,
+      recommendations: map.recommendations
+    };
+  }
+
   return {
     url,
     timestamp: new Date().getTime(),
     issues,
     scores,
     scoring,
-    chunking
+    chunking,
+    extractability
   };
 }

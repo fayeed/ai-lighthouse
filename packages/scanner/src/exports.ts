@@ -21,6 +21,19 @@ export type {
   ChunkingResult
 } from './chunker.js';
 
+// Extractability utilities
+export {
+  buildExtractabilityMap,
+  analyzeContentTypeExtractability
+} from './extractability.js';
+
+export type {
+  ExtractabilityMap,
+  ExtractableNode,
+  ContentSource,
+  ExtractabilityLevel
+} from './extractability.js';
+
 // Output formatting
 export {
   formatAuditReport,
@@ -37,7 +50,8 @@ export type {
   ScanResult,
   ScoringResult,
   CategoryScore,
-  ChunkingAnalysis
+  ChunkingAnalysis,
+  ExtractabilityAnalysis
 } from './types.js';
 
 export { SEVERITY, CATEGORY } from './types.js';

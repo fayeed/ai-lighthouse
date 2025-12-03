@@ -4,7 +4,8 @@ import { exportAuditReport } from './output-formatter.js';
 
 const result = await analyzeUrlWithRules('https://www.janus.com/', { 
   maxChunkTokens: 1200,
-  enableChunking: true 
+  enableChunking: true,
+  enableExtractability: true
 });
 
 console.log('=== Legacy Output ===');
@@ -17,6 +18,14 @@ if (result.chunking) {
   console.log(`Total Chunks: ${result.chunking.totalChunks}`);
   console.log(`Average Tokens/Chunk: ${result.chunking.averageTokensPerChunk}`);
   console.log(`Average Noise: ${(result.chunking.averageNoiseRatio * 100).toFixed(1)}%`);
+}
+
+if (result.extractability) {
+  console.log('\n\n=== Extractability ===');
+  console.log(`Overall Score: ${result.extractability.score.extractabilityScore}/100`);
+  console.log(`Server-Rendered: ${result.extractability.score.serverRenderedPercent}%`);
+  console.log(`Text Extractable: ${result.extractability.contentTypes.text.percentage}%`);
+  console.log(`Images Extractable: ${result.extractability.contentTypes.images.percentage}%`);
 }
 
 console.log('\n\n=== Standardized Audit Report ===');
