@@ -9,13 +9,13 @@ import './token-optimization.js';
 import './formatting.js';
 import './context-clarity.js';
 import './images.js';
-import './performance.js';
-import './links.js';
+import './performance/index.js';
+import './links/index.js';
 import './a11y/index.js';
-import './readability.js';
+import './readability/index.js';
 import './knowledge-graph.js';
-import './security.js';
-import './multimedia.js';
+import './security/index.js';
+import './multimedia/index.js';
 import './crawl/index.js';
 import './content-clarity/index.js';
 
