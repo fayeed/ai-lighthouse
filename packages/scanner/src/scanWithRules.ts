@@ -7,6 +7,7 @@ import { calculateScore } from "./scoring.js";
 import { chunkContent } from "./chunker.js";
 import { buildExtractabilityMap, analyzeContentTypeExtractability } from "./extractability.js";
 import { generateLLMComprehension } from "./llm/comprehension.js";
+import { detectHallucinations, hallucinationTriggersToIssues } from "./llm/hallucination.js";
 import "./rules/index.js";
 
 export async function analyzeUrlWithRules(url: string, opts?: ScanOptions): Promise<ScanResult> {
@@ -164,6 +165,41 @@ const fetched = await fetchHtml(url, options.timeoutMs!, options.userAgent);
     }
   }
 
+  // Hallucination detection (if enabled)
+  let hallucinationReport;
+  if (options.enableHallucinationDetection !== false) { // Enabled by default when LLM is available
+    try {
+      // Use LLM if available and enabled, otherwise use local heuristics only
+      const llmConfig = (options.enableLLM && options.llmConfig) ? {
+        provider: options.llmConfig.provider,
+        apiKey: options.llmConfig.apiKey,
+        baseUrl: options.llmConfig.baseUrl,
+        model: options.llmConfig.model
+      } : undefined;
+
+      const report = await detectHallucinations($, url, llmConfig);
+      
+      // Convert triggers to issues
+      const hallucinationIssues = hallucinationTriggersToIssues(report);
+      issues.push(...hallucinationIssues);
+
+      // Add to result
+      hallucinationReport = {
+        hallucinationRiskScore: report.hallucinationRiskScore,
+        triggers: report.triggers.map(t => ({
+          type: t.type,
+          severity: t.severity,
+          description: t.description,
+          confidence: t.confidence
+        })),
+        factCheckSummary: report.factCheckSummary,
+        recommendations: report.recommendations
+      };
+    } catch (error) {
+      console.error('Hallucination detection failed:', error);
+    }
+  }
+
   return {
     url,
     timestamp: new Date().getTime(),
@@ -172,6 +208,7 @@ const fetched = await fetchHtml(url, options.timeoutMs!, options.userAgent);
     scoring,
     chunking,
     extractability,
-    llm
+    llm,
+    hallucinationReport
   };
 }

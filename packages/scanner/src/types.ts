@@ -55,6 +55,7 @@ export interface ScanOptions {
   enableChunking?: boolean; // Enable detailed content chunking analysis
   enableExtractability?: boolean; // Enable extractability mapping
   enableLLM?: boolean; // Enable LLM comprehension analysis
+  enableHallucinationDetection?: boolean; // Enable hallucination trigger detection
   llmConfig?: {
     provider: 'openai' | 'anthropic' | 'ollama' | 'local';
     apiKey?: string;
@@ -177,6 +178,23 @@ export interface ScanResult {
     keyTopics?: string[];
     sentiment?: 'positive' | 'neutral' | 'negative';
     technicalDepth?: 'beginner' | 'intermediate' | 'advanced' | 'expert';
+  };
+  hallucinationReport?: {
+    hallucinationRiskScore: number; // 0-100
+    triggers: Array<{
+      type: 'missing_fact' | 'contradiction' | 'ambiguity' | 'inconsistency';
+      severity: SEVERITY;
+      description: string;
+      confidence: number;
+    }>;
+    factCheckSummary: {
+      totalFacts: number;
+      verifiedFacts: number;
+      unverifiedFacts: number;
+      contradictions: number;
+      ambiguities: number;
+    };
+    recommendations: string[];
   };
 }
 

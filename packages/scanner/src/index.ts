@@ -6,6 +6,7 @@ const result = await analyzeUrlWithRules('https://www.janus.com/', {
   maxChunkTokens: 1200,
   enableChunking: true,
   enableExtractability: true,
+  enableHallucinationDetection: true,
   enableLLM: true,
   llmConfig: {
     provider: 'ollama',
@@ -54,6 +55,35 @@ if (result.llm) {
     console.log(` ${i + 1}. Q: ${faq.question}`);
     console.log(`     A: ${faq.suggestedAnswer} (Importance: ${faq.importance})`);
   });
+}
+
+if (result.hallucinationReport) {
+  console.log('\n\n=== Hallucination Detection ===');
+  console.log(`Risk Score: ${result.hallucinationReport.hallucinationRiskScore}/100`);
+  
+  if (result.hallucinationReport.factCheckSummary.totalFacts > 0) {
+    console.log('\nFact Check Summary:');
+    console.log(` - Total Facts: ${result.hallucinationReport.factCheckSummary.totalFacts}`);
+    console.log(` - Verified: ${result.hallucinationReport.factCheckSummary.verifiedFacts}`);
+    console.log(` - Unverified: ${result.hallucinationReport.factCheckSummary.unverifiedFacts}`);
+    console.log(` - Contradictions: ${result.hallucinationReport.factCheckSummary.contradictions}`);
+  }
+  
+  if (result.hallucinationReport.triggers.length > 0) {
+    console.log(`\nTriggers Found: ${result.hallucinationReport.triggers.length}`);
+    result.hallucinationReport.triggers.slice(0, 5).forEach((trigger, i) => {
+      console.log(` ${i + 1}. [${trigger.severity}] ${trigger.type}`);
+      console.log(`     ${trigger.description}`);
+      console.log(`     Confidence: ${(trigger.confidence * 100).toFixed(0)}%`);
+    });
+  }
+  
+  if (result.hallucinationReport.recommendations.length > 0) {
+    console.log('\nRecommendations:');
+    result.hallucinationReport.recommendations.forEach(rec => {
+      console.log(` - ${rec}`);
+    });
+  }
 }
 
 // console.log('\n\n=== Standardized Audit Report ===');

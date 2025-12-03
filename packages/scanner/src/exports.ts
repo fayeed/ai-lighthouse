@@ -67,6 +67,19 @@ export type {
   LLMProvider
 } from './llm/runner.js';
 
+// Hallucination detection
+export {
+  detectHallucinations,
+  hallucinationTriggersToIssues
+} from './llm/hallucination.js';
+
+export type {
+  ExtractedFact,
+  FactVerification,
+  HallucinationTrigger,
+  MisunderstandingReport
+} from './llm/hallucination.js';
+
 // Types
 export type {
   Issue,
