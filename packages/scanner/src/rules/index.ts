@@ -17,6 +17,6 @@ import './knowledge-graph.js';
 import './security.js';
 import './multimedia.js';
 import './crawlability.js';
-import './content-clarity-advanced.js';
+import './content-clarity/index.js';
 
 export * from './registry.js';
