@@ -249,5 +249,44 @@ export interface ScanResult {
       averageConfidence: number;
     };
   };
+  mirrorReport?: {
+    intendedMessaging: Array<{
+      productName?: string;
+      tagline?: string;
+      description?: string;
+      keyFeatures?: string[];
+      targetAudience?: string;
+      pricing?: string;
+      category?: string;
+      source: 'h1' | 'meta' | 'schema' | 'hero';
+    }>;
+    llmInterpretation: {
+      productName?: string;
+      purpose?: string;
+      keyFeatures?: string[];
+      targetAudience?: string;
+      pricing?: string;
+      category?: string;
+      confidence: number;
+    };
+    mismatches: Array<{
+      field: string;
+      intended: string;
+      interpreted: string;
+      severity: 'critical' | 'major' | 'minor';
+      description: string;
+      recommendation: string;
+      confidence: number;
+    }>;
+    summary: {
+      totalMismatches: number;
+      critical: number;
+      major: number;
+      minor: number;
+      alignmentScore: number;
+      clarityScore: number;
+    };
+    recommendations: string[];
+  };
 }
 

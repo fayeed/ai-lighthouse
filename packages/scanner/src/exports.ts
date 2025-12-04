@@ -114,6 +114,19 @@ export type {
   FAQResult
 } from './llm/faq.js';
 
+// LLM Mirror Test
+export {
+  runMirrorTest,
+  quickMirrorTest
+} from './llm/mirror.js';
+
+export type {
+  IntendedMessaging,
+  LLMInterpretation,
+  Mismatch,
+  MirrorReport
+} from './llm/mirror.js';
+
 // Types
 export type {
   Issue,

@@ -12,7 +12,7 @@ const result = await analyzeUrlWithRules('https://github.com', {
     provider: 'ollama',
     baseUrl: 'http://localhost:11434',
     model: 'qwen2.5:0.5b',
-  }
+  },
 });
 
 console.log('=== Legacy Output ===');
@@ -177,6 +177,44 @@ if (result.faqs) {
   }
 }
 
+if (result.mirrorReport) {
+  console.log('\n\n=== LLM Mirror Test (AI Misunderstandings) ===');
+  console.log(`Alignment Score: ${result.mirrorReport.summary.alignmentScore}/100`);
+  console.log(`Clarity Score: ${result.mirrorReport.summary.clarityScore}/100`);
+  console.log(`Mismatches: ${result.mirrorReport.summary.totalMismatches} (${result.mirrorReport.summary.critical} critical, ${result.mirrorReport.summary.major} major, ${result.mirrorReport.summary.minor} minor)`);
+  
+  if (result.mirrorReport.mismatches.length > 0) {
+    console.log('\nMismatches Found:');
+    result.mirrorReport.mismatches.forEach((mismatch, i) => {
+      const icon = mismatch.severity === 'critical' ? '🔴' : mismatch.severity === 'major' ? '🟡' : '🔵';
+      const conf = (mismatch.confidence * 100).toFixed(0);
+      console.log(`\n  ${i + 1}. ${icon} ${mismatch.severity.toUpperCase()} (${conf}%)`);
+      console.log(`      Field: ${mismatch.field}`);
+      console.log(`      Intended: "${mismatch.intended}"`);
+      console.log(`      AI Sees: "${mismatch.interpreted}"`);
+      console.log(`      Issue: ${mismatch.description}`);
+      console.log(`      Fix: ${mismatch.recommendation}`);
+    });
+  } else {
+    console.log('\n✅ No mismatches! AI correctly understands your messaging.');
+  }
+  
+  if (result.mirrorReport.recommendations.length > 0) {
+    console.log('\nTop Recommendations:');
+    result.mirrorReport.recommendations.slice(0, 5).forEach((rec, i) => {
+      console.log(`  ${i + 1}. ${rec}`);
+    });
+  }
+  
+  console.log('\nLLM Interpretation:');
+  const interp = result.mirrorReport.llmInterpretation;
+  if (interp.productName) console.log(`  Product: ${interp.productName}`);
+  if (interp.purpose) console.log(`  Purpose: ${interp.purpose}`);
+  if (interp.targetAudience) console.log(`  Audience: ${interp.targetAudience}`);
+  if (interp.pricing) console.log(`  Pricing: ${interp.pricing}`);
+  console.log(`  Confidence: ${(interp.confidence * 100).toFixed(0)}%`);
+}
+
 // console.log('\n\n=== Standardized Audit Report ===');
 // const auditReport = exportAuditReport(result, {
 //   pretty: true,
@@ -184,5 +222,7 @@ if (result.faqs) {
 //   includeRaw: false
 // });
 // console.log(auditReport);
+
+
 
 

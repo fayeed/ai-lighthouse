@@ -11,6 +11,7 @@ import { detectHallucinations, hallucinationTriggersToIssues } from "./llm/hallu
 import { generateAISummaries, generateLocalAISummary } from "./llm/summary.js";
 import { extractNamedEntities } from "./llm/entities.js";
 import { generateFAQs } from "./llm/faq.js";
+import { runMirrorTest } from "./llm/mirror.js";
 import "./rules/index.js";
 
 export async function analyzeUrlWithRules(url: string, opts?: ScanOptions): Promise<ScanResult> {
@@ -299,6 +300,46 @@ const fetched = await fetchHtml(url, options.timeoutMs!, options.userAgent);
     console.error('FAQ generation failed:', error);
   }
 
+  // LLM Mirror Test (requires LLM)
+  let mirrorReport;
+  if (options.enableLLM && options.llmConfig) {
+    try {
+      const report = await runMirrorTest($, {
+        provider: options.llmConfig.provider,
+        apiKey: options.llmConfig.apiKey,
+        baseUrl: options.llmConfig.baseUrl,
+        model: options.llmConfig.model,
+        maxTokens: options.llmConfig.maxTokens,
+        temperature: options.llmConfig.temperature
+      });
+
+      console.log('Mirror Test Report:', report);
+      
+      mirrorReport = report;
+      
+      // Add critical mismatches as issues
+      for (const mismatch of report.mismatches) {
+        if (mismatch.severity === 'critical' || mismatch.severity === 'major') {
+          issues.push({
+            id: `LLMCONF-MIRROR-${mismatch.field.toUpperCase()}`,
+            title: `AI Misunderstanding: ${mismatch.field}`,
+            serverity: mismatch.severity === 'critical' ? SEVERITY.HIGH : SEVERITY.MEDIUM,
+            category: CATEGORY.LLMCON,
+            description: mismatch.description,
+            remediation: mismatch.recommendation,
+            impactScore: mismatch.severity === 'critical' ? 8 : 6,
+            location: { url },
+            tags: ['ai-interpretation', 'messaging', 'mirror-test'],
+            confidence: mismatch.confidence,
+            timestamp: new Date().toISOString()
+          } as Issue);
+        }
+      }
+    } catch (error) {
+      console.error('Mirror test failed:', error);
+    }
+  }
+
   return {
     url,
     timestamp: new Date().getTime(),
@@ -311,6 +352,7 @@ const fetched = await fetchHtml(url, options.timeoutMs!, options.userAgent);
     hallucinationReport,
     aiSummary,
     entities,
-    faqs
+    faqs,
+    mirrorReport
   };
 }
