@@ -91,6 +91,18 @@ export type {
   AISummary
 } from './llm/summary.js';
 
+// Named entity extraction
+export {
+  extractNamedEntities,
+  extractEntitiesQuick
+} from './llm/entities.js';
+
+export type {
+  Entity as NamedEntity,
+  EntityType,
+  EntityExtractionResult
+} from './llm/entities.js';
+
 // Types
 export type {
   Issue,

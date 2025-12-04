@@ -205,5 +205,31 @@ export interface ScanResult {
     readabilityScore?: number; // 0-100, content clarity
     structureQuality?: 'excellent' | 'good' | 'fair' | 'poor';
   };
+  entities?: {
+    entities: Array<{
+      name: string;
+      type: 'organization' | 'product' | 'person' | 'date' | 'number' | 'location' | 'email' | 'url' | 'phone';
+      confidence: number; // 0-1
+      locator: {
+        selector?: string;
+        textSnippet: string;
+        position: number;
+      };
+      metadata?: {
+        normalized?: string;
+        schemaField?: string;
+        context?: string;
+        source?: 'regex' | 'llm' | 'schema';
+      };
+    }>;
+    summary: {
+      totalEntities: number;
+      byType: Record<string, number>;
+      highConfidence: number;
+      mediumConfidence: number;
+      lowConfidence: number;
+    };
+    schemaMapping?: Record<string, any[]>;
+  };
 }
 

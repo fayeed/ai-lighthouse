@@ -109,6 +109,48 @@ if (result.aiSummary) {
   }
 }
 
+if (result.entities) {
+  console.log('\n\n=== Named Entities ===');
+  console.log(`Total Entities: ${result.entities.summary.totalEntities}`);
+  
+  console.log('\nBy Type:');
+  for (const [type, count] of Object.entries(result.entities.summary.byType)) {
+    if (count > 0) {
+      console.log(`  ${type}: ${count}`);
+    }
+  }
+  
+  console.log('\nConfidence Distribution:');
+  console.log(`  High (≥80%): ${result.entities.summary.highConfidence}`);
+  console.log(`  Medium (50-80%): ${result.entities.summary.mediumConfidence}`);
+  console.log(`  Low (<50%): ${result.entities.summary.lowConfidence}`);
+  
+  if (result.entities.entities.length > 0) {
+    console.log('\nTop Entities (by confidence):');
+    result.entities.entities.slice(0, 15).forEach((entity, i) => {
+      const conf = (entity.confidence * 100).toFixed(0);
+      console.log(`  ${i + 1}. [${entity.type}] ${entity.name} (${conf}%)`);
+      if (entity.metadata?.source) {
+        console.log(`      Source: ${entity.metadata.source}`);
+      }
+      if (entity.metadata?.context) {
+        console.log(`      Context: ${entity.metadata.context}`);
+      }
+    });
+    
+    if (result.entities.entities.length > 15) {
+      console.log(`  ... and ${result.entities.entities.length - 15} more entities`);
+    }
+  }
+  
+  if (result.entities.schemaMapping && Object.keys(result.entities.schemaMapping).length > 0) {
+    console.log('\nSchema.org Mappings:');
+    for (const [field, entities] of Object.entries(result.entities.schemaMapping)) {
+      console.log(`  ${field}: ${entities.length} entity(ies)`);
+    }
+  }
+}
+
 // console.log('\n\n=== Standardized Audit Report ===');
 // const auditReport = exportAuditReport(result, {
 //   pretty: true,

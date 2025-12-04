@@ -9,6 +9,7 @@ import { buildExtractabilityMap, analyzeContentTypeExtractability } from "./extr
 import { generateLLMComprehension } from "./llm/comprehension.js";
 import { detectHallucinations, hallucinationTriggersToIssues } from "./llm/hallucination.js";
 import { generateAISummaries, generateLocalAISummary } from "./llm/summary.js";
+import { extractNamedEntities } from "./llm/entities.js";
 import "./rules/index.js";
 
 export async function analyzeUrlWithRules(url: string, opts?: ScanOptions): Promise<ScanResult> {
@@ -250,6 +251,30 @@ const fetched = await fetchHtml(url, options.timeoutMs!, options.userAgent);
     };
   }
 
+  // Named entity extraction (always enabled - uses regex, optionally enriched with LLM)
+  let entities;
+  try {
+    const entityResult = await extractNamedEntities($, {
+      enableLLM: options.enableLLM && !!options.llmConfig,
+      llmConfig: options.llmConfig,
+      minConfidence: 0.5 // Filter low-confidence entities
+    });
+    
+    entities = {
+      entities: entityResult.entities.map(e => ({
+        name: e.name,
+        type: e.type,
+        confidence: e.confidence,
+        locator: e.locator,
+        metadata: e.metadata
+      })),
+      summary: entityResult.summary,
+      schemaMapping: entityResult.schemaMapping
+    };
+  } catch (error) {
+    console.error('Entity extraction failed:', error);
+  }
+
   return {
     url,
     timestamp: new Date().getTime(),
@@ -260,6 +285,7 @@ const fetched = await fetchHtml(url, options.timeoutMs!, options.userAgent);
     extractability,
     llm,
     hallucinationReport,
-    aiSummary
+    aiSummary,
+    entities
   };
 }
