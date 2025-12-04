@@ -231,5 +231,23 @@ export interface ScanResult {
     };
     schemaMapping?: Record<string, any[]>;
   };
+  faqs?: {
+    faqs: Array<{
+      question: string;
+      suggestedAnswer: string;
+      importance: 'high' | 'medium' | 'low';
+      confidence: number; // 0-1
+      source: 'llm' | 'heuristic' | 'schema';
+    }>;
+    summary: {
+      totalFAQs: number;
+      byImportance: {
+        high: number;
+        medium: number;
+        low: number;
+      };
+      averageConfidence: number;
+    };
+  };
 }
 

@@ -151,6 +151,32 @@ if (result.entities) {
   }
 }
 
+if (result.faqs) {
+  console.log('\n\n=== Suggested FAQs ===');
+  console.log(`Total FAQs: ${result.faqs.summary.totalFAQs}`);
+  
+  console.log('\nBy Importance:');
+  console.log(`  High: ${result.faqs.summary.byImportance.high}`);
+  console.log(`  Medium: ${result.faqs.summary.byImportance.medium}`);
+  console.log(`  Low: ${result.faqs.summary.byImportance.low}`);
+  
+  console.log(`\nAverage Confidence: ${(result.faqs.summary.averageConfidence * 100).toFixed(0)}%`);
+  
+  if (result.faqs.faqs.length > 0) {
+    console.log('\nTop FAQs:');
+    result.faqs.faqs.slice(0, 10).forEach((faq, i) => {
+      const conf = (faq.confidence * 100).toFixed(0);
+      console.log(`\n  ${i + 1}. [${faq.importance.toUpperCase()}] [${faq.source}] (${conf}%)`);
+      console.log(`      Q: ${faq.question}`);
+      console.log(`      A: ${faq.suggestedAnswer.slice(0, 150)}${faq.suggestedAnswer.length > 150 ? '...' : ''}`);
+    });
+    
+    if (result.faqs.faqs.length > 10) {
+      console.log(`\n  ... and ${result.faqs.faqs.length - 10} more FAQs`);
+    }
+  }
+}
+
 // console.log('\n\n=== Standardized Audit Report ===');
 // const auditReport = exportAuditReport(result, {
 //   pretty: true,
@@ -158,4 +184,5 @@ if (result.entities) {
 //   includeRaw: false
 // });
 // console.log(auditReport);
+
 

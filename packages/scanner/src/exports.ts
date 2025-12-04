@@ -103,6 +103,17 @@ export type {
   EntityExtractionResult
 } from './llm/entities.js';
 
+// FAQ generation
+export {
+  generateFAQs,
+  generateFAQsQuick
+} from './llm/faq.js';
+
+export type {
+  FAQEntry,
+  FAQResult
+} from './llm/faq.js';
+
 // Types
 export type {
   Issue,

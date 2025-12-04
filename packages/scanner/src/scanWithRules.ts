@@ -10,6 +10,7 @@ import { generateLLMComprehension } from "./llm/comprehension.js";
 import { detectHallucinations, hallucinationTriggersToIssues } from "./llm/hallucination.js";
 import { generateAISummaries, generateLocalAISummary } from "./llm/summary.js";
 import { extractNamedEntities } from "./llm/entities.js";
+import { generateFAQs } from "./llm/faq.js";
 import "./rules/index.js";
 
 export async function analyzeUrlWithRules(url: string, opts?: ScanOptions): Promise<ScanResult> {
@@ -275,6 +276,29 @@ const fetched = await fetchHtml(url, options.timeoutMs!, options.userAgent);
     console.error('Entity extraction failed:', error);
   }
 
+  // FAQ generation (always enabled - uses heuristics, optionally enriched with LLM)
+  let faqs;
+  try {
+    const faqResult = await generateFAQs($, {
+      enableLLM: options.enableLLM && !!options.llmConfig,
+      llmConfig: options.llmConfig,
+      maxFAQs: 15 // Limit to top 15 FAQs
+    });
+    
+    faqs = {
+      faqs: faqResult.faqs.map(f => ({
+        question: f.question,
+        suggestedAnswer: f.suggestedAnswer,
+        importance: f.importance,
+        confidence: f.confidence,
+        source: f.source
+      })),
+      summary: faqResult.summary
+    };
+  } catch (error) {
+    console.error('FAQ generation failed:', error);
+  }
+
   return {
     url,
     timestamp: new Date().getTime(),
@@ -286,6 +310,7 @@ const fetched = await fetchHtml(url, options.timeoutMs!, options.userAgent);
     llm,
     hallucinationReport,
     aiSummary,
-    entities
+    entities,
+    faqs
   };
 }
