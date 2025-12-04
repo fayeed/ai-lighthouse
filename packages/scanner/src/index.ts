@@ -2,12 +2,22 @@ import { analyzeUrlWithRules } from './scanWithRules.js';
 import { generateScoringSummary, getLetterGrade } from './scoring.js';
 import { exportAuditReport } from './output-formatter.js';
 
+console.log('╔════════════════════════════════════════════════════════════════╗');
+console.log('║           AI Lighthouse Scanner - Simplified Output            ║');
+console.log('╚════════════════════════════════════════════════════════════════╝\n');
+
 const result = await analyzeUrlWithRules('https://github.com', { 
   maxChunkTokens: 1200,
   enableChunking: true,
   enableExtractability: true,
   enableHallucinationDetection: true,
   enableLLM: true,
+  
+  // Quality filters (reduce noise)
+  minImpactScore: 8,      // Only show issues with impact ≥ 8
+  minConfidence: 0.7,     // Only show issues with 70%+ confidence
+  maxIssues: 15,          // Limit to top 15 issues
+  
   llmConfig: {
     provider: 'ollama',
     baseUrl: 'http://localhost:11434',
@@ -15,9 +25,21 @@ const result = await analyzeUrlWithRules('https://github.com', {
   },
 });
 
-console.log('=== Legacy Output ===');
+console.log('=== Scan Summary ===');
 console.log('Issues:', result.issues.length);
 console.log('\n' + generateScoringSummary(result.scoring!));
+
+// Filter to show only high-impact issues (≥8 impact score)
+const highImpactIssues = result.issues.filter(i => i.impactScore >= 8);
+if (highImpactIssues.length > 0) {
+  console.log('\n📌 Top Priority Issues (Impact ≥ 8):');
+  highImpactIssues.slice(0, 10).forEach((issue, i) => {
+    console.log(`\n${i + 1}. [${issue.serverity.toUpperCase()}] ${issue.title}`);
+    console.log(`   Impact: ${issue.impactScore} | Confidence: ${((issue.confidence || 1) * 100).toFixed(0)}%`);
+    console.log(`   ${issue.description.slice(0, 120)}...`);
+    console.log(`   Fix: ${issue.remediation.slice(0, 120)}...`);
+  });
+}
 
 if (result.chunking) {
   console.log('\n\n=== Content Chunking ===');
@@ -36,183 +58,96 @@ if (result.extractability) {
 }
 
 if (result.llm) {
-  console.log('\n\n=== LLM Comprehension ===');
-  console.log('Summary:', result.llm.summary);
-  console.log('Key Topics:', result.llm.keyTopics?.join(', '));
-  console.log('Reading Level:', result.llm.readingLevel);
-  console.log('Sentiment:', result.llm.sentiment);
-  console.log('Technical Depth:', result.llm.technicalDepth);
-  console.log('Top Entities:');
-  result.llm.topEntities.forEach(entity => {
-    console.log(` - ${entity.name} (${entity.type}): ${(entity.relevance * 100).toFixed(1)}%`);
-  });
-  console.log('Generated Questions:');
-  result.llm.questions.forEach((q, i) => {
-    console.log(` ${i + 1}. [${q.difficulty}] ${q.question}`);
-  });
-  console.log('Suggested FAQ:');
-  result.llm.suggestedFAQ.forEach((faq, i) => {
-    console.log(` ${i + 1}. Q: ${faq.question}`);
-    console.log(`     A: ${faq.suggestedAnswer} (Importance: ${faq.importance})`);
-  });
+  console.log('\n\n=== AI Understanding Analysis ===');
+  console.log('📝 Summary:', result.llm.summary);
+  console.log('🏷️  Key Topics:', result.llm.keyTopics?.join(', '));
+  console.log('📊 Reading Level:', result.llm.readingLevel?.description);
+  console.log('🎭 Sentiment:', result.llm.sentiment);
+  console.log('🎯 Technical Depth:', result.llm.technicalDepth);
+  
+  if (result.llm.topEntities && result.llm.topEntities.length > 0) {
+    console.log('\n🔍 Key Entities:');
+    result.llm.topEntities.slice(0, 5).forEach(entity => {
+      console.log(`   • ${entity.name} (${entity.type}): ${(entity.relevance * 100).toFixed(0)}% relevance`);
+    });
+  }
+  
+  // Only show high-value questions (not obvious ones)
+  const valuableQuestions = result.llm.questions.filter(q => 
+    !q.question.toLowerCase().includes('what is') || q.difficulty !== 'basic'
+  );
+  if (valuableQuestions.length > 0) {
+    console.log('\n❓ Key Questions AI Can Answer:');
+    valuableQuestions.slice(0, 3).forEach((q, i) => {
+      console.log(`   ${i + 1}. [${q.difficulty}] ${q.question}`);
+    });
+  }
+  
+  // Only show high-importance FAQs
+  const importantFAQs = result.llm.suggestedFAQ.filter(f => f.importance === 'high');
+  if (importantFAQs.length > 0) {
+    console.log('\n💡 Suggested High-Priority FAQs:');
+    importantFAQs.slice(0, 3).forEach((faq, i) => {
+      console.log(`   ${i + 1}. Q: ${faq.question}`);
+      console.log(`      A: ${faq.suggestedAnswer.slice(0, 100)}...`);
+    });
+  }
 }
 
 if (result.hallucinationReport) {
-  console.log('\n\n=== Hallucination Detection ===');
-  console.log(`Risk Score: ${result.hallucinationReport.hallucinationRiskScore}/100`);
+  console.log('\n\n=== Hallucination Risk Assessment ===');
+  console.log(`⚠️  Risk Score: ${result.hallucinationReport.hallucinationRiskScore}/100`);
   
-  if (result.hallucinationReport.factCheckSummary.totalFacts > 0) {
-    console.log('\nFact Check Summary:');
-    console.log(` - Total Facts: ${result.hallucinationReport.factCheckSummary.totalFacts}`);
-    console.log(` - Verified: ${result.hallucinationReport.factCheckSummary.verifiedFacts}`);
-    console.log(` - Unverified: ${result.hallucinationReport.factCheckSummary.unverifiedFacts}`);
-    console.log(` - Contradictions: ${result.hallucinationReport.factCheckSummary.contradictions}`);
-  }
+  // Only show if there are actual concerns
+  const highSeverityTriggers = result.hallucinationReport.triggers.filter(
+    t => t.severity === 'high' || t.severity === 'critical'
+  );
   
-  if (result.hallucinationReport.triggers.length > 0) {
-    console.log(`\nTriggers Found: ${result.hallucinationReport.triggers.length}`);
-    result.hallucinationReport.triggers.slice(0, 5).forEach((trigger, i) => {
-      console.log(` ${i + 1}. [${trigger.severity}] ${trigger.type}`);
-      console.log(`     ${trigger.description}`);
-      console.log(`     Confidence: ${(trigger.confidence * 100).toFixed(0)}%`);
+  if (highSeverityTriggers.length > 0) {
+    console.log('\n🚨 High Priority Concerns:');
+    highSeverityTriggers.slice(0, 3).forEach((trigger, i) => {
+      console.log(`   ${i + 1}. [${trigger.type}] ${trigger.description}`);
+      console.log(`      Confidence: ${(trigger.confidence * 100).toFixed(0)}%`);
     });
-  }
-  
-  if (result.hallucinationReport.recommendations.length > 0) {
-    console.log('\nRecommendations:');
-    result.hallucinationReport.recommendations.forEach(rec => {
-      console.log(` - ${rec}`);
-    });
+  } else if (result.hallucinationReport.hallucinationRiskScore > 30) {
+    console.log('\n📋 Moderate risk detected');
+    if (result.hallucinationReport.recommendations.length > 0) {
+      console.log('   Recommendation:', result.hallucinationReport.recommendations[0]);
+    }
+  } else {
+    console.log('   ✅ Low risk - content is clear and verifiable');
   }
 }
 
-if (result.aiSummary) {
-  console.log('\n\n=== AI-Readable Summary ===');
-  console.log('📝 Short Summary:');
-  console.log(result.aiSummary.summaryShort);
-  console.log();
-  
-  console.log('📄 Long Summary:');
-  console.log(result.aiSummary.summaryLong);
-  console.log();
-  
-  console.log('🏷️  Suggested Title:', result.aiSummary.suggestedTitle);
-  console.log('📋 Suggested Meta:', result.aiSummary.suggestedMeta);
-  console.log('🔑 Keywords:', result.aiSummary.keywords.join(', '));
-  
-  if (result.aiSummary.readabilityScore !== undefined) {
-    console.log('📊 Readability:', result.aiSummary.readabilityScore + '/100');
-  }
-  
-  if (result.aiSummary.structureQuality) {
-    console.log('🏗️  Structure:', result.aiSummary.structureQuality);
-  }
-}
-
-if (result.entities) {
-  console.log('\n\n=== Named Entities ===');
-  console.log(`Total Entities: ${result.entities.summary.totalEntities}`);
-  
-  console.log('\nBy Type:');
-  for (const [type, count] of Object.entries(result.entities.summary.byType)) {
-    if (count > 0) {
-      console.log(`  ${type}: ${count}`);
-    }
-  }
-  
-  console.log('\nConfidence Distribution:');
-  console.log(`  High (≥80%): ${result.entities.summary.highConfidence}`);
-  console.log(`  Medium (50-80%): ${result.entities.summary.mediumConfidence}`);
-  console.log(`  Low (<50%): ${result.entities.summary.lowConfidence}`);
-  
-  if (result.entities.entities.length > 0) {
-    console.log('\nTop Entities (by confidence):');
-    result.entities.entities.slice(0, 15).forEach((entity, i) => {
-      const conf = (entity.confidence * 100).toFixed(0);
-      console.log(`  ${i + 1}. [${entity.type}] ${entity.name} (${conf}%)`);
-      if (entity.metadata?.source) {
-        console.log(`      Source: ${entity.metadata.source}`);
-      }
-      if (entity.metadata?.context) {
-        console.log(`      Context: ${entity.metadata.context}`);
-      }
-    });
-    
-    if (result.entities.entities.length > 15) {
-      console.log(`  ... and ${result.entities.entities.length - 15} more entities`);
-    }
-  }
-  
-  if (result.entities.schemaMapping && Object.keys(result.entities.schemaMapping).length > 0) {
-    console.log('\nSchema.org Mappings:');
-    for (const [field, entities] of Object.entries(result.entities.schemaMapping)) {
-      console.log(`  ${field}: ${entities.length} entity(ies)`);
-    }
-  }
-}
-
-if (result.faqs) {
-  console.log('\n\n=== Suggested FAQs ===');
-  console.log(`Total FAQs: ${result.faqs.summary.totalFAQs}`);
-  
-  console.log('\nBy Importance:');
-  console.log(`  High: ${result.faqs.summary.byImportance.high}`);
-  console.log(`  Medium: ${result.faqs.summary.byImportance.medium}`);
-  console.log(`  Low: ${result.faqs.summary.byImportance.low}`);
-  
-  console.log(`\nAverage Confidence: ${(result.faqs.summary.averageConfidence * 100).toFixed(0)}%`);
-  
-  if (result.faqs.faqs.length > 0) {
-    console.log('\nTop FAQs:');
-    result.faqs.faqs.slice(0, 10).forEach((faq, i) => {
-      const conf = (faq.confidence * 100).toFixed(0);
-      console.log(`\n  ${i + 1}. [${faq.importance.toUpperCase()}] [${faq.source}] (${conf}%)`);
-      console.log(`      Q: ${faq.question}`);
-      console.log(`      A: ${faq.suggestedAnswer.slice(0, 150)}${faq.suggestedAnswer.length > 150 ? '...' : ''}`);
-    });
-    
-    if (result.faqs.faqs.length > 10) {
-      console.log(`\n  ... and ${result.faqs.faqs.length - 10} more FAQs`);
-    }
-  }
-}
+// REMOVED: AI-Readable Summary section (redundant with LLM Understanding)
+// REMOVED: Named Entities section (consolidated into LLM Understanding)
+// REMOVED: Suggested FAQs section (consolidated into LLM Understanding)
 
 if (result.mirrorReport) {
-  console.log('\n\n=== LLM Mirror Test (AI Misunderstandings) ===');
-  console.log(`Alignment Score: ${result.mirrorReport.summary.alignmentScore}/100`);
-  console.log(`Clarity Score: ${result.mirrorReport.summary.clarityScore}/100`);
-  console.log(`Mismatches: ${result.mirrorReport.summary.totalMismatches} (${result.mirrorReport.summary.critical} critical, ${result.mirrorReport.summary.major} major, ${result.mirrorReport.summary.minor} minor)`);
+  console.log('\n\n=== AI Misunderstanding Check ===');
+  console.log(`🎯 Alignment Score: ${result.mirrorReport.summary.alignmentScore}/100`);
+  console.log(`📖 Clarity Score: ${result.mirrorReport.summary.clarityScore}/100`);
   
-  if (result.mirrorReport.mismatches.length > 0) {
-    console.log('\nMismatches Found:');
-    result.mirrorReport.mismatches.forEach((mismatch, i) => {
-      const icon = mismatch.severity === 'critical' ? '🔴' : mismatch.severity === 'major' ? '🟡' : '🔵';
-      const conf = (mismatch.confidence * 100).toFixed(0);
-      console.log(`\n  ${i + 1}. ${icon} ${mismatch.severity.toUpperCase()} (${conf}%)`);
-      console.log(`      Field: ${mismatch.field}`);
-      console.log(`      Intended: "${mismatch.intended}"`);
-      console.log(`      AI Sees: "${mismatch.interpreted}"`);
-      console.log(`      Issue: ${mismatch.description}`);
-      console.log(`      Fix: ${mismatch.recommendation}`);
+  // Only show if there are actual issues
+  if (result.mirrorReport.summary.critical > 0 || result.mirrorReport.summary.major > 0) {
+    console.log(`\n⚠️  ${result.mirrorReport.summary.critical + result.mirrorReport.summary.major} Priority Mismatches Found`);
+    
+    const priorityMismatches = result.mirrorReport.mismatches.filter(
+      m => m.severity === 'critical' || m.severity === 'major'
+    );
+    
+    priorityMismatches.slice(0, 3).forEach((mismatch, i) => {
+      const icon = mismatch.severity === 'critical' ? '🔴' : '🟡';
+      console.log(`\n   ${icon} ${mismatch.field}: ${mismatch.description}`);
+      console.log(`      Fix: ${mismatch.recommendation.slice(0, 120)}...`);
     });
+    
+    if (result.mirrorReport.recommendations.length > 0) {
+      console.log('\n   💡 Top Recommendation:', result.mirrorReport.recommendations[0]);
+    }
   } else {
-    console.log('\n✅ No mismatches! AI correctly understands your messaging.');
+    console.log('   ✅ No critical misunderstandings - AI correctly interprets your messaging');
   }
-  
-  if (result.mirrorReport.recommendations.length > 0) {
-    console.log('\nTop Recommendations:');
-    result.mirrorReport.recommendations.slice(0, 5).forEach((rec, i) => {
-      console.log(`  ${i + 1}. ${rec}`);
-    });
-  }
-  
-  console.log('\nLLM Interpretation:');
-  const interp = result.mirrorReport.llmInterpretation;
-  if (interp.productName) console.log(`  Product: ${interp.productName}`);
-  if (interp.purpose) console.log(`  Purpose: ${interp.purpose}`);
-  if (interp.targetAudience) console.log(`  Audience: ${interp.targetAudience}`);
-  if (interp.pricing) console.log(`  Pricing: ${interp.pricing}`);
-  console.log(`  Confidence: ${(interp.confidence * 100).toFixed(0)}%`);
 }
 
 // console.log('\n\n=== Standardized Audit Report ===');

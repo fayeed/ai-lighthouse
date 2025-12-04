@@ -222,7 +222,7 @@ IMPORTANT:
 
   try {
     const response = await runner.callWithSystem(
-      'You are an expert at analyzing web content and understanding product messaging. Be precise and only report what you can verify from the content.',
+      'You are an expert at analyzing web content and understanding product messaging. Be precise and only report what you can verify from the content. Return ONLY valid JSON with no markdown formatting.',
       prompt,
       {
         maxTokens: 1000,
@@ -230,7 +230,14 @@ IMPORTANT:
       }
     );
     
-    const interpretation = JSON.parse(response.content);
+    // Clean response - remove markdown code blocks if present
+    let cleanContent = response.content.trim();
+    if (cleanContent.startsWith('```')) {
+      // Remove markdown code fences
+      cleanContent = cleanContent.replace(/^```(?:json)?\s*\n?/,'').replace(/\n?```\s*$/,'').trim();
+    }
+    
+    const interpretation = JSON.parse(cleanContent);
     
     return {
       productName: interpretation.productName || undefined,

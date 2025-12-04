@@ -1,5 +1,9 @@
 // Main exports for the scanner package
 
+// Configuration
+export { DEFAULT_CONFIG, STRICT_CONFIG, VERBOSE_CONFIG } from './config.js';
+export type { ScannerConfig } from './config.js';
+
 // Core scanning functionality
 export { analyzeUrlWithRules } from './scanWithRules.js';
 

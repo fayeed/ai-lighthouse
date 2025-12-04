@@ -56,6 +56,12 @@ export interface ScanOptions {
   enableExtractability?: boolean; // Enable extractability mapping
   enableLLM?: boolean; // Enable LLM comprehension analysis
   enableHallucinationDetection?: boolean; // Enable hallucination trigger detection
+  
+  // Filtering options to reduce noise
+  minImpactScore?: number; // Minimum impact score to include (default: 8)
+  minConfidence?: number; // Minimum confidence to include (default: 0.7)
+  maxIssues?: number; // Maximum issues to return (default: 20)
+  
   llmConfig?: {
     provider: 'openai' | 'anthropic' | 'ollama' | 'local';
     apiKey?: string;

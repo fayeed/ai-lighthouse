@@ -340,12 +340,26 @@ const fetched = await fetchHtml(url, options.timeoutMs!, options.userAgent);
     }
   }
 
+  // Filter issues based on quality thresholds (reduce noise)
+  const minImpact = options.minImpactScore ?? 8;
+  const minConf = options.minConfidence ?? 0.7;
+  const maxCount = options.maxIssues ?? 20;
+  
+  const filteredIssues = issues
+    .filter(issue => issue.impactScore >= minImpact)
+    .filter(issue => (issue.confidence ?? 1.0) >= minConf)
+    .sort((a, b) => b.impactScore - a.impactScore) // Sort by impact
+    .slice(0, maxCount); // Limit count
+
+  // Recalculate scoring with filtered issues
+  const filteredScoring = calculateScore(filteredIssues);
+
   return {
     url,
     timestamp: new Date().getTime(),
-    issues,
+    issues: filteredIssues, // Return filtered issues
     scores,
-    scoring,
+    scoring: filteredScoring, // Use filtered scoring
     chunking,
     extractability,
     llm,
