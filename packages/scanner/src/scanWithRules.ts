@@ -8,7 +8,6 @@ import { chunkContent } from "./chunker.js";
 import { buildExtractabilityMap, analyzeContentTypeExtractability } from "./extractability.js";
 import { generateLLMComprehension } from "./llm/comprehension.js";
 import { detectHallucinations, hallucinationTriggersToIssues } from "./llm/hallucination.js";
-import { generateAISummaries, generateLocalAISummary } from "./llm/summary.js";
 import { extractNamedEntities } from "./llm/entities.js";
 import { generateFAQs } from "./llm/faq.js";
 import { runMirrorTest } from "./llm/mirror.js";
@@ -204,100 +203,55 @@ const fetched = await fetchHtml(url, options.timeoutMs!, options.userAgent);
     }
   }
 
-  // AI-readable summaries (always enabled - uses local heuristics if no LLM)
-  let aiSummary;
-  try {
-    if (options.enableLLM && options.llmConfig) {
-      // Generate with LLM for best quality
-      const summary = await generateAISummaries($, url, {
-        provider: options.llmConfig.provider,
-        apiKey: options.llmConfig.apiKey,
-        baseUrl: options.llmConfig.baseUrl,
-        model: options.llmConfig.model
+  // Named entity extraction (uses dedicated entity extractor)
+  let entities;
+  if (options.enableLLM && options.llmConfig) {
+    try {
+      const entityResult = await extractNamedEntities($, {
+        enableLLM: true,
+        llmConfig: options.llmConfig,
+        minConfidence: 0.5
       });
       
-      aiSummary = {
-        summaryShort: summary.summaryShort,
-        summaryLong: summary.summaryLong,
-        suggestedTitle: summary.suggestedTitle,
-        suggestedMeta: summary.suggestedMeta,
-        keywords: summary.keywords,
-        readabilityScore: summary.readabilityScore,
-        structureQuality: summary.structureQuality
+      entities = {
+        entities: entityResult.entities.map(e => ({
+          name: e.name,
+          type: e.type,
+          confidence: e.confidence,
+          locator: e.locator,
+          metadata: e.metadata
+        })),
+        summary: entityResult.summary,
+        schemaMapping: entityResult.schemaMapping
       };
-    } else {
-      // Use local heuristic-based summaries
-      const localSummary = generateLocalAISummary($);
-      aiSummary = {
-        summaryShort: localSummary.summaryShort || '',
-        summaryLong: localSummary.summaryLong || '',
-        suggestedTitle: localSummary.suggestedTitle || '',
-        suggestedMeta: localSummary.suggestedMeta || '',
-        keywords: localSummary.keywords || [],
-        readabilityScore: localSummary.readabilityScore,
-        structureQuality: localSummary.structureQuality
-      };
+    } catch (error) {
+      console.error('Entity extraction failed:', error);
     }
-  } catch (error) {
-    console.error('AI summary generation failed:', error);
-    // Fallback to local
-    const localSummary = generateLocalAISummary($);
-    aiSummary = {
-      summaryShort: localSummary.summaryShort || '',
-      summaryLong: localSummary.summaryLong || '',
-      suggestedTitle: localSummary.suggestedTitle || '',
-      suggestedMeta: localSummary.suggestedMeta || '',
-      keywords: localSummary.keywords || [],
-      readabilityScore: localSummary.readabilityScore,
-      structureQuality: localSummary.structureQuality
-    };
   }
 
-  // Named entity extraction (always enabled - uses regex, optionally enriched with LLM)
-  let entities;
-  try {
-    const entityResult = await extractNamedEntities($, {
-      enableLLM: options.enableLLM && !!options.llmConfig,
-      llmConfig: options.llmConfig,
-      minConfidence: 0.5 // Filter low-confidence entities
-    });
-    
-    entities = {
-      entities: entityResult.entities.map(e => ({
-        name: e.name,
-        type: e.type,
-        confidence: e.confidence,
-        locator: e.locator,
-        metadata: e.metadata
-      })),
-      summary: entityResult.summary,
-      schemaMapping: entityResult.schemaMapping
-    };
-  } catch (error) {
-    console.error('Entity extraction failed:', error);
-  }
-
-  // FAQ generation (always enabled - uses heuristics, optionally enriched with LLM)
+  // FAQ generation (uses dedicated FAQ generator)
   let faqs;
-  try {
-    const faqResult = await generateFAQs($, {
-      enableLLM: options.enableLLM && !!options.llmConfig,
-      llmConfig: options.llmConfig,
-      maxFAQs: 15 // Limit to top 15 FAQs
-    });
-    
-    faqs = {
-      faqs: faqResult.faqs.map(f => ({
-        question: f.question,
-        suggestedAnswer: f.suggestedAnswer,
-        importance: f.importance,
-        confidence: f.confidence,
-        source: f.source
-      })),
-      summary: faqResult.summary
-    };
-  } catch (error) {
-    console.error('FAQ generation failed:', error);
+  if (options.enableLLM && options.llmConfig) {
+    try {
+      const faqResult = await generateFAQs($, {
+        enableLLM: true,
+        llmConfig: options.llmConfig,
+        maxFAQs: 15
+      });
+      
+      faqs = {
+        faqs: faqResult.faqs.map(f => ({
+          question: f.question,
+          suggestedAnswer: f.suggestedAnswer,
+          importance: f.importance,
+          confidence: f.confidence,
+          source: f.source
+        })),
+        summary: faqResult.summary
+      };
+    } catch (error) {
+      console.error('FAQ generation failed:', error);
+    }
   }
 
   // LLM Mirror Test (requires LLM)
@@ -362,11 +316,10 @@ const fetched = await fetchHtml(url, options.timeoutMs!, options.userAgent);
     scoring: filteredScoring, // Use filtered scoring
     chunking,
     extractability,
-    llm,
+    llm, // High-level comprehension analysis
     hallucinationReport,
-    aiSummary,
-    entities,
-    faqs,
+    entities, // Detailed entity extraction with metadata
+    faqs, // Detailed FAQ generation with sources
     mirrorReport
   };
 }

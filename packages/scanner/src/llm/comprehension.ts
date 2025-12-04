@@ -1,16 +1,18 @@
 /**
  * LLM Comprehension - Generate AI-readable summaries and insights
+ * 
+ * ARCHITECTURE NOTE:
+ * This module provides quick high-level overview in 2 LLM calls.
+ * For detailed extraction with confidence scores, locators, and metadata:
+ * - Use entities.ts for comprehensive entity extraction
+ * - Use faq.ts for comprehensive FAQ generation
+ * 
+ * This keeps comprehension fast and focused on understanding the content,
+ * while dedicated modules provide detailed structured data.
  */
 
 import { CheerioAPI } from 'cheerio';
 import { LLMRunner, LLMConfig } from './runner.js';
-
-export interface Entity {
-  name: string;
-  type: string;
-  relevance: number; // 0-1
-  mentions?: number;
-}
 
 export interface Question {
   question: string;
@@ -18,17 +20,19 @@ export interface Question {
   difficulty: 'basic' | 'intermediate' | 'advanced';
 }
 
-export interface FAQItem {
-  question: string;
-  suggestedAnswer: string;
-  importance: 'high' | 'medium' | 'low';
-}
-
 export interface LLMComprehension {
   summary: string;
-  topEntities: Entity[];
+  topEntities: Array<{  // Quick overview - use entities.ts for detailed extraction
+    name: string;
+    type: string;
+    relevance: number;
+  }>;
   questions: Question[];
-  suggestedFAQ: FAQItem[];
+  suggestedFAQ: Array<{  // Quick overview - use faq.ts for detailed generation
+    question: string;
+    suggestedAnswer: string;
+    importance: 'high' | 'medium' | 'low';
+  }>;
   readingLevel: {
     grade: number;
     description: string;
@@ -112,64 +116,27 @@ Focus on entities that are central to understanding the content. Limit to top 5-
  * Generate questions prompt
  */
 function getQuestionsPrompt(content: string, summary: string): { system: string; user: string } {
-  const system = `You are an expert at generating insightful questions about content to help AI agents understand what information users might seek.
+  const system = `You are an expert at understanding content and identifying what questions users might have.
+Focus on questions that help understand the main purpose and value of the content.`;
 
-Generate questions that:
-1. Cover different aspects of the content
-2. Range from basic to advanced understanding
-3. Help identify gaps in the content
-4. Would be useful for FAQ generation`;
-
-  const user = `Based on this content summary and full text, generate questions that users might ask:
+  const user = `Based on this content, identify key questions users would ask:
 
 Summary: ${summary}
 
-Content: ${content.substring(0, 3000)}...
+Content: ${content.substring(0, 2000)}...
 
 Provide your response in JSON format:
 {
   "questions": [
     {"question": "What is...", "category": "what", "difficulty": "basic"},
-    {"question": "How does...", "category": "how", "difficulty": "intermediate"},
-  ]
-}
-
-Generate 5-8 diverse questions covering what, why, how, when, where, who.`;
-
-  return { system, user };
-}
-
-/**
- * Generate FAQ prompt
- */
-function getFAQPrompt(content: string, questions: Question[]): { system: string; user: string } {
-  const system = `You are an expert at creating helpful FAQ sections for websites.
-Generate FAQ items that:
-1. Address common user questions
-2. Provide clear, concise answers
-3. Are directly answerable from the content
-4. Help improve content discoverability`;
-
-  const user = `Based on the content and these potential questions, generate 3-5 FAQ items:
-
-Questions to consider:
-${questions.map(q => `- ${q.question}`).join('\n')}
-
-Content:
-${content.substring(0, 3000)}...
-
-Provide your response in JSON format:
-{
+    {"question": "How does...", "category": "how", "difficulty": "intermediate"}
+  ],
   "suggestedFAQ": [
-    {
-      "question": "Frequently asked question?",
-      "suggestedAnswer": "Clear, concise answer based on content",
-      "importance": "high|medium|low"
-    }
+    {"question": "Common question?", "suggestedAnswer": "Brief answer", "importance": "high"}
   ]
 }
 
-Only include FAQs that can be answered from the provided content.`;
+Generate 3-5 questions and 2-3 FAQ items.`;
 
   return { system, user };
 }
@@ -195,6 +162,7 @@ function parseLLMJSON<T>(content: string): T | null {
 
 /**
  * Generate LLM comprehension analysis
+ * Provides high-level overview - use dedicated extractors for detailed entity/FAQ extraction
  */
 export async function generateLLMComprehension(
   $: CheerioAPI,
@@ -204,18 +172,18 @@ export async function generateLLMComprehension(
   const runner = new LLMRunner(config);
   const content = extractTextContent($);
 
-  // Step 1: Generate summary and extract entities
+  // Single LLM call for efficiency
   const summaryPrompt = getSummaryPrompt(content, url);
   const summaryResponse = await runner.callWithSystem(
     summaryPrompt.system,
     summaryPrompt.user,
-    { temperature: 0.3 } // Lower temperature for more consistent output
+    { temperature: 0.3 }
   );
 
   const summaryData = parseLLMJSON<{
     summary: string;
     keyTopics: string[];
-    topEntities: Entity[];
+    topEntities: Array<{ name: string; type: string; relevance: number }>;
     readingLevel: { grade: number; description: string };
     technicalDepth: 'beginner' | 'intermediate' | 'advanced' | 'expert';
     sentiment: 'positive' | 'neutral' | 'negative';
@@ -225,7 +193,7 @@ export async function generateLLMComprehension(
     throw new Error('Failed to parse summary response from LLM');
   }
 
-  // Step 2: Generate questions
+  // Single call for questions and quick FAQs
   const questionsPrompt = getQuestionsPrompt(content, summaryData.summary);
   const questionsResponse = await runner.callWithSystem(
     questionsPrompt.system,
@@ -233,25 +201,16 @@ export async function generateLLMComprehension(
     { temperature: 0.5 }
   );
 
-  const questionsData = parseLLMJSON<{ questions: Question[] }>(questionsResponse.content);
-  const questions = questionsData?.questions || [];
-
-  // Step 3: Generate FAQ suggestions
-  const faqPrompt = getFAQPrompt(content, questions);
-  const faqResponse = await runner.callWithSystem(
-    faqPrompt.system,
-    faqPrompt.user,
-    { temperature: 0.4 }
-  );
-
-  const faqData = parseLLMJSON<{ suggestedFAQ: FAQItem[] }>(faqResponse.content);
-  const suggestedFAQ = faqData?.suggestedFAQ || [];
+  const questionsData = parseLLMJSON<{
+    questions: Question[];
+    suggestedFAQ: Array<{ question: string; suggestedAnswer: string; importance: 'high' | 'medium' | 'low' }>;
+  }>(questionsResponse.content);
 
   return {
     summary: summaryData.summary,
-    topEntities: summaryData.topEntities,
-    questions,
-    suggestedFAQ,
+    topEntities: summaryData.topEntities || [],
+    questions: questionsData?.questions || [],
+    suggestedFAQ: questionsData?.suggestedFAQ || [],
     readingLevel: summaryData.readingLevel,
     keyTopics: summaryData.keyTopics,
     sentiment: summaryData.sentiment,

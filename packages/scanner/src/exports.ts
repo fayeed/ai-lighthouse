@@ -53,9 +53,7 @@ export {
 } from './llm/comprehension.js';
 
 export type {
-  Entity,
   Question,
-  FAQItem,
   LLMComprehension
 } from './llm/comprehension.js';
 
@@ -85,6 +83,8 @@ export type {
 } from './llm/hallucination.js';
 
 // AI-readable summaries
+// Note: These are redundant with LLM comprehension (llm.summary, llm.keyTopics, etc.)
+// Kept for backward compatibility but consider using generateLLMComprehension instead
 export {
   generateAISummaries,
   generateQuickAISummary,
@@ -95,7 +95,7 @@ export type {
   AISummary
 } from './llm/summary.js';
 
-// Named entity extraction
+// Named entity extraction (dedicated, detailed)
 export {
   extractNamedEntities,
   extractEntitiesQuick
@@ -107,7 +107,7 @@ export type {
   EntityExtractionResult
 } from './llm/entities.js';
 
-// FAQ generation
+// FAQ generation (dedicated, detailed)
 export {
   generateFAQs,
   generateFAQsQuick
