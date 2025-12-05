@@ -1,6 +1,11 @@
 /**
  * Scanner Configuration
  * Controls which checks run and filtering thresholds
+ * 
+ * RULE REDUCTION UPDATE:
+ * Reduced from 127 → 36 rules (72% reduction)
+ * Removed low-value rules (impact <8, confidence <0.6, edge cases)
+ * Focus on high-quality, actionable insights for AI comprehension
  */
 
 export interface ScannerConfig {
@@ -15,21 +20,21 @@ export interface ScannerConfig {
   
   // Rule categories to enable/disable
   rules: {
-    airead: boolean;      // AI readability checks
-    extract: boolean;     // Content extraction
-    chunk: boolean;       // Chunking analysis
-    crawl: boolean;       // Crawlability
-    tech: boolean;        // Technical SEO
-    kg: boolean;          // Knowledge graph / schema.org
-    a11y: boolean;        // Accessibility
-    hall: boolean;        // Hallucination detection
+    airead: boolean;      // Core AI readability (9 rules: H1, content quality, meta, alt text)
+    extract: boolean;     // Content extraction (1 rule)
+    chunk: boolean;       // Chunking analysis (1 rule)
+    crawl: boolean;       // Crawlability (7 rules: robots, status, canonical, H1 duplicates)
+    tech: boolean;        // Technical SEO (deprecated - merged into other categories)
+    kg: boolean;          // Knowledge graph (5 rules: JSON-LD, schema.org validation)
+    a11y: boolean;        // Accessibility (1 rule: ARIA landmarks for structure)
+    hall: boolean;        // Hallucination detection (via LLM)
   };
   
   // LLM feature toggles
   llm: {
-    comprehension: boolean;    // LLM summary and entity extraction
-    entities: boolean;          // Named entity extraction
-    faqs: boolean;              // FAQ generation
+    comprehension: boolean;    // LLM summary (2 calls, fast overview)
+    entities: boolean;          // Named entity extraction (detailed with confidence)
+    faqs: boolean;              // FAQ generation (detailed with sources)
     mirrorTest: boolean;        // AI misunderstanding detection
     hallucination: boolean;     // Hallucination risk analysis
   };
