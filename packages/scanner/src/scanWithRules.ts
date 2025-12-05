@@ -147,7 +147,8 @@ const fetched = await fetchHtml(url, options.timeoutMs!, options.userAgent);
         readingLevel: comprehension.readingLevel,
         keyTopics: comprehension.keyTopics,
         sentiment: comprehension.sentiment,
-        technicalDepth: comprehension.technicalDepth
+        technicalDepth: comprehension.technicalDepth,
+        structureQuality: comprehension.structureQuality
       };
     } catch (error) {
       console.error('LLM comprehension failed:', error);

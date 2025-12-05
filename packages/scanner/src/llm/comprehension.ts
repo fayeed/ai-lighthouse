@@ -40,6 +40,7 @@ export interface LLMComprehension {
   keyTopics: string[];
   sentiment?: 'positive' | 'neutral' | 'negative';
   technicalDepth?: 'beginner' | 'intermediate' | 'advanced' | 'expert';
+  structureQuality?: 'poor' | 'fair' | 'good' | 'excellent';
 }
 
 /**
@@ -104,7 +105,8 @@ Provide your analysis in the following JSON format:
   ],
   "readingLevel": {"grade": 10, "description": "High school level"},
   "technicalDepth": "beginner|intermediate|advanced|expert",
-  "sentiment": "positive|neutral|negative"
+  "sentiment": "positive|neutral|negative",
+  "structureQuality": "good"
 }
 
 Focus on entities that are central to understanding the content. Limit to top 5-7 entities.`;
@@ -187,6 +189,7 @@ export async function generateLLMComprehension(
     readingLevel: { grade: number; description: string };
     technicalDepth: 'beginner' | 'intermediate' | 'advanced' | 'expert';
     sentiment: 'positive' | 'neutral' | 'negative';
+    structureQuality: 'poor' | 'fair' | 'good' | 'excellent';
   }>(summaryResponse.content);
 
   if (!summaryData) {

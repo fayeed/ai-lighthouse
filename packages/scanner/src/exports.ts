@@ -7,7 +7,18 @@ export type { ScannerConfig } from './config.js';
 // Core scanning functionality
 export { analyzeUrlWithRules } from './scanWithRules.js';
 
-// Scoring utilities
+// AI Readiness Assessment (NEW - Primary way to understand AI optimization)
+export { 
+  calculateAIReadiness, 
+  formatAIReadinessReport 
+} from './ai-readiness-score.js';
+
+export type {
+  AIReadinessScore,
+  DimensionScore
+} from './ai-readiness-score.js';
+
+// Scoring utilities (Traditional technical scoring)
 export { 
   calculateScore, 
   getLetterGrade, 

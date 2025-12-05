@@ -1,9 +1,10 @@
 import { analyzeUrlWithRules } from './scanWithRules.js';
 import { generateScoringSummary, getLetterGrade } from './scoring.js';
 import { exportAuditReport } from './output-formatter.js';
+import { calculateAIReadiness, formatAIReadinessReport } from './ai-readiness-score.js';
 
 console.log('╔════════════════════════════════════════════════════════════════╗');
-console.log('║           AI Lighthouse Scanner - Simplified Output            ║');
+console.log('║           AI Lighthouse Scanner - AI Readiness Report          ║');
 console.log('╚════════════════════════════════════════════════════════════════╝\n');
 
 const result = await analyzeUrlWithRules('https://github.com', { 
@@ -25,9 +26,16 @@ const result = await analyzeUrlWithRules('https://github.com', {
   },
 });
 
-console.log('=== Scan Summary ===');
-console.log('Issues:', result.issues.length);
-console.log('\n' + generateScoringSummary(result.scoring!));
+// Calculate and display AI Readiness Assessment
+const aiReadiness = calculateAIReadiness(result);
+console.log(formatAIReadinessReport(aiReadiness));
+
+console.log('\n\n╔════════════════════════════════════════════════════════════════╗');
+console.log('║                     TECHNICAL DETAILS                          ║');
+console.log('╚════════════════════════════════════════════════════════════════╝');
+
+console.log('\n=== Traditional Scoring ===');
+console.log(generateScoringSummary(result.scoring!));
 
 // Filter to show only high-impact issues (≥8 impact score)
 const highImpactIssues = result.issues.filter(i => i.impactScore >= 8);

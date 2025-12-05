@@ -184,6 +184,7 @@ export interface ScanResult {
     keyTopics?: string[];
     sentiment?: 'positive' | 'neutral' | 'negative';
     technicalDepth?: 'beginner' | 'intermediate' | 'advanced' | 'expert';
+    structureQuality?: 'poor' | 'fair' | 'good' | 'excellent';
   };
   hallucinationReport?: {
     hallucinationRiskScore: number; // 0-100
