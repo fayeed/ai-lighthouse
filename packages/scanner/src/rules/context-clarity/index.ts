@@ -1,9 +1,2 @@
 export { MissingBreadcrumbsRule } from './missing-breadcrumbs.js';
-export { MissingStructuredNavigationRule } from './missing-structured-navigation.js';
-export { MissingSearchFunctionalityRule } from './missing-search-functionality.js';
-export { AmbiguousCtaRule } from './ambiguous-cta.js';
-export { LowTextContrastRule } from './low-text-contrast.js';
-export { MissingPrimaryLanguageRule } from './missing-primary-language.js';
 export { MissingPageTitleRule } from './missing-page-title.js';
-export { GenericPageTitleRule } from './generic-page-title.js';
-export { MissingHeadingStructureRule } from './missing-heading-structure.js';
