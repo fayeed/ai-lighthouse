@@ -1,14 +1,161 @@
-# Turborepo starter
+# 🚨 AI Lighthouse
 
-This Turborepo starter is maintained by the Turborepo core team.
+**SEO and AI Readability Audits** - A comprehensive toolkit for auditing websites for AI readiness, SEO optimization, and content quality.
 
-## Using this example
+## 📦 Packages
 
-Run the following command:
+This monorepo contains:
 
-```sh
-npx create-turbo@latest
+- **`packages/scanner`** - Core scanning engine with 50+ rules for detecting AI readiness issues
+- **`apps/cli`** - Command-line interface for running audits and generating reports
+
+## 🚀 Quick Start
+
+### Installation
+
+```bash
+pnpm install
 ```
+
+### CLI Usage
+
+```bash
+# Audit a single page
+cd apps/cli
+pnpm dev audit https://example.com --output html
+
+# Crawl multiple pages
+pnpm dev crawl https://example.com --depth 2 --sitemap
+
+# Generate report from saved results
+pnpm dev report ./.ai-lighthouse/last_run.json --open
+```
+
+## 🎯 Features
+
+### Scanning Engine (`packages/scanner`)
+
+- **50+ Built-in Rules** covering:
+  - AI Readiness & Comprehension
+  - Content Clarity & Quality
+  - Extractability & Chunking
+  - Knowledge Graph & Schema.org
+  - SEO & Crawlability
+  - Accessibility (A11y)
+  - Security & Performance
+
+- **LLM Integration:**
+  - Support for OpenAI, Anthropic, Ollama, and local models
+  - Hallucination detection
+  - Content comprehension analysis
+  - Entity extraction
+  - FAQ generation
+
+- **Advanced Analysis:**
+  - Content chunking with token optimization
+  - Extractability mapping
+  - AI readiness scoring
+  - Traditional SEO scoring
+
+### CLI (`apps/cli`)
+
+Three powerful commands:
+
+1. **`audit`** - Audit a single webpage
+2. **`crawl`** - Crawl and audit multiple pages
+3. **`report`** - Generate and view reports
+
+**Output Formats:**
+- JSON (CI/CD friendly)
+- HTML (beautiful visualizations)
+- LHR (Lighthouse-compatible)
+- CSV (spreadsheet analysis)
+
+## 📖 Documentation
+
+- [`packages/scanner/README.md`](packages/scanner/README.md) - Scanner API documentation
+- [`apps/cli/README.md`](apps/cli/README.md) - CLI documentation
+- [`apps/cli/EXAMPLES.md`](apps/cli/EXAMPLES.md) - Usage examples
+- [`apps/cli/IMPLEMENTATION.md`](apps/cli/IMPLEMENTATION.md) - Implementation details
+
+## 💻 Development
+
+```bash
+# Install dependencies
+pnpm install
+
+# Run scanner tests
+cd packages/scanner
+pnpm dev
+
+# Use the CLI
+cd apps/cli
+pnpm dev audit https://example.com
+```
+
+## 🏗️ Architecture
+
+```
+ai-lighthouse/
+├── packages/
+│   ├── scanner/          # Core scanning engine
+│   │   ├── src/
+│   │   │   ├── rules/    # 50+ detection rules
+│   │   │   ├── llm/      # LLM integration
+│   │   │   └── ...       # Core functionality
+│   └── utils/            # Shared utilities
+└── apps/
+    └── cli/              # Command-line interface
+        ├── src/
+        │   └── commands/ # CLI commands
+        └── bin/          # Executable entry
+```
+
+## 🎨 Example Output
+
+### AI Readiness Score
+```
+╔════════════════════════════════════════════════════════════════╗
+║           AI Readiness Assessment for example.com              ║
+╚════════════════════════════════════════════════════════════════╝
+
+📊 Overall AI Readiness: 87/100 (B+)
+
+🔍 Extractability    : 92/100 ⭐⭐⭐⭐⭐
+📝 Clarity          : 85/100 ⭐⭐⭐⭐
+🧩 Chunkability     : 88/100 ⭐⭐⭐⭐
+🎯 Context          : 84/100 ⭐⭐⭐⭐
+```
+
+### HTML Report
+
+Beautiful, interactive reports with:
+- Color-coded severity levels
+- Score visualizations
+- Detailed issue breakdowns
+- Entity detection display
+- Actionable remediation steps
+
+## 🛠️ CI/CD Integration
+
+```yaml
+# GitHub Actions example
+- name: Audit Website
+  run: |
+    cd apps/cli
+    pnpm dev audit ${{ secrets.SITE_URL }} --threshold 80 --output json
+```
+
+Exit code 1 if score is below threshold - perfect for automated quality gates!
+
+## 📝 License
+
+MIT
+
+## 🤝 Contributing
+
+Contributions welcome! Please see individual package READMEs for specific contribution guidelines.
+
 
 ## What's inside?
 

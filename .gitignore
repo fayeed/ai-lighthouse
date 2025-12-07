@@ -36,3 +36,11 @@ yarn-error.log*
 # Misc
 .DS_Store
 *.pem
+
+.ai-lighthouse/
+packages/scanner/src/**/*.js
+packages/scanner/src/**/*.js.map
+packages/scanner/src/**/*.d.ts
+packages/scanner/src/**/*.d.ts.map
+apps/cli/src/**/*.d.ts.map
+apps/cli/src/**/*.d.ts

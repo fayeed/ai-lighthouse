@@ -1,0 +1,37 @@
+{
+  "name": "@ai-lighthouse/cli",
+  "version": "1.0.0",
+  "description": "AI Lighthouse CLI - Audit websites for AI readiness",
+  "type": "module",
+  "bin": {
+    "ai-lighthouse": "./bin/cli.js"
+  },
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "build": "echo 'Build skipped - using tsx runtime'",
+    "check-types": "tsc --noEmit",
+    "cli": "node --loader tsx src/index.ts"
+  },
+  "keywords": [
+    "ai",
+    "lighthouse",
+    "audit",
+    "seo",
+    "accessibility",
+    "llm"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "scanner": "workspace:*",
+    "commander": "^12.1.0",
+    "chalk": "^5.3.0",
+    "ora": "^8.1.1",
+    "open": "^10.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.1",
+    "tsx": "^4.21.0",
+    "typescript": "5.9.2"
+  }
+}
