@@ -100,24 +100,184 @@ export default function AnalysisTab({ scanResult }: AnalysisTabProps) {
           <div className="text-4xl font-bold text-red-600 mb-4">
             Risk Score: {scanResult.hallucinationReport.hallucinationRiskScore}/100
           </div>
-          
-          {scanResult.hallucinationReport.facts && scanResult.hallucinationReport.facts.length > 0 && (
-            <div className="mb-4">
-              <strong className="text-gray-700">Verified Facts ({scanResult.hallucinationReport.facts.length}):</strong>
-              <div className="space-y-2 mt-3 max-h-60 overflow-y-auto">
-                {scanResult.hallucinationReport.facts.map((fact: any, idx: number) => (
-                  <div key={idx} className="bg-white p-3 rounded border-l-4 border-green-500">
-                    <div className="text-gray-900 text-sm">{fact.statement || fact}</div>
-                    {fact.confidence !== undefined && (
-                      <div className="text-xs text-gray-500 mt-1">
-                        Confidence: {Math.round(fact.confidence * 100)}%
-                      </div>
-                    )}
-                  </div>
-                ))}
+
+          {/* Fact Check Summary */}
+          {scanResult.hallucinationReport.factCheckSummary && (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+              <div className="bg-white p-3 rounded">
+                <div className="text-sm text-gray-600">Total Facts</div>
+                <div className="text-2xl font-bold text-gray-900">
+                  {scanResult.hallucinationReport.factCheckSummary.totalFacts}
+                </div>
+              </div>
+              <div className="bg-white p-3 rounded">
+                <div className="text-sm text-gray-600">Verified</div>
+                <div className="text-2xl font-bold text-green-600">
+                  {scanResult.hallucinationReport.factCheckSummary.verifiedFacts}
+                </div>
+              </div>
+              <div className="bg-white p-3 rounded">
+                <div className="text-sm text-gray-600">Unverified</div>
+                <div className="text-2xl font-bold text-orange-600">
+                  {scanResult.hallucinationReport.factCheckSummary.unverifiedFacts}
+                </div>
+              </div>
+              <div className="bg-white p-3 rounded">
+                <div className="text-sm text-gray-600">Contradictions</div>
+                <div className="text-2xl font-bold text-red-600">
+                  {scanResult.hallucinationReport.factCheckSummary.contradictions}
+                </div>
               </div>
             </div>
           )}
+
+          {/* All Extracted Facts */}
+          {scanResult.hallucinationReport.triggers && (() => {
+            // Find the consolidated fact trigger (contains all verifications)
+            const factTrigger = scanResult.hallucinationReport.verifications
+
+            console.log('Fact Trigger:', factTrigger);
+            
+            // Separate facts by verification status
+            // First, get contradicted facts (have contradictions array with items)
+            const contradictedFacts = factTrigger.filter(
+              (v: any) => v.contradictions && v.contradictions.length > 0
+            );
+            
+            // Then, get verified facts (verified=true AND no contradictions)
+            const verifiedFacts = factTrigger.filter(
+              (v: any) => v.verified && (!v.contradictions || v.contradictions.length === 0)
+            );
+            
+            // Finally, unverified facts (not verified AND no contradictions)
+            const unverifiedFacts = factTrigger.filter(
+              (v: any) => !v.verified && (!v.contradictions || v.contradictions.length === 0)
+            );
+            
+            console.log('📊 Fact counts - Verified:', verifiedFacts.length, 'Unverified:', unverifiedFacts.length, 'Contradicted:', contradictedFacts.length);
+            
+            const allFactsCount = factTrigger.length;
+            
+            return allFactsCount > 0 ? (
+              <div className="mb-4">
+                <div className="space-y-4">
+                  {/* Verified Facts */}
+                  {verifiedFacts.length > 0 && (
+                    <div>
+                      <strong className="text-green-700">✓ Verified Facts ({verifiedFacts.length}):</strong>
+                      <div className="space-y-2 mt-2 max-h-60 overflow-y-auto">
+                        {verifiedFacts.map((verification: any, idx: number) => (
+                          <div key={verification.fact.id || idx} className="bg-white p-3 rounded border-l-4 border-green-500">
+                            <div className="text-gray-900 text-sm font-medium">{verification.fact.statement}</div>
+                            <div className="flex items-center gap-3 mt-1">
+                              <span className="text-xs px-2 py-0.5 rounded bg-green-100 text-green-800">
+                                Verified
+                              </span>
+                              <span className="text-xs text-gray-500 capitalize">
+                                {verification.fact.category || 'general'}
+                              </span>
+                              {verification.fact.confidence !== undefined && (
+                                <span className="text-xs text-gray-500">
+                                  {Math.round(verification.fact.confidence * 100)}% confidence
+                                </span>
+                              )}
+                              {verification.evidence?.similarity !== undefined && (
+                                <span className="text-xs text-green-600">
+                                  {Math.round(verification.evidence.similarity * 100)}% match
+                                </span>
+                              )}
+                            </div>
+                            {verification.evidence?.textSnippet && (
+                              <div className="mt-2 text-xs text-gray-600 bg-gray-50 p-2 rounded">
+                                <strong>Found in:</strong> {verification.evidence.textSnippet.substring(0, 150)}...
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Unverified Facts */}
+                  {unverifiedFacts.length > 0 && (
+                    <div>
+                      <strong className="text-orange-700">⚠ Unverified Facts ({unverifiedFacts.length}):</strong>
+                      <p className="text-sm text-gray-600 mt-1">These facts need manual verification as they couldn't be confirmed in the page content</p>
+                      <div className="space-y-2 mt-2 max-h-60 overflow-y-auto">
+                        {unverifiedFacts.map((verification: any, idx: number) => (
+                          <div key={verification.fact.id || idx} className="bg-white p-3 rounded border-l-4 border-orange-500">
+                            <div className="text-gray-900 text-sm font-medium">{verification.fact.statement}</div>
+                            <div className="flex items-center gap-3 mt-1">
+                              <span className="text-xs px-2 py-0.5 rounded bg-orange-100 text-orange-800">
+                                Needs Verification
+                              </span>
+                              <span className="text-xs text-gray-500 capitalize">
+                                {verification.fact.category || 'general'}
+                              </span>
+                              {verification.fact.confidence !== undefined && (
+                                <span className="text-xs text-gray-500">
+                                  {Math.round(verification.fact.confidence * 100)}% confidence
+                                </span>
+                              )}
+                            </div>
+                            {verification.fact.sourceContext && (
+                              <div className="mt-2 text-xs text-gray-600 bg-gray-50 p-2 rounded">
+                                <strong>Source context:</strong> {verification.fact.sourceContext}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Contradicted Facts */}
+                  {contradictedFacts.length > 0 && (
+                    <div>
+                      <strong className="text-red-700">🔴 Contradicted Facts ({contradictedFacts.length}):</strong>
+                      <p className="text-sm text-gray-600 mt-1">These facts have contradictions found in the content</p>
+                      <div className="space-y-2 mt-2 max-h-60 overflow-y-auto">
+                        {contradictedFacts.map((verification: any, idx: number) => (
+                          <div key={verification.fact.id || idx} className="bg-white p-3 rounded border-l-4 border-red-500">
+                            <div className="text-gray-900 text-sm font-medium">{verification.fact.statement}</div>
+                            <div className="flex items-center gap-3 mt-1">
+                              <span className="text-xs px-2 py-0.5 rounded bg-red-100 text-red-800">
+                                Contradicted
+                              </span>
+                              <span className="text-xs text-gray-500 capitalize">
+                                {verification.fact.category || 'general'}
+                              </span>
+                              {verification.fact.confidence !== undefined && (
+                                <span className="text-xs text-gray-500">
+                                  {Math.round(verification.fact.confidence * 100)}% confidence
+                                </span>
+                              )}
+                            </div>
+                            {verification.contradictions && verification.contradictions.length > 0 && (
+                              <div className="mt-2 space-y-1">
+                                {verification.contradictions.map((contradiction: any, cIdx: number) => (
+                                  <div key={cIdx} className="text-xs text-red-700 bg-red-50 p-2 rounded">
+                                    <strong>⚠ Contradiction {cIdx + 1}:</strong> {contradiction.textSnippet.substring(0, 150)}...
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Summary if no facts */}
+                  {allFactsCount === 0 && (
+                    <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded">
+                      No facts extracted for verification. Enable LLM analysis to extract and verify facts.
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : null;
+          })()}
 
           {scanResult.hallucinationReport.triggers && scanResult.hallucinationReport.triggers.length > 0 && (
             <div>

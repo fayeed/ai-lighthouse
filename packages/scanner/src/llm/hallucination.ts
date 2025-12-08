@@ -58,6 +58,7 @@ export interface MisunderstandingReport {
     contradictions: number;
     ambiguities: number;
   };
+  verifications: FactVerification[];
   recommendations: string[];
   hallucinationRiskScore: number; // 0-100
 }
@@ -455,32 +456,24 @@ export async function detectHallucinations(
       
       // Verify facts against DOM
       verifications = verifyFacts(facts, $);
+
+      console.log(facts, verifications)
       
-      // Identify missing facts
+      // Separate facts by verification status
+      const verifiedFacts = verifications.filter(v => v.verified && (!v.contradictions || v.contradictions.length === 0));
       const unverifiedFacts = verifications.filter(v => !v.verified);
-      if (unverifiedFacts.length > 0) {
+      const contradictedFacts = verifications.filter(v => v.contradictions && v.contradictions.length > 0);
+      
+      // Add single consolidated trigger with all facts and verifications
+      if (verifications.length > 0) {
         triggers.push({
           type: 'missing_fact',
-          severity: SEVERITY.HIGH,
-          description: `LLM extracted ${unverifiedFacts.length} fact(s) that could not be verified in the actual content`,
-          facts: unverifiedFacts.map(v => v.fact),
-          verifications: unverifiedFacts,
-          evidence: unverifiedFacts.map(v => v.fact.statement),
-          confidence: unverifiedFacts.reduce((sum, v) => sum + v.fact.confidence, 0) / unverifiedFacts.length
-        });
-      }
-      
-      // Identify contradictions
-      const contradictedFacts = verifications.filter(v => v.contradictions && v.contradictions.length > 0);
-      for (const cf of contradictedFacts) {
-        triggers.push({
-          type: 'contradiction',
-          severity: SEVERITY.CRITICAL,
-          description: `Fact "${cf.fact.statement}" has ${cf.contradictions!.length} potential contradiction(s) in the content`,
-          facts: [cf.fact],
-          verifications: [cf],
-          evidence: cf.contradictions!.map(c => c.textSnippet),
-          confidence: 0.8
+          severity: contradictedFacts.length > 0 ? SEVERITY.CRITICAL : unverifiedFacts.length > 0 ? SEVERITY.HIGH : SEVERITY.LOW,
+          description: `Fact extraction complete: ${verifiedFacts.length} verified, ${unverifiedFacts.length} unverified, ${contradictedFacts.length} contradicted`,
+          facts: facts, // All extracted facts
+          verifications: verifications, // All verifications with status
+          evidence: verifications.map(v => v.evidence.textSnippet || v.fact.statement),
+          confidence: verifications.reduce((sum, v) => sum + v.fact.confidence, 0) / verifications.length
         });
       }
     } catch (error) {
@@ -536,6 +529,7 @@ export async function detectHallucinations(
       contradictions,
       ambiguities
     },
+    verifications,
     recommendations,
     hallucinationRiskScore: riskScore
   };

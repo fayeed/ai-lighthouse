@@ -202,6 +202,13 @@ export interface ScanResult {
       ambiguities: number;
     };
     recommendations: string[];
+    verifications: {
+      fact: string;
+      verified: boolean;
+      evidence?: string[];
+      contradictions?: string[];
+      ambiguities?: string[];
+    }
   };
   entities?: {
     entities: Array<{

@@ -197,7 +197,8 @@ const fetched = await fetchHtml(url, options.timeoutMs!, options.userAgent);
           confidence: t.confidence
         })),
         factCheckSummary: report.factCheckSummary,
-        recommendations: report.recommendations
+        recommendations: report.recommendations,
+        verifications: report.verifications,
       };
     } catch (error) {
       console.error('Hallucination detection failed:', error);
@@ -318,6 +319,7 @@ const fetched = await fetchHtml(url, options.timeoutMs!, options.userAgent);
     chunking,
     extractability,
     llm, // High-level comprehension analysis
+    // @ts-ignore
     hallucinationReport,
     entities, // Detailed entity extraction with metadata
     faqs, // Detailed FAQ generation with sources
