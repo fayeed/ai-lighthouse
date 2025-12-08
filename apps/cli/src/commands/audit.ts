@@ -8,6 +8,7 @@ import type { ScanOptions } from 'scanner';
 import { writeFile, mkdir } from 'fs/promises';
 import { join, resolve } from 'path';
 import { existsSync } from 'fs';
+import html_to_pdf from 'html-pdf-node';
 
 interface AuditOptions {
   output?: string;
@@ -112,22 +113,27 @@ export function auditCommand(program: Command) {
           console.log(chalk.dim(`Report saved to: ${jsonPath}`));
         } else if (options.output === 'html') {
           const htmlPath = join(outputDir, `${baseFilename}.html`);
-          const html = generateHTMLReport(auditReport, aiReadiness);
+          const html = generateHTMLReport(auditReport, aiReadiness, result);
           await writeFile(htmlPath, html);
           spinner.succeed(chalk.green('Audit complete!'));
           console.log(chalk.dim(`HTML report saved to: ${htmlPath}`));
           console.log(chalk.dim(`💡 Tip: Open the HTML file and use your browser's "Print > Save as PDF" to export as PDF`));
         } else if (options.output === 'pdf') {
-          const htmlPath = join(outputDir, `${baseFilename}.html`);
-          const html = generateHTMLReport(auditReport, aiReadiness);
-          await writeFile(htmlPath, html);
-          spinner.succeed(chalk.green('PDF-ready HTML generated!'));
-          console.log(chalk.dim(`HTML saved to: ${htmlPath}`));
-          console.log(chalk.yellow('\n📄 To generate PDF:'));
-          console.log(chalk.dim('   1. Open the HTML file in your browser'));
-          console.log(chalk.dim('   2. Press Ctrl+P (Cmd+P on Mac) or click "Print/Save as PDF" button'));
-          console.log(chalk.dim('   3. Select "Save as PDF" as the destination'));
-          console.log(chalk.dim('   4. Click "Save"\n'));
+          spinner.text = 'Generating PDF...';
+          const pdfPath = join(outputDir, `${baseFilename}.pdf`);
+          const html = generateHTMLReport(auditReport, aiReadiness, result);
+          
+          const file = { content: html };
+          const pdfOptions = { 
+            format: 'A4',
+            printBackground: false,
+          };
+          
+          const pdfBuffer = await html_to_pdf.generatePdf(file, pdfOptions);
+          await writeFile(pdfPath, pdfBuffer);
+          
+          spinner.succeed(chalk.green('PDF generated!'));
+          console.log(chalk.dim(`PDF report saved to: ${pdfPath}`));
         } else if (options.output === 'lhr') {
           const lhrPath = join(outputDir, `${baseFilename}.lhr.json`);
           const lhr = convertToLighthouseFormat(auditReport);
@@ -186,7 +192,7 @@ export function auditCommand(program: Command) {
     });
 }
 
-function generateHTMLReport(report: any, aiReadiness: any): string {
+function generateHTMLReport(report: any, aiReadiness: any, scanResult: any): string {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -202,7 +208,7 @@ function generateHTMLReport(report: any, aiReadiness: any): string {
       background: #f5f5f5;
       padding: 20px;
     }
-    .container { max-width: 1200px; margin: 0 auto; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .container { color: #333; max-width: 1200px; margin: 0 auto; background: white; padding: 40px; border-radius: 8px; }
     h1 { color: #2563eb; margin-bottom: 10px; font-size: 2em; }
     h2 { color: #1e40af; margin-top: 30px; margin-bottom: 15px; border-bottom: 2px solid #dbeafe; padding-bottom: 10px; }
     h3 { color: #1e40af; margin-top: 20px; margin-bottom: 10px; font-size: 1.2em; }
@@ -311,7 +317,6 @@ function generateHTMLReport(report: any, aiReadiness: any): string {
       <h1>🚨 AI Lighthouse Report</h1>
       <div class="url">${report.input?.requested_url}</div>
       <div class="timestamp">Generated: ${new Date(report.scanned_at).toLocaleString()}</div>
-      <button class="print-button" onclick="window.print()">📄 Print / Save as PDF</button>
     </div>
 
     ${aiReadiness ? `
@@ -457,6 +462,166 @@ function generateHTMLReport(report: any, aiReadiness: any): string {
           ${aiReadiness.roadmap.longTerm.slice(0, 5).map((item: string) => `
             <div class="priority-item">• ${item}</div>
           `).join('')}
+        </div>
+      ` : ''}
+    </div>
+    ` : ''}
+
+    ${scanResult?.llm ? `
+    <h2>📝 AI Understanding Analysis</h2>
+    <div style="background: #f0f9ff; border: 2px solid #0ea5e9; padding: 20px; border-radius: 8px; margin: 20px 0;">
+      <div style="margin-bottom: 15px;">
+        <strong>Summary:</strong> ${scanResult.llm.summary || 'N/A'}
+      </div>
+      ${scanResult.llm.keyTopics && scanResult.llm.keyTopics.length > 0 ? `
+        <div style="margin-bottom: 15px;">
+          <strong>🏷️ Key Topics:</strong> ${scanResult.llm.keyTopics.join(', ')}
+        </div>
+      ` : ''}
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px;">
+        ${scanResult.llm.readingLevel ? `
+          <div><strong>📊 Reading Level:</strong> ${scanResult.llm.readingLevel.description}</div>
+        ` : ''}
+        ${scanResult.llm.sentiment ? `
+          <div><strong>🎭 Sentiment:</strong> ${scanResult.llm.sentiment}</div>
+        ` : ''}
+        ${scanResult.llm.technicalDepth ? `
+          <div><strong>🎯 Technical Depth:</strong> ${scanResult.llm.technicalDepth}</div>
+        ` : ''}
+      </div>
+      
+      ${scanResult.llm.topEntities && scanResult.llm.topEntities.length > 0 ? `
+        <div style="margin-top: 20px;">
+          <strong>🔍 Key Entities:</strong>
+          <div style="margin-top: 10px; display: grid; gap: 10px;">
+            ${scanResult.llm.topEntities.slice(0, 5).map((entity: any) => `
+              <div style="background: white; padding: 10px; border-radius: 4px; border-left: 3px solid #0ea5e9;">
+                <strong>${entity.name}</strong> (${entity.type}) - ${Math.round((entity.relevance || 0) * 100)}% relevance
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      ` : ''}
+      
+      ${scanResult.llm.questions && scanResult.llm.questions.length > 0 ? `
+        <div style="margin-top: 20px;">
+          <strong>❓ Key Questions AI Can Answer:</strong>
+          <ol style="margin-top: 10px; padding-left: 25px;">
+            ${scanResult.llm.questions.slice(0, 5).map((q: any) => `
+              <li style="margin: 8px 0;"><span style="text-transform: uppercase; font-size: 0.8em; background: #dbeafe; padding: 2px 6px; border-radius: 3px;">${q.difficulty}</span> ${q.question}</li>
+            `).join('')}
+          </ol>
+        </div>
+      ` : ''}
+      
+      ${scanResult.llm.suggestedFAQ && scanResult.llm.suggestedFAQ.length > 0 ? `
+        <div style="margin-top: 20px;">
+          <strong>💡 Suggested FAQs:</strong>
+          <div style="margin-top: 10px; display: grid; gap: 15px;">
+            ${scanResult.llm.suggestedFAQ.filter((f: any) => f.importance === 'high').slice(0, 3).map((faq: any) => `
+              <div style="background: white; padding: 15px; border-radius: 4px; border-left: 3px solid #f59e0b;">
+                <div style="font-weight: 600; margin-bottom: 5px;">Q: ${faq.question}</div>
+                <div style="color: #64748b;">A: ${faq.suggestedAnswer}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      ` : ''}
+    </div>
+    ` : ''}
+
+    ${scanResult?.chunking ? `
+    <h2>📄 Content Chunking Analysis</h2>
+    <div style="background: #f0fdf4; border: 2px solid #10b981; padding: 20px; border-radius: 8px; margin: 20px 0;">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+        <div><strong>Strategy:</strong> ${scanResult.chunking.chunkingStrategy}</div>
+        <div><strong>Total Chunks:</strong> ${scanResult.chunking.totalChunks}</div>
+        <div><strong>Avg Tokens/Chunk:</strong> ${scanResult.chunking.averageTokensPerChunk}</div>
+        <div><strong>Avg Noise:</strong> ${(scanResult.chunking.averageNoiseRatio * 100).toFixed(1)}%</div>
+      </div>
+    </div>
+    ` : ''}
+
+    ${scanResult?.extractability ? `
+    <h2>🔄 Extractability Analysis</h2>
+    <div style="background: #fef3c7; border: 2px solid #f59e0b; padding: 20px; border-radius: 8px; margin: 20px 0;">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px;">
+        <div><strong>Overall Score:</strong> ${scanResult.extractability.score.extractabilityScore}/100</div>
+        <div><strong>Server-Rendered:</strong> ${scanResult.extractability.score.serverRenderedPercent}%</div>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+        <div><strong>Text Extractable:</strong> ${scanResult.extractability.contentTypes.text.percentage}%</div>
+        <div><strong>Images Extractable:</strong> ${scanResult.extractability.contentTypes.images.percentage}%</div>
+      </div>
+    </div>
+    ` : ''}
+
+    ${scanResult?.hallucinationReport ? `
+    <h2>⚠️ Hallucination Risk Assessment</h2>
+    <div style="background: #fef2f2; border: 2px solid #ef4444; padding: 20px; border-radius: 8px; margin: 20px 0;">
+      <div style="font-size: 1.5em; font-weight: bold; margin-bottom: 15px;">
+        Risk Score: ${scanResult.hallucinationReport.hallucinationRiskScore}/100
+      </div>
+      
+      ${scanResult.hallucinationReport.triggers && scanResult.hallucinationReport.triggers.length > 0 ? `
+        <div style="margin-top: 20px;">
+          <strong>🚨 Identified Triggers:</strong>
+          <div style="margin-top: 10px; display: grid; gap: 10px;">
+            ${scanResult.hallucinationReport.triggers.filter((t: any) => t.severity === 'high' || t.severity === 'critical').slice(0, 5).map((trigger: any) => `
+              <div style="background: white; padding: 15px; border-radius: 4px; border-left: 3px solid #dc2626;">
+                <div style="font-weight: 600; text-transform: uppercase; font-size: 0.85em; color: #dc2626;">${trigger.type} - ${trigger.severity}</div>
+                <div style="margin-top: 5px;">${trigger.description}</div>
+                <div style="margin-top: 5px; font-size: 0.9em; color: #64748b;">Confidence: ${Math.round((trigger.confidence || 0) * 100)}%</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      ` : ''}
+      
+      ${scanResult.hallucinationReport.recommendations && scanResult.hallucinationReport.recommendations.length > 0 ? `
+        <div style="margin-top: 20px;">
+          <strong>💡 Recommendations:</strong>
+          <ul style="margin-top: 10px; padding-left: 25px;">
+            ${scanResult.hallucinationReport.recommendations.slice(0, 3).map((rec: string) => `<li style="margin: 5px 0;">${rec}</li>`).join('')}
+          </ul>
+        </div>
+      ` : ''}
+    </div>
+    ` : ''}
+
+    ${scanResult?.mirrorReport ? `
+    <h2>🔍 AI Misunderstanding Check</h2>
+    <div style="background: #faf5ff; border: 2px solid #a855f7; padding: 20px; border-radius: 8px; margin: 20px 0;">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px;">
+        <div><strong>🎯 Alignment Score:</strong> ${scanResult.mirrorReport.summary.alignmentScore}/100</div>
+        <div><strong>📖 Clarity Score:</strong> ${scanResult.mirrorReport.summary.clarityScore}/100</div>
+        <div><strong>⚠️ Critical Issues:</strong> ${scanResult.mirrorReport.summary.critical}</div>
+        <div><strong>🟡 Major Issues:</strong> ${scanResult.mirrorReport.summary.major}</div>
+      </div>
+      
+      ${scanResult.mirrorReport.mismatches && scanResult.mirrorReport.mismatches.length > 0 ? `
+        <div style="margin-top: 20px;">
+          <strong>Priority Mismatches:</strong>
+          <div style="margin-top: 10px; display: grid; gap: 10px;">
+            ${scanResult.mirrorReport.mismatches.filter((m: any) => m.severity === 'critical' || m.severity === 'major').slice(0, 5).map((mismatch: any) => `
+              <div style="background: white; padding: 15px; border-radius: 4px; border-left: 3px solid ${mismatch.severity === 'critical' ? '#dc2626' : '#f59e0b'};">
+                <div style="font-weight: 600;">${mismatch.severity === 'critical' ? '🔴' : '🟡'} ${mismatch.field}</div>
+                <div style="margin-top: 5px; color: #64748b;">${mismatch.description}</div>
+                <div style="margin-top: 10px; padding: 10px; background: #f0fdfa; border-radius: 4px;">
+                  <strong>Fix:</strong> ${mismatch.recommendation}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      ` : ''}
+      
+      ${scanResult.mirrorReport.recommendations && scanResult.mirrorReport.recommendations.length > 0 ? `
+        <div style="margin-top: 20px;">
+          <strong>💡 Top Recommendations:</strong>
+          <ul style="margin-top: 10px; padding-left: 25px;">
+            ${scanResult.mirrorReport.recommendations.slice(0, 3).map((rec: string) => `<li style="margin: 5px 0;">${rec}</li>`).join('')}
+          </ul>
         </div>
       ` : ''}
     </div>
