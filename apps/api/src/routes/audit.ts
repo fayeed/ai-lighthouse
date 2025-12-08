@@ -14,8 +14,8 @@ auditRouter.post('/', async (req, res) => {
       enableLLM = false,
       llmProvider = 'ollama',
       llmModel = 'qwen2.5:0.5b',
-      llmBaseUrl = 'http://localhost:11434',
-      maxIssues = 20,
+      llmBaseUrl,
+      llmApiKey,
       minImpactScore = 5,
       async = false
     } = req.body;
@@ -39,16 +39,26 @@ auditRouter.post('/', async (req, res) => {
       enableHallucinationDetection: enableLLM,
       enableLLM,
       minImpactScore,
-      maxIssues,
       minConfidence: 0.7,
     };
 
     if (enableLLM) {
       scanOptions.llmConfig = {
         provider: llmProvider,
-        baseUrl: llmBaseUrl,
         model: llmModel,
       };
+
+      // Add provider-specific configuration
+      if (llmProvider === 'ollama') {
+        scanOptions.llmConfig.baseUrl = llmBaseUrl || 'http://localhost:11434';
+      } else if (llmApiKey) {
+        // For cloud providers (OpenAI, Anthropic, Gemini)
+        scanOptions.llmConfig.apiKey = llmApiKey;
+      } else {
+        return res.status(400).json({ 
+          error: `API key is required for ${llmProvider}` 
+        });
+      }
     }
 
     // If async mode, start job and return job ID

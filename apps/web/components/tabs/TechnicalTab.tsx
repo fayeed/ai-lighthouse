@@ -1,0 +1,185 @@
+interface TechnicalTabProps {
+  scanResult: any;
+}
+
+export default function TechnicalTab({ scanResult }: TechnicalTabProps) {
+  return (
+    <div className="space-y-8">
+      {/* Chunking */}
+      {scanResult?.chunking && (
+        <div className="bg-green-50 border-2 border-green-200 rounded-lg p-6">
+          <h3 className="text-2xl font-bold text-gray-900 mb-4">📄 Content Chunking</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-white p-3 rounded">
+              <div className="text-sm text-gray-600">Strategy</div>
+              <div className="font-semibold text-gray-900">
+                {scanResult.chunking.chunkingStrategy}
+              </div>
+            </div>
+            <div className="bg-white p-3 rounded">
+              <div className="text-sm text-gray-600">Total Chunks</div>
+              <div className="text-2xl font-bold text-green-600">
+                {scanResult.chunking.totalChunks}
+              </div>
+            </div>
+            <div className="bg-white p-3 rounded">
+              <div className="text-sm text-gray-600">Avg Tokens/Chunk</div>
+              <div className="text-2xl font-bold text-green-600">
+                {scanResult.chunking.averageTokensPerChunk}
+              </div>
+            </div>
+            <div className="bg-white p-3 rounded">
+              <div className="text-sm text-gray-600">Avg Noise</div>
+              <div className="text-2xl font-bold text-green-600">
+                {(scanResult.chunking.averageNoiseRatio * 100).toFixed(1)}%
+              </div>
+            </div>
+          </div>
+
+          {/* Chunk Details */}
+          {scanResult.chunking.chunks && scanResult.chunking.chunks.length > 0 && (
+            <div className="mt-4">
+              <h4 className="font-semibold text-gray-700 mb-2">Chunk Distribution</h4>
+              <div className="space-y-2 max-h-96 overflow-y-auto">
+                {scanResult.chunking.chunks.slice(0, 10).map((chunk: any, idx: number) => (
+                  <div key={idx} className="bg-white p-3 rounded border border-gray-200">
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-sm font-medium text-gray-900">Chunk {idx + 1}</span>
+                      <span className="text-xs text-gray-600">{chunk.tokenCount} tokens</span>
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      Noise: {(chunk.noiseRatio * 100).toFixed(1)}% · 
+                      Extractable: {chunk.extractableContentRatio ? (chunk.extractableContentRatio * 100).toFixed(1) : 'N/A'}%
+                    </div>
+                  </div>
+                ))}
+                {scanResult.chunking.chunks.length > 10 && (
+                  <div className="text-sm text-gray-500 text-center py-2">
+                    + {scanResult.chunking.chunks.length - 10} more chunks
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Extractability */}
+      {scanResult?.extractability && (
+        <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-6">
+          <h3 className="text-2xl font-bold text-gray-900 mb-4">🔄 Extractability</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+            <div className="bg-white p-3 rounded">
+              <div className="text-sm text-gray-600">Overall Score</div>
+              <div className="text-2xl font-bold text-yellow-600">
+                {scanResult.extractability.score.extractabilityScore}/100
+              </div>
+            </div>
+            <div className="bg-white p-3 rounded">
+              <div className="text-sm text-gray-600">Server-Rendered</div>
+              <div className="text-2xl font-bold text-yellow-600">
+                {scanResult.extractability.score.serverRenderedPercent}%
+              </div>
+            </div>
+            <div className="bg-white p-3 rounded">
+              <div className="text-sm text-gray-600">Text Extractable</div>
+              <div className="text-2xl font-bold text-yellow-600">
+                {scanResult.extractability.contentTypes.text.percentage}%
+              </div>
+            </div>
+            <div className="bg-white p-3 rounded">
+              <div className="text-sm text-gray-600">Images Extractable</div>
+              <div className="text-2xl font-bold text-yellow-600">
+                {scanResult.extractability.contentTypes.images.percentage}%
+              </div>
+            </div>
+          </div>
+
+          {/* Content Type Details */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            {Object.entries(scanResult.extractability.contentTypes).map(([type, data]: [string, any]) => (
+              <div key={type} className="bg-white p-4 rounded border border-gray-200">
+                <h4 className="font-semibold text-gray-900 capitalize mb-2">{type}</h4>
+                <div className="space-y-1 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Total:</span>
+                    <span className="font-medium">{data.total}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Extractable:</span>
+                    <span className="font-medium text-green-600">{data.extractable}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Percentage:</span>
+                    <span className="font-medium">{data.percentage}%</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Scoring Details */}
+      {scanResult?.scoring && (
+        <div className="bg-gray-50 border-2 border-gray-200 rounded-lg p-6">
+          <h3 className="text-2xl font-bold text-gray-900 mb-4">📊 Technical Scoring</h3>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
+            <div className="bg-white p-3 rounded">
+              <div className="text-sm text-gray-600">Overall Score</div>
+              <div className="text-2xl font-bold text-gray-900">
+                {scanResult.scoring.overallScore}/100
+              </div>
+            </div>
+            <div className="bg-white p-3 rounded">
+              <div className="text-sm text-gray-600">Grade</div>
+              <div className="text-2xl font-bold text-gray-900">
+                {scanResult.scoring.grade}
+              </div>
+            </div>
+            <div className="bg-white p-3 rounded">
+              <div className="text-sm text-gray-600">Total Issues</div>
+              <div className="text-2xl font-bold text-gray-900">
+                {scanResult.scoring.totalIssues}
+              </div>
+            </div>
+          </div>
+
+          {/* Category Scores */}
+          {scanResult.scoring.categoryScores && (
+            <div>
+              <h4 className="font-semibold text-gray-700 mb-3">Category Breakdown</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {Object.entries(scanResult.scoring.categoryScores).map(([category, data]: [string, any]) => {
+                  // Handle both formats: direct score or object with score property
+                  const scoreValue = typeof data === 'number' ? data : (data?.score || 0);
+                  return (
+                    <div key={category} className="bg-white p-3 rounded border border-gray-200">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium text-gray-900 capitalize">
+                          {data.category.replace(/-/g, ' ')}
+                        </span>
+                        <span className={`text-lg font-bold ${
+                          scoreValue >= 80 ? 'text-green-600' :
+                          scoreValue >= 60 ? 'text-yellow-600' :
+                          'text-red-600'
+                        }`}>
+                          {Math.round(scoreValue)}/100
+                        </span>
+                      </div>
+                      {typeof data === 'object' && data?.issueCount !== undefined && (
+                        <div className="text-xs text-gray-500 mt-1">
+                          {data.issueCount} issues
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}

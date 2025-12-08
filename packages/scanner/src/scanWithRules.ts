@@ -298,7 +298,7 @@ const fetched = await fetchHtml(url, options.timeoutMs!, options.userAgent);
   // Filter issues based on quality thresholds (reduce noise)
   const minImpact = options.minImpactScore ?? 8;
   const minConf = options.minConfidence ?? 0.7;
-  const maxCount = options.maxIssues ?? 20;
+  const maxCount = options.maxIssues ?? 100;
   
   const filteredIssues = issues
     .filter(issue => issue.impactScore >= minImpact)

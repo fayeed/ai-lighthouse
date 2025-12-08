@@ -1,6 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import ModelSelector, { ModelConfig } from '../components/ModelSelector';
+import OverviewTab from '../components/tabs/OverviewTab';
+import AnalysisTab from '../components/tabs/AnalysisTab';
+import IssuesTab from '../components/tabs/IssuesTab';
+import TechnicalTab from '../components/tabs/TechnicalTab';
 
 export default function Home() {
   const [url, setUrl] = useState('');
@@ -9,6 +14,11 @@ export default function Home() {
   const [reportData, setReportData] = useState<any>(null);
   const [enableLLM, setEnableLLM] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
+  const [modelConfig, setModelConfig] = useState<ModelConfig>({
+    provider: 'ollama',
+    model: 'qwen2.5:0.5b',
+    baseUrl: 'http://localhost:11434',
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -17,17 +27,29 @@ export default function Home() {
     setReportData(null);
 
     try {
+      const requestBody: any = {
+        url,
+        enableLLM,
+        minImpactScore: 5,
+      };
+
+      if (enableLLM) {
+        requestBody.llmProvider = modelConfig.provider;
+        requestBody.llmModel = modelConfig.model;
+        
+        if (modelConfig.provider === 'ollama') {
+          requestBody.llmBaseUrl = modelConfig.baseUrl || 'http://localhost:11434';
+        } else if (modelConfig.apiKey) {
+          requestBody.llmApiKey = modelConfig.apiKey;
+        }
+      }
+
       const response = await fetch('http://localhost:3002/api/audit', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          url,
-          enableLLM,
-          maxIssues: 20,
-          minImpactScore: 5,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       const data = await response.json();
@@ -73,7 +95,7 @@ export default function Home() {
               />
             </div>
 
-            <div className="mb-6">
+            <div className="mb-4">
               <label className="flex items-center space-x-2">
                 <input
                   type="checkbox"
@@ -82,10 +104,19 @@ export default function Home() {
                   className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                 />
                 <span className="text-sm text-gray-700">
-                  Enable LLM Analysis (requires local Ollama)
+                  Enable AI-powered analysis (LLM)
                 </span>
               </label>
+              <p className="text-xs text-gray-500 mt-1 ml-6">
+                Provides deeper insights using language models
+              </p>
             </div>
+
+            {enableLLM && (
+              <div className="mb-6">
+                <ModelSelector value={modelConfig} onChange={setModelConfig} />
+              </div>
+            )}
 
             <button
               type="submit"
@@ -148,369 +179,20 @@ export default function Home() {
               </div>
 
               {/* Tab Content */}
-              {activeTab === 'overview' && (
-                <div>
-                  {/* Dimensions */}
-                  {reportData.aiReadiness.dimensions && (
-                    <div className="mb-8">
-                      <h3 className="text-2xl font-bold text-gray-900 mb-4">Dimension Scores</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {Object.entries(reportData.aiReadiness.dimensions).map(([key, dim]: [string, any]) => (
-                          <div key={key} className="bg-gray-50 border-l-4 border-blue-500 rounded-lg p-4">
-                            <div className="font-semibold text-lg text-gray-900 capitalize">
-                              {key.replace(/([A-Z])/g, ' $1').trim()}
-                            </div>
-                            <div className="text-3xl font-bold text-blue-600 my-2">
-                              {Math.round(dim.score)}/100
-                            </div>
-                            <div className="text-sm text-gray-600 capitalize">{dim.status}</div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Quick Wins */}
-                  {reportData.aiReadiness.quickWins && reportData.aiReadiness.quickWins.length > 0 && (
-                    <div className="mb-8">
-                      <h3 className="text-2xl font-bold text-gray-900 mb-4">⚡ Quick Wins</h3>
-                      <div className="space-y-4">
-                        {reportData.aiReadiness.quickWins.slice(0, 5).map((win: any, idx: number) => (
-                          <div key={idx} className="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded">
-                            <div className="font-semibold text-gray-900">{win.issue}</div>
-                            <div className="text-sm text-gray-600 mt-1">
-                              Impact: {win.impact} · Effort: {win.effort}
-                            </div>
-                            <div className="text-sm text-green-700 mt-2">→ {win.fix}</div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
+              {activeTab === 'overview' && reportData.aiReadiness && (
+                <OverviewTab aiReadiness={reportData.aiReadiness} />
               )}
 
-              {activeTab === 'analysis' && (
-                <div className="space-y-8">
-                  {/* LLM Summary */}
-                  {reportData.scanResult?.llm && (
-                    <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-6">
-                      <h3 className="text-2xl font-bold text-gray-900 mb-4">📝 AI Understanding</h3>
-                      <div className="space-y-4">
-                        {reportData.scanResult.llm.summary && (
-                          <div>
-                            <strong className="text-gray-700">Summary:</strong>
-                            <p className="text-gray-900 mt-1">{reportData.scanResult.llm.summary}</p>
-                          </div>
-                        )}
-                        
-                        {reportData.scanResult.llm.keyTopics && reportData.scanResult.llm.keyTopics.length > 0 && (
-                          <div>
-                            <strong className="text-gray-700">Key Topics:</strong>
-                            <div className="flex flex-wrap gap-2 mt-2">
-                              {reportData.scanResult.llm.keyTopics.map((topic: string, idx: number) => (
-                                <span key={idx} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
-                                  {topic}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          {reportData.scanResult.llm.readingLevel && (
-                            <div className="bg-white p-3 rounded">
-                              <strong className="text-gray-700">Reading Level:</strong>
-                              <p className="text-gray-900">{reportData.scanResult.llm.readingLevel.description}</p>
-                            </div>
-                          )}
-                          {reportData.scanResult.llm.sentiment && (
-                            <div className="bg-white p-3 rounded">
-                              <strong className="text-gray-700">Sentiment:</strong>
-                              <p className="text-gray-900">{reportData.scanResult.llm.sentiment}</p>
-                            </div>
-                          )}
-                          {reportData.scanResult.llm.technicalDepth && (
-                            <div className="bg-white p-3 rounded">
-                              <strong className="text-gray-700">Technical Depth:</strong>
-                              <p className="text-gray-900">{reportData.scanResult.llm.technicalDepth}</p>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Top Entities */}
-                        {reportData.scanResult.llm.topEntities && reportData.scanResult.llm.topEntities.length > 0 && (
-                          <div>
-                            <strong className="text-gray-700">Key Entities:</strong>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
-                              {reportData.scanResult.llm.topEntities.slice(0, 6).map((entity: any, idx: number) => (
-                                <div key={idx} className="bg-white p-3 rounded border-l-3 border-blue-400">
-                                  <div className="font-semibold text-gray-900">{entity.name}</div>
-                                  <div className="text-sm text-gray-600">
-                                    {entity.type} · {Math.round((entity.relevance || 0) * 100)}% relevance
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* FAQs */}
-                        {reportData.scanResult.llm.suggestedFAQ && reportData.scanResult.llm.suggestedFAQ.length > 0 && (
-                          <div>
-                            <strong className="text-gray-700">Suggested FAQs:</strong>
-                            <div className="space-y-3 mt-2">
-                              {reportData.scanResult.llm.suggestedFAQ.slice(0, 5).map((faq: any, idx: number) => (
-                                <div key={idx} className="bg-white p-4 rounded border-l-4 border-yellow-400">
-                                  <div className="font-semibold text-gray-900 mb-1">Q: {faq.question}</div>
-                                  <div className="text-gray-700 text-sm">A: {faq.suggestedAnswer}</div>
-                                  {faq.importance && (
-                                    <span className={`inline-block mt-2 px-2 py-1 text-xs rounded ${
-                                      faq.importance === 'high' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'
-                                    }`}>
-                                      {faq.importance} priority
-                                    </span>
-                                  )}
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Hallucination Report */}
-                  {reportData.scanResult?.hallucinationReport && (
-                    <div className="bg-red-50 border-2 border-red-200 rounded-lg p-6">
-                      <h3 className="text-2xl font-bold text-gray-900 mb-4">⚠️ Hallucination Risk Assessment</h3>
-                      <div className="text-4xl font-bold text-red-600 mb-4">
-                        Risk Score: {reportData.scanResult.hallucinationReport.hallucinationRiskScore}/100
-                      </div>
-                      
-                      {reportData.scanResult.hallucinationReport.triggers && reportData.scanResult.hallucinationReport.triggers.length > 0 && (
-                        <div>
-                          <strong className="text-gray-700">Risk Triggers:</strong>
-                          <div className="space-y-3 mt-3">
-                            {reportData.scanResult.hallucinationReport.triggers
-                              .filter((t: any) => t.severity === 'high' || t.severity === 'critical')
-                              .slice(0, 5)
-                              .map((trigger: any, idx: number) => (
-                                <div key={idx} className="bg-white p-4 rounded border-l-4 border-red-500">
-                                  <div className="font-semibold text-red-900 uppercase text-sm">
-                                    {trigger.type} - {trigger.severity}
-                                  </div>
-                                  <div className="text-gray-900 mt-1">{trigger.description}</div>
-                                  <div className="text-sm text-gray-600 mt-1">
-                                    Confidence: {Math.round((trigger.confidence || 0) * 100)}%
-                                  </div>
-                                </div>
-                              ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {reportData.scanResult.hallucinationReport.recommendations && reportData.scanResult.hallucinationReport.recommendations.length > 0 && (
-                        <div className="mt-4">
-                          <strong className="text-gray-700">Recommendations:</strong>
-                          <ul className="list-disc list-inside mt-2 space-y-1 text-gray-900">
-                            {reportData.scanResult.hallucinationReport.recommendations.slice(0, 3).map((rec: string, idx: number) => (
-                              <li key={idx}>{rec}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Mirror Report */}
-                  {reportData.scanResult?.mirrorReport && (
-                    <div className="bg-purple-50 border-2 border-purple-200 rounded-lg p-6">
-                      <h3 className="text-2xl font-bold text-gray-900 mb-4">🔍 AI Misunderstanding Check</h3>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                        <div className="bg-white p-3 rounded">
-                          <div className="text-sm text-gray-600">Alignment Score</div>
-                          <div className="text-2xl font-bold text-purple-600">
-                            {reportData.scanResult.mirrorReport.summary.alignmentScore}/100
-                          </div>
-                        </div>
-                        <div className="bg-white p-3 rounded">
-                          <div className="text-sm text-gray-600">Clarity Score</div>
-                          <div className="text-2xl font-bold text-purple-600">
-                            {reportData.scanResult.mirrorReport.summary.clarityScore}/100
-                          </div>
-                        </div>
-                        <div className="bg-white p-3 rounded">
-                          <div className="text-sm text-gray-600">Critical Issues</div>
-                          <div className="text-2xl font-bold text-red-600">
-                            {reportData.scanResult.mirrorReport.summary.critical}
-                          </div>
-                        </div>
-                        <div className="bg-white p-3 rounded">
-                          <div className="text-sm text-gray-600">Major Issues</div>
-                          <div className="text-2xl font-bold text-orange-600">
-                            {reportData.scanResult.mirrorReport.summary.major}
-                          </div>
-                        </div>
-                      </div>
-
-                      {reportData.scanResult.mirrorReport.mismatches && reportData.scanResult.mirrorReport.mismatches.length > 0 && (
-                        <div>
-                          <strong className="text-gray-700">Priority Mismatches:</strong>
-                          <div className="space-y-3 mt-3">
-                            {reportData.scanResult.mirrorReport.mismatches
-                              .filter((m: any) => m.severity === 'critical' || m.severity === 'major')
-                              .slice(0, 5)
-                              .map((mismatch: any, idx: number) => (
-                                <div key={idx} className={`bg-white p-4 rounded border-l-4 ${
-                                  mismatch.severity === 'critical' ? 'border-red-500' : 'border-orange-500'
-                                }`}>
-                                  <div className="font-semibold text-gray-900">
-                                    {mismatch.severity === 'critical' ? '🔴' : '🟡'} {mismatch.field}
-                                  </div>
-                                  <div className="text-gray-700 text-sm mt-1">{mismatch.description}</div>
-                                  <div className="bg-green-50 p-2 rounded mt-2 text-sm text-green-800">
-                                    <strong>Fix:</strong> {mismatch.recommendation}
-                                  </div>
-                                </div>
-                              ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
+              {activeTab === 'analysis' && reportData.scanResult && (
+                <AnalysisTab scanResult={reportData.scanResult} />
               )}
 
-              {activeTab === 'issues' && (
-                <div>
-                  {reportData.auditReport.issues && reportData.auditReport.issues.length > 0 ? (
-                    <div className="space-y-4">
-                      <h3 className="text-2xl font-bold text-gray-900 mb-4">
-                        ⚠️ Issues Found ({reportData.auditReport.issues.length})
-                      </h3>
-                      {reportData.auditReport.issues.map((issue: any, idx: number) => (
-                        <div key={idx} className={`border-l-4 p-4 rounded ${
-                          issue.severity === 'critical' ? 'bg-red-50 border-red-500' :
-                          issue.severity === 'high' ? 'bg-orange-50 border-orange-500' :
-                          issue.severity === 'medium' ? 'bg-yellow-50 border-yellow-500' :
-                          'bg-blue-50 border-blue-500'
-                        }`}>
-                          <div className="font-semibold text-gray-900">{issue.message}</div>
-                          <div className="text-sm text-gray-600 mt-1">
-                            <span className="uppercase font-semibold">{issue.severity}</span> · 
-                            Impact: {issue.impact} · 
-                            Category: {issue.category}
-                          </div>
-                          {issue.suggested_fix && (
-                            <div className="text-sm text-green-700 mt-2 bg-white p-2 rounded">
-                              <strong>Fix:</strong> {issue.suggested_fix}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center text-gray-500 py-8">No issues found</div>
-                  )}
-                </div>
+              {activeTab === 'issues' && reportData.auditReport && (
+                <IssuesTab issues={reportData.auditReport.issues || []} />
               )}
 
-              {activeTab === 'technical' && (
-                <div className="space-y-8">
-                  {/* Chunking */}
-                  {reportData.scanResult?.chunking && (
-                    <div className="bg-green-50 border-2 border-green-200 rounded-lg p-6">
-                      <h3 className="text-2xl font-bold text-gray-900 mb-4">📄 Content Chunking</h3>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div className="bg-white p-3 rounded">
-                          <div className="text-sm text-gray-600">Strategy</div>
-                          <div className="font-semibold text-gray-900">
-                            {reportData.scanResult.chunking.chunkingStrategy}
-                          </div>
-                        </div>
-                        <div className="bg-white p-3 rounded">
-                          <div className="text-sm text-gray-600">Total Chunks</div>
-                          <div className="text-2xl font-bold text-green-600">
-                            {reportData.scanResult.chunking.totalChunks}
-                          </div>
-                        </div>
-                        <div className="bg-white p-3 rounded">
-                          <div className="text-sm text-gray-600">Avg Tokens/Chunk</div>
-                          <div className="text-2xl font-bold text-green-600">
-                            {reportData.scanResult.chunking.averageTokensPerChunk}
-                          </div>
-                        </div>
-                        <div className="bg-white p-3 rounded">
-                          <div className="text-sm text-gray-600">Avg Noise</div>
-                          <div className="text-2xl font-bold text-green-600">
-                            {(reportData.scanResult.chunking.averageNoiseRatio * 100).toFixed(1)}%
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Extractability */}
-                  {reportData.scanResult?.extractability && (
-                    <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-6">
-                      <h3 className="text-2xl font-bold text-gray-900 mb-4">🔄 Extractability</h3>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div className="bg-white p-3 rounded">
-                          <div className="text-sm text-gray-600">Overall Score</div>
-                          <div className="text-2xl font-bold text-yellow-600">
-                            {reportData.scanResult.extractability.score.extractabilityScore}/100
-                          </div>
-                        </div>
-                        <div className="bg-white p-3 rounded">
-                          <div className="text-sm text-gray-600">Server-Rendered</div>
-                          <div className="text-2xl font-bold text-yellow-600">
-                            {reportData.scanResult.extractability.score.serverRenderedPercent}%
-                          </div>
-                        </div>
-                        <div className="bg-white p-3 rounded">
-                          <div className="text-sm text-gray-600">Text Extractable</div>
-                          <div className="text-2xl font-bold text-yellow-600">
-                            {reportData.scanResult.extractability.contentTypes.text.percentage}%
-                          </div>
-                        </div>
-                        <div className="bg-white p-3 rounded">
-                          <div className="text-sm text-gray-600">Images Extractable</div>
-                          <div className="text-2xl font-bold text-yellow-600">
-                            {reportData.scanResult.extractability.contentTypes.images.percentage}%
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Scoring Details */}
-                  {reportData.scanResult?.scoring && (
-                    <div className="bg-gray-50 border-2 border-gray-200 rounded-lg p-6">
-                      <h3 className="text-2xl font-bold text-gray-900 mb-4">📊 Technical Scoring</h3>
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        <div className="bg-white p-3 rounded">
-                          <div className="text-sm text-gray-600">Overall Score</div>
-                          <div className="text-2xl font-bold text-gray-900">
-                            {reportData.scanResult.scoring.overallScore}/100
-                          </div>
-                        </div>
-                        <div className="bg-white p-3 rounded">
-                          <div className="text-sm text-gray-600">Grade</div>
-                          <div className="text-2xl font-bold text-gray-900">
-                            {reportData.scanResult.scoring.grade}
-                          </div>
-                        </div>
-                        <div className="bg-white p-3 rounded">
-                          <div className="text-sm text-gray-600">Total Issues</div>
-                          <div className="text-2xl font-bold text-gray-900">
-                            {reportData.scanResult.scoring.totalIssues}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
+              {activeTab === 'technical' && reportData.scanResult && (
+                <TechnicalTab scanResult={reportData.scanResult} />
               )}
             </div>
           </div>
