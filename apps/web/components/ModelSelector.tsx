@@ -15,7 +15,7 @@ interface ModelSelectorProps {
 }
 
 const providerModels = {
-  ollama: ['qwen2.5:0.5b', 'qwen2.5:3b', 'llama3.2:3b', 'llama3.2:1b', 'gemma2:2b', 'phi3:mini'],
+  ollama: ['qwen2.5:0.5b'], // Backend will use this model
   openai: ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-3.5-turbo'],
   anthropic: ['claude-3-5-sonnet-20241022', 'claude-3-5-haiku-20241022', 'claude-3-opus-20240229'],
   gemini: ['gemini-2.0-flash-exp', 'gemini-1.5-pro', 'gemini-1.5-flash'],
@@ -79,40 +79,32 @@ export default function ModelSelector({ value, onChange }: ModelSelectorProps) {
         </div>
       </div>
 
-      {/* Model Selection */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Model
-        </label>
-        <select
-          value={value.model}
-          onChange={(e) => handleModelChange(e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        >
-          {providerModels[value.provider].map((model) => (
-            <option key={model} value={model}>
-              {model}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* Base URL for Ollama */}
-      {value.provider === 'ollama' && (
+      {/* Model Selection - Only for non-Ollama providers */}
+      {value.provider !== 'ollama' && (
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Base URL
+            Model
           </label>
-          <input
-            type="text"
-            value={value.baseUrl || 'http://localhost:11434'}
-            onChange={(e) => handleBaseUrlChange(e.target.value)}
-            placeholder="http://localhost:11434"
+          <select
+            value={value.model}
+            onChange={(e) => handleModelChange(e.target.value)}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-          <p className="text-xs text-gray-500 mt-1">
-            Make sure Ollama is running locally
-          </p>
+          >
+            {providerModels[value.provider].map((model) => (
+              <option key={model} value={model}>
+                {model}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {/* Base URL for Ollama - Hidden since it runs on backend */}
+      {value.provider === 'ollama' && (
+        <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+          <div className="text-sm text-green-900">
+            <strong>✅ Local Processing:</strong> Ollama will run on the backend server using <span className="font-mono font-semibold">{value.model}</span>. No configuration needed.
+          </div>
         </div>
       )}
 
@@ -149,7 +141,7 @@ export default function ModelSelector({ value, onChange }: ModelSelectorProps) {
         <div className="text-sm text-blue-900">
           <strong>ℹ️ Note:</strong> {' '}
           {value.provider === 'ollama' 
-            ? 'Local models run on your machine. Make sure Ollama is installed and running.'
+            ? 'Runs locally on the backend server. Fast, private, and free.'
             : `${value.provider.charAt(0).toUpperCase() + value.provider.slice(1)} requires an API key. Your data will be sent to their servers.`
           }
         </div>
