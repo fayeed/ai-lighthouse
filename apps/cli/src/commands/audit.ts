@@ -9,6 +9,7 @@ import { writeFile, mkdir } from 'fs/promises';
 import { join, resolve } from 'path';
 import { existsSync } from 'fs';
 import html_to_pdf from 'html-pdf-node';
+import { formatComprehensiveReport, formatDetailedIssues } from '../utils/comprehensive-formatter.js';
 
 interface AuditOptions {
   output?: string;
@@ -158,20 +159,15 @@ export function auditCommand(program: Command) {
         console.log('\n' + chalk.bold('📈 Technical Scores'));
         console.log(generateScoringSummary(result.scoring!));
 
-        // Display top issues
-        const highImpactIssues = result.issues
-          .filter((i: any) => i.impactScore >= 8)
-          .slice(0, 5);
+        // Display comprehensive report with all website data
+        console.log('\n' + chalk.bold('═══════════════════════════════════════════════════════════════════'));
+        console.log(chalk.bold.cyan('                    COMPREHENSIVE ANALYSIS                           '));
+        console.log(chalk.bold('═══════════════════════════════════════════════════════════════════'));
+        console.log(formatComprehensiveReport(result, aiReadiness));
 
-        if (highImpactIssues.length > 0) {
-          console.log('\n' + chalk.bold('⚠️  Top Priority Issues'));
-          highImpactIssues.forEach((issue: any, i: number) => {
-            const icon = issue.serverity === 'critical' ? '🔴' : 
-                        issue.serverity === 'high' ? '🟠' : '🟡';
-            console.log(`\n${icon} ${i + 1}. ${chalk.yellow(issue.title)}`);
-            console.log(`   ${chalk.dim(issue.description.slice(0, 100))}...`);
-            console.log(`   ${chalk.cyan('→')} ${issue.remediation.slice(0, 100)}...`);
-          });
+        // Display all issues
+        if (result.issues && result.issues.length > 0) {
+          console.log('\n' + formatDetailedIssues(result.issues));
         }
 
         // Check threshold
