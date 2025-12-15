@@ -4,5 +4,6 @@
 
 echo "🚀 Starting AI Lighthouse API with PM2..."
 
+# Use yarn as Render expects it
 cd apps/api
-exec pm2-runtime start ecosystem.config.cjs
+exec pnpm start:pm2

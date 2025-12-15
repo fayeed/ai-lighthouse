@@ -4,8 +4,8 @@
 
 echo "🚀 Starting Render build..."
 
-# Install dependencies
+# Install dependencies with frozen lockfile
 echo "📦 Installing dependencies..."
-pnpm install
+pnpm install --frozen-lockfile
 
 echo "✅ Build complete!"
