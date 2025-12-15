@@ -23,6 +23,7 @@ export interface Question {
 export interface LLMComprehension {
   summary: string;
   pageType?: string;
+  pageTypeInsights?: string[];  // LLM-generated recommendations specific to this page type
   topEntities: Array<{  // Quick overview - use entities.ts for detailed extraction
     name: string;
     type: string;
@@ -101,6 +102,11 @@ Provide your analysis in the following JSON format:
 {
   "summary": "A 2-3 sentence summary of the main content and purpose",
   "pageType": "One of: Homepage / Product Page / Blog Post / Documentation / Landing Page / FAQ / About Page / Contact Page / Pricing Page / Portfolio / Case Study / News Article / Tutorial / Guide / Directory / Dashboard / Forum / E-commerce / Service Page / Career Page",
+  "pageTypeInsights": [
+    "Specific actionable recommendation based on the page type and content",
+    "Another insight tailored to this page",
+    "3-5 insights total that would improve AI understanding and user value"
+  ],
   "keyTopics": ["topic1", "topic2", "topic3"],
   "topEntities": [
     {"name": "Entity Name", "type": "Person|Organization|Product|Concept", "relevance": 0.9},
@@ -187,6 +193,7 @@ export async function generateLLMComprehension(
   const summaryData = parseLLMJSON<{
     summary: string;
     pageType?: string;
+    pageTypeInsights?: string[];
     keyTopics: string[];
     topEntities: Array<{ name: string; type: string; relevance: number }>;
     readingLevel: { grade: number; description: string };
@@ -215,6 +222,7 @@ export async function generateLLMComprehension(
   return {
     summary: summaryData.summary,
     pageType: summaryData.pageType,
+    pageTypeInsights: summaryData.pageTypeInsights,
     topEntities: summaryData.topEntities || [],
     questions: questionsData?.questions || [],
     suggestedFAQ: questionsData?.suggestedFAQ || [],

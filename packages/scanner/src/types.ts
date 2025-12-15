@@ -163,6 +163,7 @@ export interface ScanResult {
   llm?: {
     summary: string;
     pageType?: string;
+    pageTypeInsights?: string[];  // LLM-generated recommendations specific to this page type
     topEntities: Array<{
       name: string;
       type: string;
