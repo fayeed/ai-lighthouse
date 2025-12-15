@@ -71,8 +71,7 @@ export function crawlCommand(program: Command) {
               minImpactScore: 8,
             });
             
-            const report = exportAuditReport(result);
-            results.push(report);
+            results.push(result);
           } catch (error) {
             console.error(chalk.yellow(`\n⚠️  Failed to audit ${pageUrl}: ${error}`));
           }
@@ -90,8 +89,8 @@ export function crawlCommand(program: Command) {
           crawl_depth: options.depth,
           pages: results,
           summary: {
-            avg_overall_score: average(results.map(r => r.scores.overall)),
-            avg_ai_readiness: average(results.map(r => r.scores.ai_readiness)),
+            avgOverallScore: average(results.map(r => r.scoring.overallScore)),
+            avgAIReadinessScore: average(results.map(r => r.scoring.categoryScores.find(c => c.category === 'AI Readiness')?.score || 0)),
             total_issues: results.reduce((sum, r) => sum + r.issues.length, 0),
             issues_by_severity: aggregateIssuesBySeverity(results),
           },
@@ -122,8 +121,8 @@ export function crawlCommand(program: Command) {
         // Display summary
         console.log('\n' + chalk.bold('🌐 Crawl Summary'));
         console.log(`Pages audited: ${chalk.cyan(crawlReport.total_pages)}`);
-        console.log(`Average overall score: ${chalk.cyan(crawlReport.summary.avg_overall_score.toFixed(1))}`);
-        console.log(`Average AI readiness: ${chalk.cyan(crawlReport.summary.avg_ai_readiness.toFixed(1))}`);
+        console.log(`Average overall score: ${chalk.cyan(crawlReport.summary.avgOverallScore.toFixed(1))}`);
+        console.log(`Average AI readiness: ${chalk.cyan(crawlReport.summary.avgAIReadinessScore.toFixed(1))}`);
         console.log(`Total issues found: ${chalk.yellow(crawlReport.summary.total_issues)}`);
 
       } catch (error) {
@@ -277,12 +276,12 @@ function generateCrawlHTML(report: any): string {
         </div>
         <div class="stat">
           <div class="stat-label">Avg Overall Score</div>
-          <div class="stat-value">${report.summary.avg_overall_score.toFixed(1)}</div>
+          <div class="stat-value">${report.summary.avgOverallScore.toFixed(1)}</div>
         </div>
         <div class="stat">
           <div class="stat-label">Avg AI Readiness</div>
-          <div class="stat-value">${report.summary.avg_ai_readiness.toFixed(1)}</div>
-        </div>
+          <div class="stat-value">${report.summary.avgAIReadinessScore.toFixed(1)}</div>
+        </div>          avg
         <div class="stat">
           <div class="stat-label">Total Issues</div>
           <div class="stat-value">${report.summary.total_issues}</div>
