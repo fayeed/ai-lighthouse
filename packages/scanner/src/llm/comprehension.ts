@@ -13,6 +13,7 @@
 
 import { CheerioAPI } from 'cheerio';
 import { LLMRunner, LLMConfig } from './runner.js';
+import { safeJSONParse } from './helpers.js';
 
 export interface Question {
   question: string;
@@ -156,14 +157,7 @@ Generate 3-5 questions and 2-3 FAQ items.`;
  */
 function parseLLMJSON<T>(content: string): T | null {
   try {
-    // Try to extract JSON from markdown code blocks
-    const jsonMatch = content.match(/```(?:json)?\s*(\{[\s\S]*\})\s*```/);
-    if (jsonMatch) {
-      return JSON.parse(jsonMatch[1]);
-    }
-    
-    // Try direct parse
-    return JSON.parse(content);
+    return safeJSONParse<T>(content, 'LLM comprehension');
   } catch (e) {
     console.error('Failed to parse LLM JSON response:', e);
     return null;

@@ -174,3 +174,48 @@ export function printLLMConfig(config: LLMConfig): void {
   if (config.maxTokens) console.log(`  Max Tokens: ${config.maxTokens}`);
   if (config.apiKey) console.log(`  API Key: ${config.apiKey.substring(0, 8)}...`);
 }
+
+/**
+ * Safely parse JSON from LLM response, handling markdown code blocks and malformed JSON
+ */
+export function safeJSONParse<T = any>(content: string, context: string = 'LLM response'): T {
+  try {
+    // Clean response - remove markdown code blocks if present
+    let cleanContent = content.trim();
+    
+    // Remove markdown code fences
+    if (cleanContent.startsWith('```')) {
+      cleanContent = cleanContent.replace(/^```(?:json)?\s*\n?/,'').replace(/\n?```\s*$/,'').trim();
+    }
+    
+    // Remove any leading/trailing whitespace and newlines
+    cleanContent = cleanContent.trim();
+    
+    // Try to find JSON object/array if surrounded by other text
+    const jsonMatch = cleanContent.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
+    if (jsonMatch) {
+      cleanContent = jsonMatch[0];
+    }
+    
+    // Attempt to parse
+    return JSON.parse(cleanContent);
+  } catch (err) {
+    const error = err as Error;
+    console.error(`Failed to parse JSON from ${context}:`, error.message);
+    console.error('Raw content:', content.substring(0, 500));
+    
+    // Try to provide helpful error message
+    if (error.message.includes('position')) {
+      const match = error.message.match(/position (\d+)/);
+      if (match) {
+        const pos = parseInt(match[1]);
+        const contextStart = Math.max(0, pos - 50);
+        const contextEnd = Math.min(content.length, pos + 50);
+        console.error('Error context:', content.substring(contextStart, contextEnd));
+        console.error('Error position marker:', ' '.repeat(Math.min(50, pos - contextStart)) + '^');
+      }
+    }
+    
+    throw new Error(`Failed to parse JSON from ${context}: ${error.message}`);
+  }
+}

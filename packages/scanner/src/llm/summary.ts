@@ -7,6 +7,7 @@
 
 import { CheerioAPI } from 'cheerio';
 import { LLMRunner, LLMConfig } from './runner.js';
+import { safeJSONParse } from './helpers.js';
 
 export interface AISummary {
   summaryShort: string;      // 2-3 sentences, optimized for LLM quick understanding
@@ -124,9 +125,7 @@ Guidelines:
 
   // Parse response
   try {
-    const jsonMatch = response.content.match(/```(?:json)?\s*(\{[\s\S]*\})\s*```/);
-    const jsonStr = jsonMatch ? jsonMatch[1] : response.content;
-    const data = JSON.parse(jsonStr);
+    const data = safeJSONParse(response.content, 'Summary generation');
     
     return {
       summaryShort: data.summaryShort || '',
@@ -186,9 +185,7 @@ Respond in JSON:
   });
 
   try {
-    const jsonMatch = response.content.match(/```(?:json)?\s*(\{[\s\S]*\})\s*```/);
-    const jsonStr = jsonMatch ? jsonMatch[1] : response.content;
-    const data = JSON.parse(jsonStr);
+    const data = safeJSONParse(response.content, 'Quick summary');
     
     return {
       summaryShort: data.summaryShort || '',

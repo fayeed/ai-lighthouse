@@ -8,6 +8,7 @@
 
 import { CheerioAPI } from 'cheerio';
 import { LLMRunner, LLMConfig } from './runner.js';
+import { safeJSONParse } from './helpers.js';
 
 export interface IntendedMessaging {
   productName?: string;
@@ -94,7 +95,7 @@ function extractIntendedMessaging($: CheerioAPI): IntendedMessaging[] {
       const content = $(elem).html();
       if (!content) return;
       
-      const data = JSON.parse(content);
+      const data = safeJSONParse(content, 'Mirror test data');
       const items = Array.isArray(data) ? data : [data];
       
       for (const item of items) {
@@ -230,14 +231,7 @@ IMPORTANT:
       }
     );
     
-    // Clean response - remove markdown code blocks if present
-    let cleanContent = response.content.trim();
-    if (cleanContent.startsWith('```')) {
-      // Remove markdown code fences
-      cleanContent = cleanContent.replace(/^```(?:json)?\s*\n?/,'').replace(/\n?```\s*$/,'').trim();
-    }
-    
-    const interpretation = JSON.parse(cleanContent);
+    const interpretation = safeJSONParse(response.content, 'LLM interpretation');
     
     return {
       productName: interpretation.productName || undefined,

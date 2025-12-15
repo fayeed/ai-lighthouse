@@ -8,6 +8,7 @@
 
 import { CheerioAPI } from 'cheerio';
 import { LLMRunner, LLMConfig } from './runner.js';
+import { safeJSONParse } from './helpers.js';
 
 export interface FAQEntry {
   question: string;
@@ -123,7 +124,7 @@ Guidelines:
       }
     );
     
-    const llmFAQs = JSON.parse(response.content);
+    const llmFAQs = safeJSONParse(response.content, 'LLM FAQ generation');
     
     if (!Array.isArray(llmFAQs)) {
       console.error('LLM returned non-array FAQ response');
@@ -171,7 +172,7 @@ function generateFAQsHeuristic($: CheerioAPI): FAQEntry[] {
       const content = $(elem).html();
       if (!content) return;
       
-      const data = JSON.parse(content);
+      const data = safeJSONParse(content, 'FAQ Schema.org JSON-LD');
       const schemas = Array.isArray(data) ? data : [data];
       
       for (const schema of schemas) {

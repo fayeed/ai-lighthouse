@@ -14,6 +14,7 @@
 
 import { CheerioAPI } from 'cheerio';
 import { LLMRunner, LLMConfig } from './runner.js';
+import { safeJSONParse } from './helpers.js';
 
 export type EntityType = 
   | 'organization' 
@@ -629,7 +630,7 @@ function extractEntitiesFromSchema($: CheerioAPI): Entity[] {
       const content = $(elem).html();
       if (!content) return;
       
-      const data = JSON.parse(content);
+      const data = safeJSONParse(content, 'Schema.org JSON-LD');
       const schemas = Array.isArray(data) ? data : [data];
       
       for (const schema of schemas) {
@@ -890,7 +891,7 @@ Return ONLY the JSON array, nothing else.`;
     );
     
     // Parse LLM response
-    let llmEntities = JSON.parse(response.content);
+    let llmEntities = safeJSONParse(response.content, 'LLM entity extraction');
     
     if (!Array.isArray(llmEntities)) {
       console.error('LLM returned non-array response');

@@ -10,6 +10,7 @@
 
 import { CheerioAPI } from 'cheerio';
 import { LLMRunner, LLMConfig } from './runner.js';
+import { safeJSONParse } from './helpers.js';
 import { SEVERITY, CATEGORY, Issue } from '../types.js';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -142,9 +143,7 @@ Only include facts that can be verified in the content. Avoid opinions or interp
 
   // Parse response
   try {
-    const jsonMatch = response.content.match(/```(?:json)?\s*(\{[\s\S]*\})\s*```/);
-    const jsonStr = jsonMatch ? jsonMatch[1] : response.content;
-    const data = JSON.parse(jsonStr);
+    const data = safeJSONParse(response.content, 'LLM fact extraction');
     
     return data.facts.map((f: any) => ({
       id: uuidv4(),
