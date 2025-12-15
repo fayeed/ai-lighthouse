@@ -16,6 +16,7 @@ export default function Home() {
   const [reportData, setReportData] = useState<any>(null);
   const [enableLLM, setEnableLLM] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
+  const [showScoringGuide, setShowScoringGuide] = useState(false);
   const [modelConfig, setModelConfig] = useState<ModelConfig>({
     provider: 'openrouter',
     model: 'meta-llama/llama-3.3-70b-instruct:free',
@@ -167,8 +168,81 @@ Example impact:
                 <div className="text-6xl font-bold mb-2">
                   {Math.round(reportData.aiReadiness.overall)}/100
                 </div>
-                <div className="text-xl">Grade: {reportData.aiReadiness.grade}</div>
+                <div className="text-xl mb-3">Grade: {reportData.aiReadiness.grade}</div>
+                
+                {/* Scoring Guide Button */}
+                <button
+                  onClick={() => setShowScoringGuide(!showScoringGuide)}
+                  className="text-sm text-white/90 hover:text-white underline flex items-center gap-1"
+                >
+                  {showScoringGuide ? '▼' : '▶'} How is this calculated?
+                </button>
               </div>
+
+              {/* Scoring Guide Section */}
+              {showScoringGuide && (
+                <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-6 mb-8">
+                  <h3 className="text-xl font-bold text-gray-900 mb-4">📊 Understanding Your Score & Grade</h3>
+                  
+                  <div className="space-y-6">
+                    {/* How Score is Calculated */}
+                    <div>
+                      <h4 className="font-semibold text-gray-900 mb-2">How the Score is Calculated:</h4>
+                      <div className="bg-white rounded-lg p-4 space-y-2 text-sm">
+                        <p className="text-gray-700">Your AI Readiness Score (0-100) is calculated by analyzing multiple dimensions of your website:</p>
+                        <ul className="list-disc list-inside space-y-1 text-gray-600 ml-2">
+                          <li><strong>Content Quality (20%):</strong> Text clarity, structure, readability</li>
+                          <li><strong>Discoverability (20%):</strong> How easily AI can find your content</li>
+                          <li><strong>Extractability (20%):</strong> How easily AI can extract information</li>
+                          <li><strong>Comprehensibility (15%):</strong> How well AI understands your content</li>
+                          <li><strong>Trustworthiness (15%):</strong> Authority and reliability signals</li>
+                          <li><strong>Technical (10%):</strong> HTML structure, semantic markup, accessibility</li>
+                        </ul>
+                        <p className="text-gray-700 mt-3">
+                          Each dimension is scored based on specific checks and rules. The weighted average gives you the overall score.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Grade Breakdown */}
+                    <div>
+                      <h4 className="font-semibold text-gray-900 mb-2">Grade Breakdown:</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div className="bg-green-50 border-l-4 border-green-500 p-3 rounded">
+                          <div className="font-bold text-green-800">A (90-100)</div>
+                          <p className="text-sm text-gray-700 mt-1">Excellent AI readiness. Your content is highly optimized for AI systems.</p>
+                        </div>
+                        <div className="bg-blue-50 border-l-4 border-blue-500 p-3 rounded">
+                          <div className="font-bold text-blue-800">B (80-89)</div>
+                          <p className="text-sm text-gray-700 mt-1">Good AI readiness. Minor improvements will maximize AI comprehension.</p>
+                        </div>
+                        <div className="bg-yellow-50 border-l-4 border-yellow-500 p-3 rounded">
+                          <div className="font-bold text-yellow-800">C (70-79)</div>
+                          <p className="text-sm text-gray-700 mt-1">Fair AI readiness. Several improvements needed for better AI understanding.</p>
+                        </div>
+                        <div className="bg-orange-50 border-l-4 border-orange-500 p-3 rounded">
+                          <div className="font-bold text-orange-800">D (60-69)</div>
+                          <p className="text-sm text-gray-700 mt-1">Poor AI readiness. Significant issues affecting AI comprehension.</p>
+                        </div>
+                        <div className="bg-red-50 border-l-4 border-red-500 p-3 rounded md:col-span-2">
+                          <div className="font-bold text-red-800">F (Below 60)</div>
+                          <p className="text-sm text-gray-700 mt-1">Critical AI readiness issues. Major improvements required for AI systems to properly understand your content.</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* What This Means */}
+                    <div>
+                      <h4 className="font-semibold text-gray-900 mb-2">What This Means For You:</h4>
+                      <div className="bg-white rounded-lg p-4 space-y-2 text-sm text-gray-700">
+                        <p>• <strong>High scores (A-B):</strong> AI chatbots like ChatGPT, Claude, and search engines can accurately answer questions about your products/services</p>
+                        <p>• <strong>Medium scores (C-D):</strong> AI may miss important details or misunderstand key information</p>
+                        <p>• <strong>Low scores (F):</strong> AI systems struggle to extract information and may hallucinate facts when asked about your business</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Tabs Navigation */}
               <div className="border-b border-gray-200 mb-6">
