@@ -12,9 +12,8 @@ auditRouter.post('/', async (req, res) => {
     const { 
       url, 
       enableLLM = false,
-      llmProvider = 'ollama',
-      llmModel = 'qwen2.5:0.5b',
-      llmBaseUrl,
+      llmProvider = 'openrouter',
+      llmModel = 'meta-llama/llama-3.3-70b-instruct:free',
       llmApiKey,
       minImpactScore = 5,
       async = false
@@ -48,13 +47,21 @@ auditRouter.post('/', async (req, res) => {
         model: llmModel,
       };
 
-      // Add provider-specific configuration
-      if (llmProvider === 'ollama') {
-        scanOptions.llmConfig.baseUrl = llmBaseUrl || 'http://localhost:11434';
-      } else if (llmApiKey) {
-        // For cloud providers (OpenAI, Anthropic, Gemini)
+      // Add API key configuration
+      if (llmApiKey) {
         scanOptions.llmConfig.apiKey = llmApiKey;
+      } else if (llmProvider === 'openrouter') {
+        // Use environment variable for OpenRouter if no key provided
+        const defaultKey = process.env.OPENROUTER_API_KEY;
+        if (defaultKey) {
+          scanOptions.llmConfig.apiKey = defaultKey;
+        } else {
+          return res.status(400).json({ 
+            error: 'API key is required for OpenRouter. Please provide an API key or set OPENROUTER_API_KEY environment variable.' 
+          });
+        }
       } else {
+        // For other cloud providers (OpenAI, Anthropic, Gemini)
         return res.status(400).json({ 
           error: `API key is required for ${llmProvider}` 
         });
