@@ -12,6 +12,8 @@ export default function AnalysisTab({ scanResult }: AnalysisTabProps) {
   const [showAlignmentExample, setShowAlignmentExample] = useState(false);
   const [showClarityExample, setShowClarityExample] = useState(false);
 
+  console.log('AnalysisTab scanResult:', scanResult);
+
   return (
     <div className="space-y-8">
       {/* LLM Summary */}
@@ -28,6 +30,24 @@ export default function AnalysisTab({ scanResult }: AnalysisTabProps) {
                   </span>
                 </div>
                 <p className="text-xs text-gray-500 mt-1">AI's best guess based on content analysis</p>
+                
+                {/* LLM-Generated Page Type Insights */}
+                {scanResult.llm.pageTypeInsights && scanResult.llm.pageTypeInsights.length > 0 && (
+                  <div className="mt-3 bg-white border border-purple-200 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-lg">💡</span>
+                      <strong className="text-purple-900 text-sm">AI-Generated Insights for {scanResult.llm.pageType}</strong>
+                    </div>
+                    <ul className="space-y-1">
+                      {scanResult.llm.pageTypeInsights.map((insight: string, idx: number) => (
+                        <li key={idx} className="text-sm text-gray-700 flex items-start gap-2">
+                          <span className="text-purple-600 mt-0.5">•</span>
+                          <span>{insight}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
             )}
             
@@ -259,6 +279,31 @@ export default function AnalysisTab({ scanResult }: AnalysisTabProps) {
                   {unverifiedFacts.length > 0 && (
                     <div>
                       <strong className="text-yellow-700">⚠ Unverified Facts ({unverifiedFacts.length}):</strong>
+                      
+                      {/* Source Link Recommendation Box */}
+                      <div className="bg-yellow-50 border border-yellow-300 rounded-lg p-4 mt-2 mb-3">
+                        <div className="flex items-start gap-2">
+                          <span className="text-lg">💡</span>
+                          <div className="flex-1">
+                            <p className="text-sm text-gray-800 font-semibold mb-2">
+                              Why these couldn't be verified:
+                            </p>
+                            <p className="text-sm text-gray-700 mb-3">
+                              "LLM could not find supporting evidence in the page."
+                            </p>
+                            <p className="text-sm text-gray-800 font-semibold mb-2">
+                              Best practice:
+                            </p>
+                            <p className="text-sm text-gray-700">
+                              "Consider providing a link or citation if this is important."
+                            </p>
+                            <p className="text-xs text-gray-600 mt-3 italic border-t border-yellow-200 pt-2">
+                              This teaches good content practices and helps users trust your information.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      
                       <p className="text-sm text-gray-600 mt-1">These facts need manual verification as they couldn't be confirmed in the page content</p>
                       <div className="space-y-2 mt-2 max-h-60 overflow-y-auto">
                         {unverifiedFacts.map((verification: any, idx: number) => (
