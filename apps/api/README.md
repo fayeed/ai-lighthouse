@@ -5,16 +5,28 @@ Express backend API for AI Lighthouse scanner.
 ## Features
 
 - ✅ Synchronous and asynchronous audit modes
-- ✅ LLM integration support (Ollama)
+- ✅ LLM integration support (Ollama, OpenRouter, etc.)
 - ✅ CORS enabled for frontend integration
 - ✅ Job status tracking for long-running audits
 - ✅ Comprehensive error handling
+- ✅ Redis-based rate limiting (general: 10/15min, LLM: 5/hour)
+
+## Prerequisites
+
+- Node.js 18+
+- Redis server (local or remote)
 
 ## Getting Started
 
 ```bash
 # Install dependencies
 pnpm install
+
+# Start Redis (if running locally)
+redis-server
+
+# Or use Docker
+docker run -d -p 6379:6379 redis:alpine
 
 # Start development server
 pnpm dev
@@ -26,7 +38,7 @@ pnpm build
 pnpm start
 ```
 
-The API will run on `http://localhost:3001`
+The API will run on `http://localhost:3002`
 
 ## API Endpoints
 
@@ -100,8 +112,19 @@ Health check endpoint.
 
 ## Environment Variables
 
-- `PORT` - Server port (default: 3001)
+- `PORT` - Server port (default: 3002)
 - `NODE_ENV` - Environment (development/production)
+- `REDIS_URL` - Redis connection URL (default: redis://localhost:6379)
+- `OPENROUTER_API_KEY` - API key for OpenRouter LLM provider (optional)
+
+## Rate Limiting
+
+The API implements two-tier rate limiting using Redis:
+
+1. **General API Rate Limit**: 10 requests per 15 minutes per IP
+2. **LLM-Enabled Rate Limit**: 5 requests per hour per IP (only when `enableLLM: true`)
+
+Rate limit errors return HTTP 429 with retry information.
 
 ## Frontend Integration
 
