@@ -15,7 +15,7 @@ interface ModelSelectorProps {
 }
 
 const providerModels = {
-  openrouter: ['meta-llama/llama-3.3-70b-instruct:free', 'google/gemini-2.0-flash-exp:free', 'meta-llama/llama-3.1-8b-instruct:free', 'microsoft/phi-3-mini-128k-instruct:free'],
+  openrouter: ['meta-llama/llama-3.3-70b-instruct:free', 'openai/gpt-oss-120b:free', 'tngtech/deepseek-r1t2-chimera:free'],
   openai: ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-3.5-turbo'],
   anthropic: ['claude-3-5-sonnet-20241022', 'claude-3-5-haiku-20241022', 'claude-3-opus-20240229'],
   gemini: ['gemini-2.0-flash-exp', 'gemini-1.5-pro', 'gemini-1.5-flash'],
