@@ -41,7 +41,7 @@ export default function Home() {
         }
       }
 
-      const response = await fetch('http://localhost:3002/api/audit', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002'}/api/audit`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
