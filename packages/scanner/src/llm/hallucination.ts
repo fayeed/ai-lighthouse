@@ -544,7 +544,7 @@ export function hallucinationTriggersToIssues(
     issues.push({
       id: `HALL-${trigger.type.toUpperCase()}-${uuidv4().substring(0, 8)}`,
       title: `Hallucination Trigger: ${trigger.type.replace('_', ' ')}`,
-      serverity: trigger.severity,
+      severity: trigger.severity,
       category: CATEGORY.HALL,
       description: trigger.description,
       remediation: getRemediation(trigger),

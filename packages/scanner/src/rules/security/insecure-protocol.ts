@@ -20,7 +20,7 @@ export class InsecureProtocolRule extends BaseRule {
       return {
         id: `${CATEGORY.TECH}-007`,
         title: 'Page not served over HTTPS',
-        serverity: SEVERITY.CRITICAL,
+        severity: SEVERITY.CRITICAL,
         category: CATEGORY.TECH,
         description: 'The page is served over HTTP instead of HTTPS. Many AI crawlers prefer or require HTTPS for security.',
         remediation: 'Implement HTTPS with a valid SSL/TLS certificate. HTTPS is essential for modern web security.',

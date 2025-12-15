@@ -38,7 +38,7 @@ export class RedundantContentRule extends BaseRule {
     return {
       id: `${CATEGORY.CHUNK}-002`,
       title: 'Repetitive text content',
-      serverity: SEVERITY.MEDIUM,
+      severity: SEVERITY.MEDIUM,
       category: CATEGORY.CHUNK,
       description: `Found ${duplicates.length} text pattern(s) repeated multiple times, wasting ~${totalDuplicateTokens} tokens. Repetitive disclaimers or boilerplate hurt token efficiency.`,
       remediation: 'Consolidate repetitive text into a single location. Use references or footnotes instead of repeating the same text multiple times.',

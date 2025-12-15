@@ -29,7 +29,7 @@ export class FormWithoutHttpsRule extends BaseRule {
       return {
         id: `${CATEGORY.TECH}-010`,
         title: 'Forms submitting to HTTP',
-        serverity: SEVERITY.CRITICAL,
+        severity: SEVERITY.CRITICAL,
         category: CATEGORY.TECH,
         description: `Found ${insecureForms} form(s) submitting to HTTP URLs. This exposes user data and signals poor security practices.`,
         remediation: 'Update form actions to use HTTPS URLs to protect user data in transit.',

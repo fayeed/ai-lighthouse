@@ -25,7 +25,7 @@ export class MissingSemanticHtmlRule extends BaseRule {
     return {
       id: `${CATEGORY.AIREAD}-014`,
       title: 'Missing main semantic container',
-      serverity: SEVERITY.HIGH,
+      severity: SEVERITY.HIGH,
       category: CATEGORY.AIREAD,
       description: 'The page lacks a <main> or <article> element. These semantic containers help AI agents identify the primary content.',
       remediation: 'Wrap your main content in a <main> element, or use <article> for article-type content. This helps AI understand what content is most important.',

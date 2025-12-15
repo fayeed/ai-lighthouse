@@ -29,7 +29,7 @@ export class MissingBreadcrumbsRule extends BaseRule {
     return {
       id: `${CATEGORY.AIREAD}-031`,
       title: 'Missing breadcrumb navigation',
-      serverity: SEVERITY.LOW,
+      severity: SEVERITY.LOW,
       category: CATEGORY.AIREAD,
       description: 'The page lacks breadcrumb navigation. Breadcrumbs help AI agents understand the page\'s position in the site hierarchy.',
       remediation: 'Add breadcrumb navigation with Schema.org BreadcrumbList markup to provide hierarchical context.',

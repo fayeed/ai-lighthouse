@@ -175,7 +175,7 @@ function extractEntities(result: ScanResult): AuditReport['entities'] {
 
   // Find entity detector issue (INFO severity with entity data)
   const entityIssue = result.issues.find(
-    issue => issue.id === 'EXTRACT-002' && issue.serverity === SEVERITY.INFO
+    issue => issue.id === 'EXTRACT-002' && issue.severity === SEVERITY.INFO
   );
 
   if (entityIssue && entityIssue.evidence) {
@@ -212,11 +212,11 @@ function generateRecommendations(issues: Issue[]): AuditReport['recommendations'
 
   // Get critical and high severity issues
   const priorityIssues = issues
-    .filter(i => i.serverity === SEVERITY.CRITICAL || i.serverity === SEVERITY.HIGH)
+    .filter(i => i.severity === SEVERITY.CRITICAL || i.severity === SEVERITY.HIGH)
     .sort((a, b) => {
       // Sort by severity then impact
-      if (a.serverity === SEVERITY.CRITICAL && b.serverity !== SEVERITY.CRITICAL) return -1;
-      if (a.serverity !== SEVERITY.CRITICAL && b.serverity === SEVERITY.CRITICAL) return 1;
+      if (a.severity === SEVERITY.CRITICAL && b.severity !== SEVERITY.CRITICAL) return -1;
+      if (a.severity !== SEVERITY.CRITICAL && b.severity === SEVERITY.CRITICAL) return 1;
       return b.impactScore - a.impactScore;
     })
     .slice(0, 10); // Top 10 recommendations
@@ -225,7 +225,7 @@ function generateRecommendations(issues: Issue[]): AuditReport['recommendations'
     recommendations.push({
       issue_id: issue.id,
       fix: issue.remediation,
-      impact: mapSeverity(issue.serverity),
+      impact: mapSeverity(issue.severity),
     });
   }
 
@@ -237,16 +237,16 @@ function generateRecommendations(issues: Issue[]): AuditReport['recommendations'
  */
 function formatIssues(issues: Issue[]): AuditReport['issues'] {
   return issues
-    .filter(i => i.serverity !== SEVERITY.INFO) // Exclude INFO issues from main list
+    .filter(i => i.severity !== SEVERITY.INFO) // Exclude INFO issues from main list
     .map(issue => ({
       id: issue.id,
-      severity: mapSeverity(issue.serverity),
+      severity: mapSeverity(issue.severity),
       message: issue.title,
       evidence: issue.evidence && issue.evidence.length > 0 
         ? issue.evidence.join(', ') 
         : null,
       suggested_fix: issue.remediation,
-      impact: mapSeverity(issue.serverity),
+      impact: mapSeverity(issue.severity),
       category: mapCategory(issue.category),
     }));
 }

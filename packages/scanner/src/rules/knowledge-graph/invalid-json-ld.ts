@@ -27,7 +27,7 @@ export class InvalidJsonLdRule extends BaseRule {
     return {
       id: `${CATEGORY.KG}-002`,
       title: 'Invalid JSON-LD blocks detected',
-      serverity: SEVERITY.MEDIUM,
+      severity: SEVERITY.MEDIUM,
       category: CATEGORY.KG,
       description: `Found ${jsonLd.errors.length} JSON-LD script(s) with parsing errors. Invalid structured data is ignored by AI crawlers.`,
       remediation: 'Validate your JSON-LD using Google\'s Structured Data Testing Tool or schema.org validator.',

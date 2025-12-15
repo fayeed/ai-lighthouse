@@ -48,7 +48,7 @@ export class PageEntityDetectorRule extends BaseRule {
     return {
       id: `${CATEGORY.EXTRACT}-002`,
       title: 'Page-Level Entity Detected',
-      serverity: SEVERITY.INFO,
+      severity: SEVERITY.INFO,
       category: CATEGORY.EXTRACT,
       description: `Detected primary entity: ${entity.entityType || 'Unknown'} - ${entity.name || 'Unnamed'}`,
       remediation: entity.confidence < 0.7 

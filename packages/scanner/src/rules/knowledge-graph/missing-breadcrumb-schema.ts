@@ -29,7 +29,7 @@ export class MissingBreadcrumbSchemaRule extends BaseRule {
     return {
       id: `${CATEGORY.KG}-005`,
       title: 'Breadcrumbs lack structured data',
-      serverity: SEVERITY.LOW,
+      severity: SEVERITY.LOW,
       category: CATEGORY.KG,
       description: 'Page has breadcrumb navigation but no BreadcrumbList schema. Structured breadcrumbs help AI understand site hierarchy.',
       remediation: 'Add BreadcrumbList structured data to complement your breadcrumb navigation.',

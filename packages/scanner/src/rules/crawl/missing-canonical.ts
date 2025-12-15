@@ -20,7 +20,7 @@ export class MissingCanonicalRule extends BaseRule {
       return {
         id: `${CATEGORY.CRAWL}-003`,
         title: 'Missing canonical tag',
-        serverity: SEVERITY.HIGH,
+        severity: SEVERITY.HIGH,
         category: CATEGORY.CRAWL,
         description: 'No canonical URL specified. This can cause duplicate content issues for AI crawlers.',
         remediation: 'Add <link rel="canonical" href="..."> to specify the preferred URL version.',

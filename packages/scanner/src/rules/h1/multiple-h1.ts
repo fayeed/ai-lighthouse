@@ -20,7 +20,7 @@ export class MultipleH1Rule extends BaseRule {
       return {
         id: `${CATEGORY.AIREAD}-002`,
         title: 'Multiple H1 Headings',
-        serverity: SEVERITY.HIGH,
+        severity: SEVERITY.HIGH,
         category: CATEGORY.AIREAD,
         description: `The HTML document contains multiple H1 headings (${h1s.length} found).`,
         remediation: 'Consider using a single H1 heading for better SEO practices.',

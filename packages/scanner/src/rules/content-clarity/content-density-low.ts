@@ -27,7 +27,7 @@ export class ContentDensityLowRule extends BaseRule {
       return {
         id: `${CATEGORY.AIREAD}-089`,
         title: 'Content density too low',
-        serverity: SEVERITY.MEDIUM,
+        severity: SEVERITY.MEDIUM,
         category: CATEGORY.AIREAD,
         description: `Content-to-code ratio is ${(contentRatio * 100).toFixed(1)}%. Too much markup relative to content.`,
         remediation: 'Increase text content or reduce excessive HTML markup/scripts.',

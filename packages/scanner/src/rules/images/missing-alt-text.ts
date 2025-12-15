@@ -39,7 +39,7 @@ export class MissingAltTextRule extends BaseRule {
     return {
       id: `${CATEGORY.AIREAD}-037`,
       title: 'Images missing alt text',
-      serverity: SEVERITY.HIGH,
+      severity: SEVERITY.HIGH,
       category: CATEGORY.AIREAD,
       description: `Found ${imagesWithoutAlt.length} image(s) without alt attributes. Alt text is crucial for AI agents to understand image content and context.`,
       remediation: 'Add descriptive alt text to all content images. For decorative images, use alt="" to indicate they can be safely ignored.',

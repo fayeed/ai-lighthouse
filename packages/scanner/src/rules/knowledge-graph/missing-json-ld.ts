@@ -23,7 +23,7 @@ export class MissingJsonLdRule extends BaseRule {
     return {
       id: `${CATEGORY.KG}-001`,
       title: 'No Schema.org structured data',
-      serverity: SEVERITY.HIGH,
+      severity: SEVERITY.HIGH,
       category: CATEGORY.KG,
       description: 'The page lacks Schema.org structured data in JSON-LD format. This prevents AI from building knowledge graphs from your content.',
       remediation: 'Add Schema.org structured data using JSON-LD. Consider Organization, Person, Article, Product, or other relevant schemas.',

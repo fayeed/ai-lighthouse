@@ -50,7 +50,7 @@ export class LowClarityScoreRule extends BaseRule {
       return {
         id: `${CATEGORY.AIREAD}-094`,
         title: 'Low clarity score',
-        serverity: SEVERITY.MEDIUM,
+        severity: SEVERITY.MEDIUM,
         category: CATEGORY.AIREAD,
         description: `Content clarity score: ${clarityScore}/100. Multiple readability issues detected.`,
         remediation: 'Improve structure, readability, and organization. Issues: ' + clarityIssues.join(', '),

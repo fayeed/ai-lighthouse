@@ -26,7 +26,7 @@ export class ThinContentRule extends BaseRule {
     return {
       id: `${CATEGORY.AIREAD}-018`,
       title: 'Thin content detected',
-      serverity: SEVERITY.HIGH,
+      severity: SEVERITY.HIGH,
       category: CATEGORY.AIREAD,
       description: `Page contains only ${wordCount} words of content. Thin content provides little value to AI agents and users.`,
       remediation: 'Add substantial, valuable content to the page. Aim for at least 300 words of meaningful content.',

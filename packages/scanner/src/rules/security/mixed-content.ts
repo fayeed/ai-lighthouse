@@ -22,7 +22,7 @@ export class MixedContentRule extends BaseRule {
         return {
           id: `${CATEGORY.TECH}-008`,
           title: 'Mixed content detected',
-          serverity: SEVERITY.HIGH,
+          severity: SEVERITY.HIGH,
           category: CATEGORY.TECH,
           description: `HTTPS page loading ${httpResources} HTTP resource(s). Mixed content is blocked by browsers and raises security concerns.`,
           remediation: 'Update all resource URLs to use HTTPS or protocol-relative URLs (//).',

@@ -374,10 +374,10 @@ export function formatDetailedIssues(issues: any[]): string {
 
   // Group by severity
   const grouped = {
-    critical: issues.filter(i => i.serverity === 'critical'),
-    high: issues.filter(i => i.serverity === 'high'),
-    medium: issues.filter(i => i.serverity === 'medium'),
-    low: issues.filter(i => i.serverity === 'low'),
+    critical: issues.filter(i => i.severity === 'critical'),
+    high: issues.filter(i => i.severity === 'high'),
+    medium: issues.filter(i => i.severity === 'medium'),
+    low: issues.filter(i => i.severity === 'low'),
   };
 
   // Stats

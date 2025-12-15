@@ -21,7 +21,7 @@ export class BrokenInternalLinksRule extends BaseRule {
       return {
         id: `${CATEGORY.AIREAD}-041`,
         title: 'No links found',
-        serverity: SEVERITY.HIGH,
+        severity: SEVERITY.HIGH,
         category: CATEGORY.AIREAD,
         description: 'The page contains no links. This creates a dead-end for AI crawlers and limits content discoverability.',
         remediation: 'Add relevant internal and external links to improve navigation and content relationships.',

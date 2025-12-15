@@ -20,7 +20,7 @@ export async function runRegisteredRules(ctx: RuleContext) {
       allIssues.push({
         id: 'MISC-ERR',
         title: `Rule ${r.meta.id} failed to run`,
-        serverity: SEVERITY.LOW,
+        severity: SEVERITY.LOW,
         category: CATEGORY.MISC,
         description: String(err ?? err),
         remediation: 'Report this rule error to maintainers.',

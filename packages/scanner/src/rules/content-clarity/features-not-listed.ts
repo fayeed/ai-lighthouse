@@ -28,7 +28,7 @@ export class FeaturesNotListedRule extends BaseRule {
       return {
         id: `${CATEGORY.AIREAD}-086`,
         title: 'Features not clearly listed',
-        serverity: SEVERITY.LOW,
+        severity: SEVERITY.LOW,
         category: CATEGORY.AIREAD,
         description: 'Product page lacks a clear features or benefits section with structured lists.',
         remediation: 'Add a "Features" or "Benefits" section with bullet points or ordered list.',

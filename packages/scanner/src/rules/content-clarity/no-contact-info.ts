@@ -27,7 +27,7 @@ export class NoContactInfoRule extends BaseRule {
       return {
         id: `${CATEGORY.AIREAD}-098`,
         title: 'No contact information',
-        serverity: SEVERITY.LOW,
+        severity: SEVERITY.LOW,
         category: CATEGORY.AIREAD,
         description: 'Page lacks visible contact information (email, phone, or contact links).',
         remediation: 'Add contact information to improve trust and AI understanding of your organization.',

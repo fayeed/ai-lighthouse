@@ -346,9 +346,9 @@ function calculateDimensionScore(issues: Issue[]): number {
   let penalty = 0;
   for (const issue of issues) {
     const severityMultiplier = 
-      issue.serverity === SEVERITY.CRITICAL ? 3 :
-      issue.serverity === SEVERITY.HIGH ? 2 :
-      issue.serverity === SEVERITY.MEDIUM ? 1 :
+      issue.severity === SEVERITY.CRITICAL ? 3 :
+      issue.severity === SEVERITY.HIGH ? 2 :
+      issue.severity === SEVERITY.MEDIUM ? 1 :
       0.5;
     
     penalty += issue.impactScore * severityMultiplier * 0.5;
@@ -380,16 +380,16 @@ function identifyQuickWins(issues: Issue[]): AIReadinessScore['quickWins'] {
  */
 function buildRoadmap(issues: Issue[], dimensions: AIReadinessScore['dimensions']): AIReadinessScore['roadmap'] {
   const critical = issues.filter(i => 
-    i.serverity === SEVERITY.CRITICAL || 
-    (i.serverity === SEVERITY.HIGH && i.impactScore >= 20)
+    i.severity === SEVERITY.CRITICAL || 
+    (i.severity === SEVERITY.HIGH && i.impactScore >= 20)
   );
   
   const high = issues.filter(i => 
-    i.serverity === SEVERITY.HIGH && i.impactScore >= 15 && i.impactScore < 20
+    i.severity === SEVERITY.HIGH && i.impactScore >= 15 && i.impactScore < 20
   );
   
   const medium = issues.filter(i => 
-    i.serverity === SEVERITY.MEDIUM && i.impactScore >= 10
+    i.severity === SEVERITY.MEDIUM && i.impactScore >= 10
   );
   
   return {
@@ -483,7 +483,7 @@ function getStatus(score: number): DimensionScore['status'] {
 function formatIssue(issue: Issue) {
   return {
     title: issue.title,
-    severity: issue.serverity,
+    severity: issue.severity,
     impact: issue.impactScore,
   };
 }

@@ -31,7 +31,7 @@ export class IncompleteSchemaOrgRule extends BaseRule {
     return {
       id: `${CATEGORY.KG}-003`,
       title: 'Schema.org data lacks main entity',
-      serverity: SEVERITY.MEDIUM,
+      severity: SEVERITY.MEDIUM,
       category: CATEGORY.KG,
       description: `Found ${schemaCount} Schema.org object(s) but no main entity type (Organization, Person, Article, WebPage, etc.).`,
       remediation: 'Add a primary Schema.org type that describes the main content or purpose of the page.',

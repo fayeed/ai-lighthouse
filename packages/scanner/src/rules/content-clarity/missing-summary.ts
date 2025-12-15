@@ -26,7 +26,7 @@ export class MissingSummaryRule extends BaseRule {
       return {
         id: `${CATEGORY.AIREAD}-080`,
         title: 'Missing summary or intro section',
-        serverity: SEVERITY.MEDIUM,
+        severity: SEVERITY.MEDIUM,
         category: CATEGORY.AIREAD,
         description: 'No clear summary or introduction section found. AI agents benefit from explicit page summaries.',
         remediation: 'Add a clear introduction or summary section at the start of your content.',

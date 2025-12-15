@@ -31,7 +31,7 @@ export class AudioMissingTranscriptRule extends BaseRule {
     return {
       id: `${CATEGORY.AIREAD}-069`,
       title: 'Audio content without transcripts',
-      serverity: SEVERITY.MEDIUM,
+      severity: SEVERITY.MEDIUM,
       category: CATEGORY.AIREAD,
       description: `Found ${audioElements.length} audio element(s) without transcript links. Audio content is inaccessible to AI without text alternatives.`,
       remediation: 'Provide text transcripts for all audio content (podcasts, audio clips, etc.).',

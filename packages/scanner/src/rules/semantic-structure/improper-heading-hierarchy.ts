@@ -40,7 +40,7 @@ export class ImproperHeadingHierarchyRule extends BaseRule {
     return {
       id: `${CATEGORY.AIREAD}-015`,
       title: 'Broken heading hierarchy',
-      serverity: SEVERITY.MEDIUM,
+      severity: SEVERITY.MEDIUM,
       category: CATEGORY.AIREAD,
       description: 'The page has skipped heading levels (e.g., h1 to h3 without h2). A proper heading hierarchy helps AI agents understand content structure.',
       remediation: 'Ensure heading levels follow sequential order: h1 → h2 → h3. Don\'t skip levels in the hierarchy.',

@@ -20,7 +20,7 @@ export class DuplicateH1Rule extends BaseRule {
       return {
         id: `${CATEGORY.CRAWL}-014`,
         title: 'Excessive external resources',
-        serverity: SEVERITY.LOW,
+        severity: SEVERITY.LOW,
         category: CATEGORY.CRAWL,
         description: `Page loads ${totalResources} external resources. This wastes crawl budget and slows down AI crawler processing.`,
         remediation: 'Consolidate resources, use sprite sheets, inline critical assets, and defer non-critical loads.',

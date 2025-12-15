@@ -34,7 +34,7 @@ export class ChunkRule extends BaseRule {
       return {
         id: `${CATEGORY.CHUNK}-001`,
         title: "Chunk exceeds recommended token/window size",
-        serverity: SEVERITY.CRITICAL,
+        severity: SEVERITY.CRITICAL,
         category: CATEGORY.CHUNK,
         description: `The content chunk contains approximately ${totalTokens} tokens, which exceeds the recommended maximum of ${maxWindow} tokens.`,
         remediation: `Consider splitting the content into smaller chunks or sections to fit within the recommended token limit of ${maxWindow} tokens for better processing performance.`,

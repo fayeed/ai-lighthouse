@@ -24,7 +24,7 @@ export class HttpStatusNotOkRule extends BaseRule {
       return {
         id: `${CATEGORY.CRAWL}-001`,
         title: 'HTTP status not OK',
-        serverity: SEVERITY.CRITICAL,
+        severity: SEVERITY.CRITICAL,
         category: CATEGORY.CRAWL,
         description: `Page returned HTTP status ${status}. AI crawlers cannot index pages with non-2xx or 3xx status codes.`,
         remediation: 'Ensure the page returns a successful 2xx status code (typically 200 OK).',

@@ -23,7 +23,7 @@ export class MissingPageTitleRule extends BaseRule {
     return {
       id: `${CATEGORY.AIREAD}-028`,
       title: 'Missing or inadequate page title',
-      serverity: SEVERITY.HIGH,
+      severity: SEVERITY.HIGH,
       category: CATEGORY.AIREAD,
       description: 'The page lacks a proper <title> element. Page titles provide essential context for AI agents.',
       remediation: 'Add a descriptive <title> element that clearly describes the page content. Aim for 50-60 characters.',

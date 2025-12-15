@@ -42,7 +42,7 @@ const highImpactIssues = result.issues.filter(i => i.impactScore >= 8);
 if (highImpactIssues.length > 0) {
   console.log('\n📌 Top Priority Issues (Impact ≥ 8):');
   highImpactIssues.slice(0, 10).forEach((issue, i) => {
-    console.log(`\n${i + 1}. [${issue.serverity.toUpperCase()}] ${issue.title}`);
+    console.log(`\n${i + 1}. [${issue.severity.toUpperCase()}] ${issue.title}`);
     console.log(`   Impact: ${issue.impactScore} | Confidence: ${((issue.confidence || 1) * 100).toFixed(0)}%`);
     console.log(`   ${issue.description.slice(0, 120)}...`);
     console.log(`   Fix: ${issue.remediation.slice(0, 120)}...`);

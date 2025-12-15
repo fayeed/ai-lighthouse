@@ -31,7 +31,7 @@ export class VideoMissingTranscriptRule extends BaseRule {
     return {
       id: `${CATEGORY.AIREAD}-068`,
       title: 'No video transcripts available',
-      serverity: SEVERITY.LOW,
+      severity: SEVERITY.LOW,
       category: CATEGORY.AIREAD,
       description: 'Videos present but no transcript links found. Full text transcripts are ideal for AI content understanding.',
       remediation: 'Provide full text transcripts for videos. Link to them near the video or include them on the page.',

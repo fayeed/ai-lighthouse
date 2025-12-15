@@ -26,7 +26,7 @@ export class RobotsMetaNoindexRule extends BaseRule {
       return {
         id: `${CATEGORY.CRAWL}-009`,
         title: 'Page has nofollow directive',
-        serverity: SEVERITY.HIGH,
+        severity: SEVERITY.HIGH,
         category: CATEGORY.CRAWL,
         description: 'Meta robots tag contains "nofollow". This prevents AI crawlers from following links on the page.',
         remediation: 'Remove "nofollow" from meta robots tag if you want AI crawlers to discover linked pages.',

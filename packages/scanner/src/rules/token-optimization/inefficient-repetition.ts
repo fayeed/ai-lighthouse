@@ -28,7 +28,7 @@ export class InefficientRepetitionRule extends BaseRule {
       return {
         id: `${CATEGORY.CHUNK}-005`,
         title: 'Duplicate navigation elements',
-        serverity: SEVERITY.MEDIUM,
+        severity: SEVERITY.MEDIUM,
         category: CATEGORY.CHUNK,
         description: `Found ${nav.length} <nav> elements. Multiple navigation sections waste ~${repetitiveTokens} tokens with repetitive content.`,
         remediation: 'Consolidate navigation into a single element. If multiple navs are needed, ensure they serve distinct purposes and contain unique content.',
@@ -50,7 +50,7 @@ export class InefficientRepetitionRule extends BaseRule {
       return {
         id: `${CATEGORY.CHUNK}-005`,
         title: 'Duplicate footer elements',
-        serverity: SEVERITY.LOW,
+        severity: SEVERITY.LOW,
         category: CATEGORY.CHUNK,
         description: `Found ${footer.length} <footer> elements wasting ~${footerTokens} tokens with repetitive content.`,
         remediation: 'Consolidate footers into a single element to reduce token waste.',

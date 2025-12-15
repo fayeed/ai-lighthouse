@@ -28,7 +28,7 @@ export class FaqNotStructuredRule extends BaseRule {
       return {
         id: `${CATEGORY.AIREAD}-088`,
         title: 'FAQ section not structured',
-        serverity: SEVERITY.LOW,
+        severity: SEVERITY.LOW,
         category: CATEGORY.AIREAD,
         description: `Found ${questionHeadings} question-style headings but no structured FAQ section.`,
         remediation: 'Create a dedicated FAQ section with proper markup or schema.',

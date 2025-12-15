@@ -26,7 +26,7 @@ export class RobotsTxtBlocksAllRule extends BaseRule {
       return {
         id: `${CATEGORY.CRAWL}-008`,
         title: 'Page has noindex directive',
-        serverity: SEVERITY.CRITICAL,
+        severity: SEVERITY.CRITICAL,
         category: CATEGORY.CRAWL,
         description: 'Meta robots tag contains "noindex". This prevents AI crawlers from indexing the page.',
         remediation: 'Remove "noindex" from meta robots tag if you want AI crawlers to index this page.',

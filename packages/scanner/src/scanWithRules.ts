@@ -24,7 +24,7 @@ const fetched = await fetchHtml(url, options.timeoutMs!, options.userAgent);
     issues.push({
       id: 'MISC-002',
       title: 'HTTP error fetching page',
-      serverity: SEVERITY.LOW,
+      severity: SEVERITY.LOW,
       category: CATEGORY.MISC,
       description: `Failed to fetch page; HTTP status ${fetched.status}`,
       remediation: 'Check URL and network; ensure the page is accessible.',
@@ -68,7 +68,7 @@ const fetched = await fetchHtml(url, options.timeoutMs!, options.userAgent);
     issues.push({
       id: 'CHUNK-001',
       title: 'Chunk exceeds recommended token/window size',
-      serverity: SEVERITY.CRITICAL,
+      severity: SEVERITY.CRITICAL,
       category: CATEGORY.CHUNK,
       description: `Main content appears to be long (${tokenEstimate} tokens) and may exceed model context windows. Consider splitting into smaller sections or paginating content.`,
       remediation: 'Break content into smaller semantic sections using headings or create separate pages for distinct topics.',
@@ -169,7 +169,7 @@ const fetched = await fetchHtml(url, options.timeoutMs!, options.userAgent);
         issues.push({
           id: 'LLMAPI-001',
           title: 'LLM Comprehension Failed',
-          serverity: SEVERITY.LOW,
+          severity: SEVERITY.LOW,
           category: CATEGORY.LLMAPI,
           description: `Failed to generate LLM comprehension: ${errorMessage}`,
           remediation: 'Check LLM API credentials and configuration.',
@@ -318,7 +318,7 @@ const fetched = await fetchHtml(url, options.timeoutMs!, options.userAgent);
           issues.push({
             id: `LLMCONF-MIRROR-${mismatch.field.toUpperCase()}`,
             title: `AI Misunderstanding: ${mismatch.field}`,
-            serverity: mismatch.severity === 'critical' ? SEVERITY.HIGH : SEVERITY.MEDIUM,
+            severity: mismatch.severity === 'critical' ? SEVERITY.HIGH : SEVERITY.MEDIUM,
             category: CATEGORY.LLMCON,
             description: mismatch.description,
             remediation: mismatch.recommendation,

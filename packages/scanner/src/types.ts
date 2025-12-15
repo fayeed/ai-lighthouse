@@ -35,7 +35,7 @@ export interface IssueLocation {
 export interface Issue {
   id: string;
   title: string;
-  serverity: SEVERITY;
+  severity: SEVERITY;
   description: string;
   remediation: string;
   impactScore: number;

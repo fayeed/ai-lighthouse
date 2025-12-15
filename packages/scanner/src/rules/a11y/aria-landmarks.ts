@@ -21,7 +21,7 @@ export class AriaLandmarksRule extends BaseRule {
       return {
         id: `${CATEGORY.A11Y}-001`,
         title: 'No ARIA landmarks or semantic elements',
-        serverity: SEVERITY.HIGH,
+        severity: SEVERITY.HIGH,
         category: CATEGORY.A11Y,
         description: 'The page lacks ARIA landmark roles and semantic HTML5 elements. These help AI agents identify and navigate content sections.',
         remediation: 'Add ARIA landmark roles (role="main", role="navigation", etc.) or use semantic HTML5 elements (<main>, <nav>, <header>, <footer>).',

@@ -32,7 +32,7 @@ export class DuplicateContentRule extends BaseRule {
       return {
         id: `${CATEGORY.AIREAD}-093`,
         title: 'Duplicate content detected',
-        serverity: SEVERITY.LOW,
+        severity: SEVERITY.LOW,
         category: CATEGORY.AIREAD,
         description: `Found ${duplicates.length} instances of duplicate paragraphs across the page.`,
         remediation: 'Remove or consolidate duplicate content to avoid redundancy.',

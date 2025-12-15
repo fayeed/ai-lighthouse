@@ -33,7 +33,7 @@ for (const [category, issues] of byCategory.entries()) {
   
   // Show first 3 examples
   issues.slice(0, 3).forEach((issue, i) => {
-    console.log(`  ${i + 1}. [${issue.serverity}] ${issue.title}`);
+    console.log(`  ${i + 1}. [${issue.severity}] ${issue.title}`);
     console.log(`     ID: ${issue.id}`);
     console.log(`     Impact: ${issue.impactScore}`);
     console.log(`     Description: ${issue.description.slice(0, 100)}...`);

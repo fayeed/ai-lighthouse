@@ -27,7 +27,7 @@ export class ExtractCSRule extends BaseRule {
         return {
           id: `${CATEGORY.EXTRACT}-001`,
           title: "Potential Content Extraction Issue",
-          serverity: SEVERITY.CRITICAL,
+          severity: SEVERITY.CRITICAL,
           category: CATEGORY.EXTRACT,
           description: "The HTML document appears to have minimal extractable content, which may indicate issues with content extraction.",
           remediation: "Review the HTML structure and ensure that meaningful content is present within <main> or <article> tags. Consider improving the content delivery method if necessary.",

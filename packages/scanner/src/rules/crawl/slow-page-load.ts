@@ -38,7 +38,7 @@ export class SlowPageLoadRule extends BaseRule {
       return {
         id: `${CATEGORY.CRAWL}-010`,
         title: 'Missing hreflang self-reference',
-        serverity: SEVERITY.LOW,
+        severity: SEVERITY.LOW,
         category: CATEGORY.CRAWL,
         description: 'Hreflang tags present but no self-reference found. This is a best practice for international SEO.',
         remediation: 'Add a self-referential hreflang link pointing to the current page in its own language.',

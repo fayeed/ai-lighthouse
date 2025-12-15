@@ -39,7 +39,7 @@ export class VideoMissingCaptionsRule extends BaseRule {
     return {
       id: `${CATEGORY.AIREAD}-066`,
       title: 'Videos without captions',
-      serverity: SEVERITY.MEDIUM,
+      severity: SEVERITY.MEDIUM,
       category: CATEGORY.AIREAD,
       description: `Found ${videosWithoutCaptions} video(s) without caption tracks. Captions provide text alternatives that AI can process.`,
       remediation: 'Add <track kind="captions"> elements to video tags with WebVTT caption files.',

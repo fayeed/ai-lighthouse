@@ -23,7 +23,7 @@ export class MissingMetaDescriptionRule extends BaseRule {
     return {
       id: `${CATEGORY.AIREAD}-010`,
       title: 'Missing or short meta description',
-      serverity: SEVERITY.MEDIUM,
+      severity: SEVERITY.MEDIUM,
       category: CATEGORY.AIREAD,
       description: 'The page lacks a proper meta description. Descriptions help AI agents understand page content and purpose.',
       remediation: 'Add a meta description tag with 150-160 characters that summarizes the page content.',

@@ -33,7 +33,7 @@ export class FormLabelsRule extends BaseRule {
       return {
         id: `${CATEGORY.A11Y}-002`,
         title: 'Form inputs without labels',
-        serverity: SEVERITY.MEDIUM,
+        severity: SEVERITY.MEDIUM,
         category: CATEGORY.A11Y,
         description: `Found ${inputsWithoutLabels} form input(s) without associated labels or ARIA labels. Labels help AI agents understand form purpose and context.`,
         remediation: 'Add <label> elements associated with inputs via for/id attributes, or use aria-label/aria-labelledby attributes.',

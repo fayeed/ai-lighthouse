@@ -24,7 +24,7 @@ export class WallOfTextRule extends BaseRule {
       return {
         id: `${CATEGORY.AIREAD}-051`,
         title: 'Abbreviations without markup',
-        serverity: SEVERITY.LOW,
+        severity: SEVERITY.LOW,
         category: CATEGORY.AIREAD,
         description: `Found ${potentialAbbrCount} potential abbreviation(s) without <abbr> markup. Expanded abbreviations help AI understand specialized terms.`,
         remediation: 'Use <abbr title="Full Name">ABBR</abbr> to provide expansions for abbreviations and acronyms.',

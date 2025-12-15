@@ -31,7 +31,7 @@ export class CanonicalMismatchRule extends BaseRule {
           return {
             id: `${CATEGORY.CRAWL}-005`,
             title: 'Invalid canonical URL format',
-            serverity: SEVERITY.HIGH,
+            severity: SEVERITY.HIGH,
             category: CATEGORY.CRAWL,
             description: 'Canonical URL has invalid format. AI crawlers may ignore it.',
             remediation: 'Ensure canonical URL is a valid absolute URL (starts with http:// or https://).',
@@ -48,7 +48,7 @@ export class CanonicalMismatchRule extends BaseRule {
       return {
         id: `${CATEGORY.CRAWL}-005`,
         title: 'Invalid canonical URL format',
-        serverity: SEVERITY.HIGH,
+        severity: SEVERITY.HIGH,
         category: CATEGORY.CRAWL,
         description: 'Canonical URL cannot be parsed. AI crawlers may ignore it.',
         remediation: 'Ensure canonical URL is a valid absolute URL.',

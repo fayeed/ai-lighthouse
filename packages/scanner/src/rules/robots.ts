@@ -52,7 +52,7 @@ export class RobotsRule extends BaseRule {
         return {
           id: `${CATEGORY.AIREAD}-009`,
           title: 'robots.txt blocks AI crawlers',
-          serverity: SEVERITY.CRITICAL,
+          severity: SEVERITY.CRITICAL,
           category: CATEGORY.AIREAD,
           description: `robots.txt disallows ${blockedCrawlers.length} known AI crawler(s): ${blockedCrawlers.join(', ')}. This prevents AI indexers from accessing content for training and search.`,
           remediation: 'Consider allowing AI crawlers in robots.txt if you want your content indexed by AI systems. Review which crawlers should have access and update robots.txt accordingly.',

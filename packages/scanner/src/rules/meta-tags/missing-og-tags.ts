@@ -31,7 +31,7 @@ export class MissingOgTagsRule extends BaseRule {
     return {
       id: `${CATEGORY.AIREAD}-013`,
       title: 'Missing OpenGraph meta tags',
-      serverity: SEVERITY.MEDIUM,
+      severity: SEVERITY.MEDIUM,
       category: CATEGORY.AIREAD,
       description: `The page is missing ${missingOgTags.length} important OpenGraph meta tag(s): ${missingOgTags.join(', ')}. These help AI agents understand and share your content better.`,
       remediation: 'Add missing OpenGraph meta tags (og:title, og:description, og:image) to improve how AI agents and social platforms understand your content.',

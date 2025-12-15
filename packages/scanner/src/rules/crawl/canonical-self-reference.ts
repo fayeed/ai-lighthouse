@@ -28,7 +28,7 @@ export class CanonicalSelfReferenceRule extends BaseRule {
         return {
           id: `${CATEGORY.CRAWL}-004`,
           title: 'Canonical points to different URL',
-          serverity: SEVERITY.MEDIUM,
+          severity: SEVERITY.MEDIUM,
           category: CATEGORY.CRAWL,
           description: 'Canonical URL differs from current page URL. This tells AI crawlers to index a different URL.',
           remediation: 'Ensure canonical URL matches the current page URL unless intentionally consolidating duplicate content.',

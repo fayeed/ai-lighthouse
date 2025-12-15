@@ -66,7 +66,7 @@ export interface ScoringResult {
  * Calculate weighted impact for an issue
  */
 function calculateWeightedImpact(issue: Issue): number {
-  const severityWeight = SEVERITY_WEIGHTS[issue.serverity] || SEVERITY_WEIGHTS[SEVERITY.LOW];
+  const severityWeight = SEVERITY_WEIGHTS[issue.severity] || SEVERITY_WEIGHTS[SEVERITY.LOW];
   const categoryWeight = CATEGORY_WEIGHTS[issue.category] || 1.0;
   const baseImpact = issue.impactScore || 0;
   
@@ -95,7 +95,7 @@ function calculateCategoryScore(issues: Issue[], category: CATEGORY): CategorySc
   let totalWeightedImpact = 0;
 
   for (const issue of categoryIssues) {
-    const severity = issue.serverity;
+    const severity = issue.severity;
     const weightedImpact = calculateWeightedImpact(issue);
     totalWeightedImpact += weightedImpact;
 
@@ -167,7 +167,7 @@ export function calculateScore(issues: Issue[]): ScoringResult {
   };
 
   for (const issue of issues) {
-    severityBreakdown[issue.serverity]++;
+    severityBreakdown[issue.severity]++;
   }
 
   // Calculate normalized score (0-100 scale considering all possible categories)
