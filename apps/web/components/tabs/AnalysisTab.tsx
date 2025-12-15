@@ -19,6 +19,18 @@ export default function AnalysisTab({ scanResult }: AnalysisTabProps) {
         <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-6">
           <h3 className="text-2xl font-bold text-gray-900 mb-4">📝 AI Understanding</h3>
           <div className="space-y-4">
+            {scanResult.llm.pageType && (
+              <div className="mb-4">
+                <strong className="text-gray-700">Inferred Page Type:</strong>
+                <div className="mt-2">
+                  <span className="inline-block bg-purple-100 text-purple-800 px-4 py-2 rounded-lg font-semibold text-lg">
+                    {scanResult.llm.pageType}
+                  </span>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">AI's best guess based on content analysis</p>
+              </div>
+            )}
+            
             {scanResult.llm.summary && (
               <div>
                 <strong className="text-gray-700">Summary:</strong>

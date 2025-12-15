@@ -162,6 +162,7 @@ export interface ScanResult {
   extractability?: ExtractabilityAnalysis; // Extractability mapping
   llm?: {
     summary: string;
+    pageType?: string;
     topEntities: Array<{
       name: string;
       type: string;

@@ -14,6 +14,7 @@ export interface AISummary {
   suggestedTitle: string;    // SEO-optimized title
   suggestedMeta: string;     // Meta description (150-160 chars)
   keywords: string[];        // Key terms for indexing
+  pageType?: string;         // Inferred page type (e.g., "Blog Post", "Product Page", "Documentation")
   readabilityScore?: number; // 0-100, how clear/accessible the content is
   structureQuality?: 'excellent' | 'good' | 'fair' | 'poor';
 }

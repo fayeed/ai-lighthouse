@@ -142,6 +142,7 @@ const fetched = await fetchHtml(url, options.timeoutMs!, options.userAgent);
 
       llm = {
         summary: comprehension.summary,
+        pageType: comprehension.pageType,
         topEntities: comprehension.topEntities,
         questions: comprehension.questions,
         suggestedFAQ: comprehension.suggestedFAQ,
