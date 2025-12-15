@@ -17,6 +17,9 @@ importers:
 
   apps/api:
     dependencies:
+      '@openrouter/sdk':
+        specifier: ^0.2.11
+        version: 0.2.11
       cors:
         specifier: ^2.8.5
         version: 2.8.5
@@ -116,6 +119,9 @@ importers:
 
   packages/scanner:
     dependencies:
+      '@openrouter/sdk':
+        specifier: ^0.2.11
+        version: 0.2.11
       cheerio:
         specifier: ^1.1.2
         version: 1.1.2
@@ -536,6 +542,9 @@ packages:
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [win32]
+
+  '@openrouter/sdk@0.2.11':
+    resolution: {integrity: sha512-W6ji4J2O08RUkDmCBqDgiHkoH5ARb4xBZL/xTM98cDzes2iLBuGaF3z2PXMCC27UYTas2pyz+nn62iXjO+yQvg==}
 
   '@swc/helpers@0.5.15':
     resolution: {integrity: sha512-JQ5TuMi45Owi4/BIMAJBoSQoOJu12oOk/gADqlcUL9JEdHB8vyjUSsxqeNXnmXHjYKMi2WcYtezGEEhqUI/E2g==}
@@ -1972,6 +1981,9 @@ packages:
     resolution: {integrity: sha512-Ux4ygGWsu2c7isFWe8Yu1YluJmqVhxqK2cLXNQA5AcC3QfbGNpM7fu0Y8b/z16pXLnFxZYvWhd3fhBY9DLmC6Q==}
     engines: {node: '>=6'}
 
+  zod@4.1.13:
+    resolution: {integrity: sha512-AvvthqfqrAhNH9dnfmrfKzX5upOdjUVJYFqNSlkmGf64gRaTzlPwz99IHYnVs28qYAybvAlBV+H7pn0saFY4Ig==}
+
 snapshots:
 
   '@alloc/quick-lru@5.2.0': {}
@@ -2222,6 +2234,10 @@ snapshots:
 
   '@next/swc-win32-x64-msvc@16.0.7':
     optional: true
+
+  '@openrouter/sdk@0.2.11':
+    dependencies:
+      zod: 4.1.13
 
   '@swc/helpers@0.5.15':
     dependencies:
@@ -3770,3 +3786,5 @@ snapshots:
       fd-slicer: 1.1.0
 
   yn@3.1.1: {}
+
+  zod@4.1.13: {}
