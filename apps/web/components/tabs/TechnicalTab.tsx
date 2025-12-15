@@ -7,6 +7,73 @@ interface TechnicalTabProps {
   scanResult: any;
 }
 
+const categoryDescriptions: Record<string, { name: string; description: string }> = {
+  AIREAD: {
+    name: "AI Readability",
+    description: "How well your content is structured for AI/LLM comprehension. Includes heading hierarchy, semantic HTML, and content organization. This is the most crucial category for AI understanding."
+  },
+  CHUNK: {
+    name: "Content Chunking",
+    description: "How well your content fits within AI token windows and embedding systems. Large chunks may be truncated; small chunks lose context. Optimal chunking improves AI processing."
+  },
+  EXTRACT: {
+    name: "Data Extraction",
+    description: "Quality of structured data (Schema.org, JSON-LD, microdata). Makes it easier for AI to extract facts, entities, and relationships from your content."
+  },
+  CRAWL: {
+    name: "Crawlability",
+    description: "How easily AI crawlers can discover and access your content. Includes robots.txt, sitemaps, canonical URLs, and crawl directives."
+  },
+  A11Y: {
+    name: "Accessibility",
+    description: "Accessibility features that also benefit AI: ARIA labels, alt text, semantic markup, keyboard navigation. Accessible content is AI-readable content."
+  },
+  KG: {
+    name: "Knowledge Graph",
+    description: "Structured data and knowledge graph implementation using Schema.org vocabularies. Helps AI understand entities and relationships on your page."
+  },
+  TECH: {
+    name: "Technical SEO",
+    description: "Technical infrastructure supporting AI crawling: HTML structure, meta tags, canonicals, redirects, and page performance."
+  },
+  LLMLOCAL: {
+    name: "Local LLM",
+    description: "Optimization for local/on-device AI models that may have smaller context windows and different processing requirements."
+  },
+  LLMAPI: {
+    name: "API LLM",
+    description: "Optimization for cloud-based AI APIs (GPT, Claude, etc.) including API-specific formatting and data structures."
+  },
+  LLMCONF: {
+    name: "LLM Confidence",
+    description: "Signals that help AI systems determine confidence in their understanding of your content. Clear, authoritative content scores higher."
+  },
+  HALL: {
+    name: "Hallucination Prevention",
+    description: "Measures to prevent AI from generating false information about your content. Includes fact verification, clear attribution, and explicit disclaimers."
+  },
+  GAPS: {
+    name: "Content Gaps",
+    description: "Missing information that AI systems might expect or need to fully understand your offering. Filling gaps improves completeness."
+  },
+  DRIFT: {
+    name: "Content Drift",
+    description: "Consistency between different representations of your content. Mismatches between title/meta/body can confuse AI systems."
+  },
+  CI: {
+    name: "Citations",
+    description: "Proper attribution and citation of sources. Helps AI understand authority and trustworthiness of information."
+  },
+  DX: {
+    name: "Developer Experience",
+    description: "Technical elements that affect developers working with AI integrations: APIs, documentation, code examples."
+  },
+  MISC: {
+    name: "Miscellaneous",
+    description: "Other optimization opportunities that don't fit into major categories but still affect AI readiness."
+  }
+};
+
 export default function TechnicalTab({ scanResult }: TechnicalTabProps) {
   const [showExtractabilityExample, setShowExtractabilityExample] = useState(false);
   const [showTechnicalScoringExample, setShowTechnicalScoringExample] = useState(false);
@@ -523,12 +590,28 @@ export default function TechnicalTab({ scanResult }: TechnicalTabProps) {
                 {Object.entries(scanResult.scoring.categoryScores).map(([category, data]: [string, any]) => {
                   // Handle both formats: direct score or object with score property
                   const scoreValue = typeof data === 'number' ? data : (data?.score || 0);
+                  const categoryCode = typeof data === 'object' && data?.category ? data.category : category;
+                  const categoryInfo = categoryDescriptions[categoryCode] || { 
+                    name: categoryCode, 
+                    description: `Score for ${categoryCode} category` 
+                  };
+                  
                   return (
                     <div key={category} className="bg-white p-3 rounded border border-gray-200">
                       <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium text-gray-900 capitalize">
-                          {data.category.replace(/-/g, ' ')}
-                        </span>
+                        <div className="flex items-center gap-1">
+                          <span className="text-sm font-medium text-gray-900">
+                            {categoryCode}
+                          </span>
+                          <Tooltip content={
+                            <div className="text-xs">
+                              <div className="font-semibold mb-1">{categoryInfo.name}</div>
+                              <div>{categoryInfo.description}</div>
+                            </div>
+                          }>
+                            <span className="text-gray-400 hover:text-gray-600 cursor-help text-xs">ⓘ</span>
+                          </Tooltip>
+                        </div>
                         <span className={`text-lg font-bold ${
                           scoreValue >= 90 ? 'text-blue-600' :    // Excellent (low risk)
                           scoreValue >= 75 ? 'text-yellow-600' :  // Good (medium risk)
@@ -540,7 +623,7 @@ export default function TechnicalTab({ scanResult }: TechnicalTabProps) {
                       </div>
                       {typeof data === 'object' && data?.issueCount !== undefined && (
                         <div className="text-xs text-gray-500 mt-1">
-                          {data.issueCount} issues
+                          {data.issueCount} {data.issueCount === 1 ? 'issue' : 'issues'}
                         </div>
                       )}
                     </div>
