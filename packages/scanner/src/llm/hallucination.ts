@@ -456,8 +456,6 @@ export async function detectHallucinations(
       // Verify facts against DOM
       verifications = verifyFacts(facts, $);
 
-      console.log(facts, verifications)
-      
       // Separate facts by verification status
       const verifiedFacts = verifications.filter(v => v.verified && (!v.contradictions || v.contradictions.length === 0));
       const unverifiedFacts = verifications.filter(v => !v.verified);

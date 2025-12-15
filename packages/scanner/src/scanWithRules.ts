@@ -310,8 +310,6 @@ const fetched = await fetchHtml(url, options.timeoutMs!, options.userAgent);
         temperature: options.llmConfig.temperature
       });
 
-      console.log('Mirror Test Report:', report);
-      
       mirrorReport = report;
       
       // Add critical mismatches as issues
