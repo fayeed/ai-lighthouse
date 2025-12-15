@@ -1,4 +1,8 @@
 node_modules
 dist
 .env
+.env.local
+logs/*.log
 *.log
+.DS_Store
+.pm2

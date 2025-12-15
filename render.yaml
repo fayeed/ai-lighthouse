@@ -1,0 +1,17 @@
+service:
+  type: web
+  name: ai-lighthouse-api
+  env: node
+  region: oregon
+  plan: free
+  buildCommand: bash scripts/render-build.sh
+  startCommand: bash scripts/render-start.sh
+  healthCheckPath: /health
+  autoDeploy: true
+  envVars:
+    - key: OPENROUTER_API_KEY
+      sync: false
+    - key: PORT
+      value: 10000
+    - key: NODE_ENV
+      value: production
