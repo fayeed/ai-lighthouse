@@ -476,6 +476,11 @@ function generateHTMLReport(report: any, aiReadiness: any, scanResult: any): str
       <div style="margin-bottom: 15px;">
         <strong>Summary:</strong> ${scanResult.llm.summary || 'N/A'}
       </div>
+      ${scanResult.llm.pageType ? `
+        <div style="margin-bottom: 15px;">
+          <strong>📄 Page Type:</strong> ${scanResult.llm.pageType}
+        </div>
+      ` : ''}
       ${scanResult.llm.keyTopics && scanResult.llm.keyTopics.length > 0 ? `
         <div style="margin-bottom: 15px;">
           <strong>🏷️ Key Topics:</strong> ${scanResult.llm.keyTopics.join(', ')}
@@ -492,6 +497,16 @@ function generateHTMLReport(report: any, aiReadiness: any, scanResult: any): str
           <div><strong>🎯 Technical Depth:</strong> ${scanResult.llm.technicalDepth}</div>
         ` : ''}
       </div>
+      
+      ${scanResult.llm.pageTypeInsights && scanResult.llm.pageTypeInsights.length > 0 ? `
+        <div style="margin-top: 20px; background: #dbeafe; padding: 15px; border-radius: 4px; border-left: 4px solid #0ea5e9;">
+          <div style="font-weight: 600; margin-bottom: 10px;">💡 AI-Generated Insights for ${scanResult.llm.pageType || 'This Page'}</div>
+          <ul style="margin: 0; padding-left: 20px;">
+            ${scanResult.llm.pageTypeInsights.map((insight: string) => `<li style="margin: 5px 0;">${insight}</li>`).join('')}
+          </ul>
+        </div>
+      ` : ''}
+      
       
       ${scanResult.llm.topEntities && scanResult.llm.topEntities.length > 0 ? `
         <div style="margin-top: 20px;">
@@ -565,6 +580,41 @@ function generateHTMLReport(report: any, aiReadiness: any, scanResult: any): str
       <div style="font-size: 1.5em; font-weight: bold; margin-bottom: 15px;">
         Risk Score: ${scanResult.hallucinationReport.hallucinationRiskScore}/100
       </div>
+      
+      ${scanResult.hallucinationReport.factCheckSummary ? `
+        <div style="margin-top: 20px; background: white; padding: 15px; border-radius: 4px;">
+          <strong>📊 Fact Check Summary:</strong>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 10px;">
+            <div>✅ Verified: ${scanResult.hallucinationReport.factCheckSummary.verifiedFacts}</div>
+            <div>❓ Unverified: ${scanResult.hallucinationReport.factCheckSummary.unverifiedFacts}</div>
+            <div>⚠️ Contradictions: ${scanResult.hallucinationReport.factCheckSummary.contradictions}</div>
+            <div>🤔 Ambiguities: ${scanResult.hallucinationReport.factCheckSummary.ambiguities}</div>
+          </div>
+        </div>
+      ` : ''}
+      
+      ${scanResult.hallucinationReport.factCheckSummary && scanResult.hallucinationReport.factCheckSummary.unverifiedFacts > 0 ? `
+        <div style="margin-top: 15px; background: #fef9c3; border-left: 4px solid #eab308; padding: 15px; border-radius: 4px;">
+          <div style="display: flex; align-items: start; gap: 10px;">
+            <span style="font-size: 1.5em;">💡</span>
+            <div>
+              <div style="font-weight: 600; margin-bottom: 8px;">Why Some Facts Can't Be Verified</div>
+              <div style="color: #854d0e; margin-bottom: 8px;">
+                AI systems need external sources to verify claims. When information lacks citations, links, or 
+                references, it becomes difficult to confirm accuracy, increasing the risk of AI hallucination or misinformation.
+              </div>
+              <div style="font-weight: 600; margin-top: 12px; margin-bottom: 6px;">Best Practices:</div>
+              <ul style="margin: 0; padding-left: 20px; color: #854d0e;">
+                <li>Add source links directly in or near claim text</li>
+                <li>Include dates for time-sensitive information</li>
+                <li>Link to authoritative sources (research, official docs)</li>
+                <li>Provide context for statistics and data points</li>
+                <li>Use schema.org markup to specify citations</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      ` : ''}
       
       ${scanResult.hallucinationReport.triggers && scanResult.hallucinationReport.triggers.length > 0 ? `
         <div style="margin-top: 20px;">
