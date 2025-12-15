@@ -156,39 +156,39 @@ export default function TechnicalTab({ scanResult }: TechnicalTabProps) {
     <div className="space-y-8">
       {/* Chunking */}
       {scanResult?.chunking && (
-        <div className="bg-green-50 border-2 border-green-200 rounded-lg p-6">
-          <h3 className="text-2xl font-bold text-gray-900 mb-4">📄 Content Chunking</h3>
+        <div className="bg-green-50 dark:bg-green-900/20 border-2 border-green-200 dark:border-green-700 rounded-lg p-6">
+          <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">📄 Content Chunking</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-white p-3 rounded">
-              <div className="flex items-center gap-1 text-sm text-gray-600 mb-1">
+            <div className="bg-white dark:bg-gray-800 p-3 rounded">
+              <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400 mb-1">
                 <span>Strategy</span>
                 <Tooltip content={
                   scanResult.chunking.chunkingStrategy === 'heading-based' 
                     ? "✓ Heading-based: Your page has clear H1-H6 headings. Content is chunked by semantic sections, which is ideal for AI comprehension. Each heading creates a natural context boundary."
                     : "⚠ Paragraph-based: No headings detected. Content is split by paragraphs with a token limit. Consider adding H2-H6 headings to create better semantic structure and improve AI understanding."
                 }>
-                  <span className="text-gray-400 hover:text-gray-600 cursor-help">ⓘ</span>
+                  <span className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 cursor-help">ⓘ</span>
                 </Tooltip>
               </div>
-              <div className="font-semibold text-gray-900">
+              <div className="font-semibold text-gray-900 dark:text-gray-100">
                 {scanResult.chunking.chunkingStrategy}
               </div>
             </div>
-            <div className="bg-white p-3 rounded">
-              <div className="text-sm text-gray-600">Total Chunks</div>
-              <div className="text-2xl font-bold text-green-600">
+            <div className="bg-white dark:bg-gray-800 p-3 rounded">
+              <div className="text-sm text-gray-600 dark:text-gray-400">Total Chunks</div>
+              <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                 {scanResult.chunking.totalChunks}
               </div>
             </div>
-            <div className="bg-white p-3 rounded">
-              <div className="text-sm text-gray-600">Avg Tokens/Chunk</div>
-              <div className="text-2xl font-bold text-green-600">
+            <div className="bg-white dark:bg-gray-800 p-3 rounded">
+              <div className="text-sm text-gray-600 dark:text-gray-400">Avg Tokens/Chunk</div>
+              <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                 {scanResult.chunking.averageTokensPerChunk}
               </div>
             </div>
-            <div className="bg-white p-3 rounded">
-              <div className="text-sm text-gray-600">Avg Noise</div>
-              <div className="text-2xl font-bold text-green-600">
+            <div className="bg-white dark:bg-gray-800 p-3 rounded">
+              <div className="text-sm text-gray-600 dark:text-gray-400">Avg Noise</div>
+              <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                 {(scanResult.chunking.averageNoiseRatio * 100).toFixed(1)}%
               </div>
             </div>
@@ -197,8 +197,8 @@ export default function TechnicalTab({ scanResult }: TechnicalTabProps) {
           {/* Token Distribution Heatmap */}
           {scanResult.chunking.chunks && scanResult.chunking.chunks.length > 0 && (
             <div className="mt-4">
-              <h4 className="font-semibold text-gray-700 mb-2">Token Distribution Heatmap</h4>
-              <div className="bg-white p-3 rounded border border-gray-200">
+              <h4 className="font-semibold text-gray-700 dark:text-gray-300 mb-2">Token Distribution Heatmap</h4>
+              <div className="bg-white dark:bg-gray-800 p-3 rounded border border-gray-200 dark:border-gray-700">
                 <div className="flex gap-0.5 h-6">
                   {scanResult.chunking.chunks.map((chunk: any, idx: number) => {
                     const width = `${100 / scanResult.chunking.chunks.length}%`;
@@ -214,7 +214,7 @@ export default function TechnicalTab({ scanResult }: TechnicalTabProps) {
                     );
                   })}
                 </div>
-                <div className="flex justify-between text-xs text-gray-500 mt-2">
+                <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-2">
                   <span>Chunk 1</span>
                   <span>Token distribution (hover for details)</span>
                   <span>Chunk {scanResult.chunking.chunks.length}</span>
@@ -250,14 +250,14 @@ export default function TechnicalTab({ scanResult }: TechnicalTabProps) {
             <div className="mt-4">
               {/* Overall Recommendations */}
               {scanResult.chunking.chunkingStrategy === 'paragraph-based' && (
-                <div className="mb-4 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <div className="mb-4 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4">
                   <div className="flex items-start gap-2">
-                    <span className="text-yellow-600 text-lg">💡</span>
+                    <span className="text-yellow-600 dark:text-yellow-400 text-lg">💡</span>
                     <div>
-                      <div className="font-semibold text-yellow-900 mb-1">Chunking Recommendation</div>
-                      <div className="text-sm text-yellow-800">
+                      <div className="font-semibold text-yellow-900 dark:text-yellow-200 mb-1">Chunking Recommendation</div>
+                      <div className="text-sm text-yellow-800 dark:text-yellow-300">
                         Your page is using paragraph-based chunking because no heading structure was detected. 
-                        Consider adding <code className="bg-yellow-100 px-1 rounded">H2</code>, <code className="bg-yellow-100 px-1 rounded">H3</code>, etc. 
+                        Consider adding <code className="bg-yellow-100 dark:bg-yellow-900/50 px-1 rounded">H2</code>, <code className="bg-yellow-100 dark:bg-yellow-900/50 px-1 rounded">H3</code>, etc. 
                         headings to create semantic sections. This will improve AI comprehension and chunk quality.
                       </div>
                     </div>
@@ -266,13 +266,13 @@ export default function TechnicalTab({ scanResult }: TechnicalTabProps) {
               )}
               
               <div className="flex items-center justify-between mb-3">
-                <h4 className="font-semibold text-gray-700">Chunk Viewer</h4>
+                <h4 className="font-semibold text-gray-700 dark:text-gray-300">Chunk Viewer</h4>
                 <button
                   onClick={() => setCombinedChunkView(!combinedChunkView)}
                   className={`px-3 py-1 text-sm font-medium rounded transition-colors ${
                     combinedChunkView
-                      ? 'bg-green-600 text-white hover:bg-green-700'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      ? 'bg-green-600 dark:bg-green-700 text-white hover:bg-green-700 dark:hover:bg-green-800'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   {combinedChunkView ? '📋 Combined View' : '📑 Individual View'}
@@ -280,14 +280,14 @@ export default function TechnicalTab({ scanResult }: TechnicalTabProps) {
               </div>
 
               {combinedChunkView ? (
-                <div className="bg-white p-4 rounded border border-gray-200 max-h-[600px] overflow-y-auto">
+                <div className="bg-white dark:bg-gray-800 p-4 rounded border border-gray-200 dark:border-gray-700 max-h-[600px] overflow-y-auto">
                   <div className="prose prose-sm max-w-none">
                     {scanResult.chunking.chunks.map((chunk: any, idx: number) => (
-                      <div key={idx} className="border-l-4 border-green-300 pl-3 mb-4">
-                        <div className="text-xs font-semibold text-green-700 mb-1">
+                      <div key={idx} className="border-l-4 border-green-300 dark:border-green-600 pl-3 mb-4">
+                        <div className="text-xs font-semibold text-green-700 dark:text-green-400 mb-1">
                           Chunk #{idx + 1} ({chunk.tokenCount} tokens)
                         </div>
-                        <div className="text-sm text-gray-800 whitespace-pre-wrap">
+                        <div className="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap">
                           {chunk.text}
                         </div>
                       </div>
@@ -299,13 +299,13 @@ export default function TechnicalTab({ scanResult }: TechnicalTabProps) {
                   {scanResult.chunking.chunks.map((chunk: any, idx: number) => {
                     const chunkQuality = getChunkQuality(chunk);
                     return (
-                      <div key={idx} className="bg-white p-3 rounded border border-gray-200">
+                      <div key={idx} className="bg-white dark:bg-gray-800 p-3 rounded border border-gray-200 dark:border-gray-700">
                         <div className="flex justify-between items-center mb-1">
                           <div className="flex items-center gap-2">
-                            <span className="text-xs font-mono bg-green-100 text-green-800 px-2 py-0.5 rounded">
+                            <span className="text-xs font-mono bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-200 px-2 py-0.5 rounded">
                               #{idx + 1}
                             </span>
-                            <span className="text-sm font-medium text-gray-900">
+                            <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                               {chunk.heading || 'Content Chunk'}
                             </span>
                             <Tooltip content={
@@ -341,23 +341,23 @@ export default function TechnicalTab({ scanResult }: TechnicalTabProps) {
                             </Tooltip>
                           </div>
                           <div className="flex items-center gap-2">
-                            <span className="text-xs text-gray-600">{chunk.tokenCount} tokens</span>
+                            <span className="text-xs text-gray-600 dark:text-gray-400">{chunk.tokenCount} tokens</span>
                             <button
                               onClick={() => toggleChunk(idx)}
-                              className="text-xs text-blue-600 hover:text-blue-800"
+                              className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
                             >
                               {expandedChunks.has(idx) ? '▼' : '▶'}
                             </button>
                           </div>
                         </div>
-                        <div className="text-xs text-gray-500 mb-2">
+                        <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
                           Noise: {(chunk.noiseRatio * 100).toFixed(1)}% · 
                           Words: {chunk.wordCount || 'N/A'}
                           {chunk.extractableContentRatio && ` · Extractable: ${(chunk.extractableContentRatio * 100).toFixed(1)}%`}
                         </div>
                         {expandedChunks.has(idx) && (
-                          <div className="mt-2 pt-2 border-t border-gray-200">
-                            <div className="text-sm text-gray-700 whitespace-pre-wrap max-h-64 overflow-y-auto bg-gray-50 p-2 rounded">
+                          <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+                            <div className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap max-h-64 overflow-y-auto bg-gray-50 dark:bg-gray-700 p-2 rounded">
                               {chunk.text}
                             </div>
                           </div>
@@ -374,9 +374,9 @@ export default function TechnicalTab({ scanResult }: TechnicalTabProps) {
 
       {/* Extractability */}
       {scanResult?.extractability && (
-        <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-6">
+        <div className="bg-yellow-50 dark:bg-yellow-900/30 border-2 border-yellow-200 dark:border-yellow-700 rounded-lg p-6">
           <div className="flex items-center gap-2 mb-4">
-            <h3 className="text-2xl font-bold text-gray-900">🔄 Extractability</h3>
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100">🔄 Extractability</h3>
             <Tooltip content="How easily AI systems can extract and process your content. Considers HTML structure, rendering method, and content accessibility.">
               <span className="text-gray-500 hover:text-gray-700 cursor-help">ⓘ</span>
             </Tooltip>
@@ -386,38 +386,38 @@ export default function TechnicalTab({ scanResult }: TechnicalTabProps) {
           <div className="mb-4">
             <button
               onClick={() => setShowExtractabilityExample(!showExtractabilityExample)}
-              className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
+              className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium flex items-center gap-1"
             >
               {showExtractabilityExample ? '▼' : '▶'} See Example
             </button>
             {showExtractabilityExample && (
-              <div className="mt-3 bg-white border border-yellow-200 rounded-lg p-4">
+              <div className="mt-3 bg-white dark:bg-gray-800 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4">
                 <div className="space-y-3">
                   <div>
-                    <div className="text-sm font-semibold text-green-700 mb-1">✓ High Extractability (90+):</div>
-                    <div className="bg-green-50 p-3 rounded text-sm font-mono">
-                      <div className="text-gray-700">
-                        <span className="text-blue-600">&lt;article&gt;</span><br />
-                        <span className="ml-4"><span className="text-blue-600">&lt;h1&gt;</span>Product Features<span className="text-blue-600">&lt;/h1&gt;</span></span><br />
-                        <span className="ml-4"><span className="text-blue-600">&lt;p&gt;</span>Our CRM increases sales by 25%<span className="text-blue-600">&lt;/p&gt;</span></span><br />
-                        <span className="text-blue-600">&lt;/article&gt;</span>
+                    <div className="text-sm font-semibold text-green-700 dark:text-green-400 mb-1">✓ Good Extractability - Static HTML:</div>
+                    <div className="bg-green-50 dark:bg-green-900/50 p-3 rounded text-sm font-mono">
+                      <div className="text-gray-700 dark:text-gray-300">
+                        <span className="text-blue-600 dark:text-blue-400">&lt;article&gt;</span><br />
+                        <span className="ml-4"><span className="text-blue-600 dark:text-blue-400">&lt;h1&gt;</span>Product Features<span className="text-blue-600 dark:text-blue-400">&lt;/h1&gt;</span></span><br />
+                        <span className="ml-4"><span className="text-blue-600 dark:text-blue-400">&lt;p&gt;</span>Our CRM increases sales by 25%<span className="text-blue-600 dark:text-blue-400">&lt;/p&gt;</span></span><br />
+                        <span className="text-blue-600 dark:text-blue-400">&lt;/article&gt;</span>
                       </div>
-                      <p className="text-green-600 mt-2 text-xs">✓ AI can immediately read and understand the content</p>
+                      <p className="text-green-600 dark:text-green-300 mt-2 text-xs">✓ AI can immediately read and understand the content</p>
                     </div>
                   </div>
                   <div>
-                    <div className="text-sm font-semibold text-red-700 mb-1">❌ Low Extractability (30-):</div>
-                    <div className="bg-red-50 p-3 rounded text-sm space-y-2">
-                      <div className="font-mono text-gray-700">
-                        <span className="text-blue-600">&lt;div id="app"&gt;</span><span className="text-blue-600">&lt;/div&gt;</span><br />
-                        <span className="text-gray-500">// Content loaded via JavaScript</span>
+                    <div className="text-sm font-semibold text-red-700 dark:text-red-400 mb-1">❌ Low Extractability (30-):</div>
+                    <div className="bg-red-50 dark:bg-red-900/50 p-3 rounded text-sm space-y-2">
+                      <div className="font-mono text-gray-700 dark:text-gray-300">
+                        <span className="text-blue-600 dark:text-blue-400">&lt;div id="app"&gt;</span><span className="text-blue-600 dark:text-blue-400">&lt;/div&gt;</span><br />
+                        <span className="text-gray-500 dark:text-gray-400">// Content loaded via JavaScript</span>
                       </div>
-                      <div className="text-xs text-red-600">❌ AI sees empty page, misses all content</div>
-                      <div className="border-t border-red-200 pt-2 mt-2">
-                        <div className="font-mono text-gray-700">
-                          <span className="text-blue-600">&lt;img src="features.png"&gt;</span>
+                      <div className="text-xs text-red-600 dark:text-red-300">❌ AI sees empty page, misses all content</div>
+                      <div className="border-t border-red-200 dark:border-red-700 pt-2 mt-2">
+                        <div className="font-mono text-gray-700 dark:text-gray-300">
+                          <span className="text-blue-600 dark:text-blue-400">&lt;img src="features.png"&gt;</span>
                         </div>
-                        <div className="text-xs text-red-600">❌ Text in image without alt text - AI can't read it</div>
+                        <div className="text-xs text-red-600 dark:text-red-300">❌ Text in image without alt text - AI can't read it</div>
                       </div>
                     </div>
                   </div>
@@ -426,28 +426,28 @@ export default function TechnicalTab({ scanResult }: TechnicalTabProps) {
             )}
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-            <div className="bg-white p-3 rounded">
-              <div className="text-sm text-gray-600">Overall Score</div>
-              <div className="text-2xl font-bold text-yellow-600">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+            <div className="bg-white dark:bg-gray-800 p-3 rounded">
+              <div className="text-sm text-gray-600 dark:text-gray-400">Overall Score</div>
+              <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
                 {scanResult.extractability.score.extractabilityScore}/100
               </div>
             </div>
-            <div className="bg-white p-3 rounded">
-              <div className="text-sm text-gray-600">Server-Rendered</div>
-              <div className="text-2xl font-bold text-yellow-600">
+            <div className="bg-white dark:bg-gray-800 p-3 rounded">
+              <div className="text-sm text-gray-600 dark:text-gray-400">Server-Rendered</div>
+              <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
                 {scanResult.extractability.score.serverRenderedPercent}%
               </div>
             </div>
-            <div className="bg-white p-3 rounded">
-              <div className="text-sm text-gray-600">Text Extractable</div>
-              <div className="text-2xl font-bold text-yellow-600">
+            <div className="bg-white dark:bg-gray-800 p-3 rounded">
+              <div className="text-sm text-gray-600 dark:text-gray-400">Text Extractable</div>
+              <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
                 {scanResult.extractability.contentTypes.text.percentage}%
               </div>
             </div>
-            <div className="bg-white p-3 rounded">
-              <div className="text-sm text-gray-600">Images Extractable</div>
-              <div className="text-2xl font-bold text-yellow-600">
+            <div className="bg-white dark:bg-gray-800 p-3 rounded">
+              <div className="text-sm text-gray-600 dark:text-gray-400">Images Extractable</div>
+              <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
                 {scanResult.extractability.contentTypes.images.percentage}%
               </div>
             </div>
@@ -456,20 +456,20 @@ export default function TechnicalTab({ scanResult }: TechnicalTabProps) {
           {/* Content Type Details */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
             {Object.entries(scanResult.extractability.contentTypes).map(([type, data]: [string, any]) => (
-              <div key={type} className="bg-white p-4 rounded border border-gray-200">
-                <h4 className="font-semibold text-gray-900 capitalize mb-2">{type}</h4>
+              <div key={type} className="bg-white dark:bg-gray-800 p-4 rounded border border-gray-200 dark:border-gray-700">
+                <h4 className="font-semibold text-gray-900 dark:text-gray-100 capitalize mb-2">{type}</h4>
                 <div className="space-y-1 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Total:</span>
-                    <span className="font-medium">{data.total}</span>
+                    <span className="text-gray-600 dark:text-gray-400">Total:</span>
+                    <span className="font-medium text-gray-900 dark:text-gray-100">{data.total}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Extractable:</span>
-                    <span className="font-medium text-green-600">{data.extractable}</span>
+                    <span className="text-gray-600 dark:text-gray-400">Extractable:</span>
+                    <span className="font-medium text-green-600 dark:text-green-400">{data.extractable}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Percentage:</span>
-                    <span className="font-medium">{data.percentage}%</span>
+                    <span className="text-gray-600 dark:text-gray-400">Percentage:</span>
+                    <span className="font-medium text-gray-900 dark:text-gray-100">{data.percentage}%</span>
                   </div>
                 </div>
               </div>
@@ -480,9 +480,9 @@ export default function TechnicalTab({ scanResult }: TechnicalTabProps) {
 
       {/* Scoring Details */}
       {scanResult?.scoring && (
-        <div className="bg-gray-50 border-2 border-gray-200 rounded-lg p-6">
+        <div className="bg-gray-50 dark:bg-gray-800/50 border-2 border-gray-200 dark:border-gray-700 rounded-lg p-6">
           <div className="flex items-center gap-2 mb-4">
-            <h3 className="text-2xl font-bold text-gray-900">📊 Technical Scoring</h3>
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100">📊 Technical Scoring</h3>
             <Tooltip content="Comprehensive technical score based on all AI readiness checks including accessibility, structure, and metadata quality.">
               <span className="text-gray-500 hover:text-gray-700 cursor-help">ⓘ</span>
             </Tooltip>
@@ -492,62 +492,62 @@ export default function TechnicalTab({ scanResult }: TechnicalTabProps) {
           <div className="mb-4">
             <button
               onClick={() => setShowTechnicalScoringExample(!showTechnicalScoringExample)}
-              className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
+              className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium flex items-center gap-1"
             >
               {showTechnicalScoringExample ? '▼' : '▶'} See What Improves Your Score
             </button>
             {showTechnicalScoringExample && (
-              <div className="mt-3 bg-white border border-gray-200 rounded-lg p-4">
+              <div className="mt-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <div className="text-sm font-semibold text-green-700 mb-2">✓ High Score Elements:</div>
-                    <div className="bg-green-50 p-3 rounded space-y-2 text-sm">
+                    <div className="text-sm font-semibold text-green-700 dark:text-green-400 mb-2">✓ High Score Elements:</div>
+                    <div className="bg-green-50 dark:bg-green-900/50 p-3 rounded space-y-2 text-sm">
                       <div>
-                        <div className="font-semibold text-gray-700">Semantic HTML:</div>
-                        <div className="font-mono text-xs text-gray-600 mt-1">
+                        <div className="font-semibold text-gray-700 dark:text-gray-300">Semantic HTML:</div>
+                        <div className="font-mono text-xs text-gray-600 dark:text-gray-400 mt-1">
                           &lt;header&gt;, &lt;nav&gt;, &lt;main&gt;, &lt;article&gt;
                         </div>
                       </div>
                       <div>
-                        <div className="font-semibold text-gray-700">Heading Hierarchy:</div>
-                        <div className="text-gray-600 text-xs">H1 → H2 → H3 (logical order)</div>
+                        <div className="font-semibold text-gray-700 dark:text-gray-300">Heading Hierarchy:</div>
+                        <div className="text-gray-600 dark:text-gray-400 text-xs">H1 → H2 → H3 (logical order)</div>
                       </div>
                       <div>
-                        <div className="font-semibold text-gray-700">Alt Text:</div>
-                        <div className="font-mono text-xs text-gray-600">
+                        <div className="font-semibold text-gray-700 dark:text-gray-300">Alt Text:</div>
+                        <div className="font-mono text-xs text-gray-600 dark:text-gray-400">
                           &lt;img alt="Dashboard metrics"&gt;
                         </div>
                       </div>
                       <div>
-                        <div className="font-semibold text-gray-700">Schema.org Data:</div>
-                        <div className="font-mono text-xs text-gray-600">
+                        <div className="font-semibold text-gray-700 dark:text-gray-300">Schema.org Data:</div>
+                        <div className="font-mono text-xs text-gray-600 dark:text-gray-400">
                           JSON-LD structured data
                         </div>
                       </div>
                     </div>
                   </div>
                   <div>
-                    <div className="text-sm font-semibold text-red-700 mb-2">❌ Low Score Elements:</div>
-                    <div className="bg-red-50 p-3 rounded space-y-2 text-sm">
+                    <div className="text-sm font-semibold text-red-700 dark:text-red-400 mb-2">❌ Low Score Elements:</div>
+                    <div className="bg-red-50 dark:bg-red-900/50 p-3 rounded space-y-2 text-sm">
                       <div>
-                        <div className="font-semibold text-gray-700">Generic Tags:</div>
-                        <div className="font-mono text-xs text-gray-600 mt-1">
+                        <div className="font-semibold text-gray-700 dark:text-gray-300">Generic Tags:</div>
+                        <div className="font-mono text-xs text-gray-600 dark:text-gray-400 mt-1">
                           &lt;div&gt;, &lt;span&gt; for everything
                         </div>
                       </div>
                       <div>
-                        <div className="font-semibold text-gray-700">Poor Headings:</div>
-                        <div className="text-gray-600 text-xs">Multiple H1s, skipping levels</div>
+                        <div className="font-semibold text-gray-700 dark:text-gray-300">Poor Headings:</div>
+                        <div className="text-gray-600 dark:text-gray-400 text-xs">Multiple H1s, skipping levels</div>
                       </div>
                       <div>
-                        <div className="font-semibold text-gray-700">Missing Alt Text:</div>
-                        <div className="font-mono text-xs text-gray-600">
+                        <div className="font-semibold text-gray-700 dark:text-gray-300">Missing Alt Text:</div>
+                        <div className="font-mono text-xs text-gray-600 dark:text-gray-400">
                           &lt;img src="chart.png"&gt;
                         </div>
                       </div>
                       <div>
-                        <div className="font-semibold text-gray-700">No Metadata:</div>
-                        <div className="text-gray-600 text-xs">Missing titles, descriptions</div>
+                        <div className="font-semibold text-gray-700 dark:text-gray-300">No Metadata:</div>
+                        <div className="text-gray-600 dark:text-gray-400 text-xs">Missing titles, descriptions</div>
                       </div>
                     </div>
                   </div>
@@ -557,21 +557,21 @@ export default function TechnicalTab({ scanResult }: TechnicalTabProps) {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
-            <div className="bg-white p-3 rounded">
-              <div className="text-sm text-gray-600">Overall Score</div>
-              <div className="text-2xl font-bold text-gray-900">
+            <div className="bg-white dark:bg-gray-800 p-3 rounded">
+              <div className="text-sm text-gray-600 dark:text-gray-400">Overall Score</div>
+              <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                 {scanResult.scoring.overallScore}/100
               </div>
             </div>
-            <div className="bg-white p-3 rounded">
-              <div className="text-sm text-gray-600">Grade</div>
-              <div className="text-2xl font-bold text-gray-900">
+            <div className="bg-white dark:bg-gray-800 p-3 rounded">
+              <div className="text-sm text-gray-600 dark:text-gray-400">Metadata Score</div>
+              <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                 {scanResult.scoring.grade}
               </div>
             </div>
-            <div className="bg-white p-3 rounded">
-              <div className="text-sm text-gray-600">Total Issues</div>
-              <div className="text-2xl font-bold text-gray-900">
+            <div className="bg-white dark:bg-gray-800 p-3 rounded">
+              <div className="text-sm text-gray-600 dark:text-gray-400">Content Score</div>
+              <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                 {scanResult.scoring.totalIssues}
               </div>
             </div>
@@ -581,7 +581,7 @@ export default function TechnicalTab({ scanResult }: TechnicalTabProps) {
           {scanResult.scoring.categoryScores && (
             <div>
               <div className="flex items-center gap-2 mb-3">
-                <h4 className="font-semibold text-gray-700">Category Breakdown</h4>
+                <h4 className="font-semibold text-gray-700 dark:text-gray-300">Category Breakdown</h4>
                 <Tooltip content="Individual scores for each AI readiness category:\n\n• Content Quality: Text clarity, structure, readability\n• Technical: HTML structure, semantic markup\n• Crawlability: robots.txt, sitemaps, canonical URLs\n• Knowledge Graph: Schema.org data, JSON-LD\n• Accessibility: ARIA labels, alt text, keyboard navigation">
                   <span className="text-gray-400 hover:text-gray-600 cursor-help text-sm">ⓘ</span>
                 </Tooltip>
@@ -597,10 +597,10 @@ export default function TechnicalTab({ scanResult }: TechnicalTabProps) {
                   };
                   
                   return (
-                    <div key={category} className="bg-white p-3 rounded border border-gray-200">
+                    <div key={category} className="bg-white dark:bg-gray-800 p-3 rounded border border-gray-200 dark:border-gray-700">
                       <div className="flex justify-between items-center">
                         <div className="flex items-center gap-1">
-                          <span className="text-sm font-medium text-gray-900">
+                          <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                             {categoryCode}
                           </span>
                           <Tooltip content={
@@ -613,16 +613,16 @@ export default function TechnicalTab({ scanResult }: TechnicalTabProps) {
                           </Tooltip>
                         </div>
                         <span className={`text-lg font-bold ${
-                          scoreValue >= 90 ? 'text-blue-600' :    // Excellent (low risk)
-                          scoreValue >= 75 ? 'text-yellow-600' :  // Good (medium risk)
-                          scoreValue >= 60 ? 'text-orange-600' :  // Fair (high risk)
-                          'text-red-600'                          // Poor (critical risk)
+                          scoreValue >= 90 ? 'text-blue-600 dark:text-blue-400' :    // Excellent (low risk)
+                          scoreValue >= 75 ? 'text-yellow-600 dark:text-yellow-400' :  // Good (medium risk)
+                          scoreValue >= 60 ? 'text-orange-600 dark:text-orange-400' :  // Fair (high risk)
+                          'text-red-600 dark:text-red-400'                          // Poor (critical risk)
                         }`}>
                           {Math.round(scoreValue)}/100
                         </span>
                       </div>
                       {typeof data === 'object' && data?.issueCount !== undefined && (
-                        <div className="text-xs text-gray-500 mt-1">
+                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                           {data.issueCount} {data.issueCount === 1 ? 'issue' : 'issues'}
                         </div>
                       )}
