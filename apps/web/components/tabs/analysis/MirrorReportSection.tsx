@@ -20,6 +20,7 @@ interface MirrorReportSummary {
 interface MirrorReport {
   summary: MirrorReportSummary;
   mismatches?: Mismatch[];
+  recommendations?: string[];
 }
 
 interface MirrorReportSectionProps {
@@ -106,6 +107,18 @@ export default function MirrorReportSection({ mirrorReport }: MirrorReportSectio
 
       <ExampleSection title="See Alignment Example" examples={alignmentExamples} />
       <ExampleSection title="See Clarity Example" examples={clarityExamples} />
+
+      {/* Recommendations Section */}
+      {mirrorReport.recommendations && mirrorReport.recommendations.length > 0 && (
+        <div className="mb-4">
+          <strong className="text-gray-700 dark:text-gray-300">💡 Key Recommendations:</strong>
+          <ul className="list-disc list-inside mt-2 space-y-1 text-gray-900 dark:text-gray-100">
+            {mirrorReport.recommendations.map((rec, idx) => (
+              <li key={idx} className="text-sm">{rec}</li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {mirrorReport.mismatches && mirrorReport.mismatches.length > 0 && (
         <div>
