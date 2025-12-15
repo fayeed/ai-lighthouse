@@ -36,7 +36,9 @@ export default function Home() {
         requestBody.llmProvider = modelConfig.provider;
         requestBody.llmModel = modelConfig.model;
         
-        if (modelConfig.apiKey) {
+        if (modelConfig.provider === 'ollama') {
+          requestBody.llmBaseUrl = modelConfig.baseUrl || 'http://localhost:11434';
+        } else if (modelConfig.apiKey) {
           requestBody.llmApiKey = modelConfig.apiKey;
         }
       }

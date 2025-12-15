@@ -3,7 +3,7 @@
 import { useState } from 'react';
 
 export interface ModelConfig {
-  provider: 'openrouter' | 'openai' | 'anthropic' | 'gemini';
+  provider: 'openrouter' | 'openai' | 'anthropic' | 'gemini' | 'ollama';
   model: string;
   apiKey?: string;
   baseUrl?: string;
@@ -19,7 +19,10 @@ const providerModels = {
   openai: ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-3.5-turbo'],
   anthropic: ['claude-3-5-sonnet-20241022', 'claude-3-5-haiku-20241022', 'claude-3-opus-20240229'],
   gemini: ['gemini-2.0-flash-exp', 'gemini-1.5-pro', 'gemini-1.5-flash'],
+  ollama: ['qwen2.5:0.5b', 'llama3.2:latest', 'mistral:latest'],
 };
+
+const isDev = process.env.NODE_ENV === 'development';
 
 export default function ModelSelector({ value, onChange }: ModelSelectorProps) {
   const [showApiKey, setShowApiKey] = useState(false);
@@ -29,8 +32,8 @@ export default function ModelSelector({ value, onChange }: ModelSelectorProps) {
     onChange({
       provider,
       model: defaultModel,
-      apiKey: provider === 'openrouter' ? undefined : value.apiKey,
-      baseUrl: undefined,
+      apiKey: provider === 'openrouter' || provider === 'ollama' ? undefined : value.apiKey,
+      baseUrl: provider === 'ollama' ? 'http://localhost:11434' : undefined,
     });
   };
 
@@ -55,8 +58,10 @@ export default function ModelSelector({ value, onChange }: ModelSelectorProps) {
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Provider
         </label>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-          {(Object.keys(providerModels) as Array<keyof typeof providerModels>).map((provider) => (
+        <div className={`grid grid-cols-2 ${isDev ? 'md:grid-cols-5' : 'md:grid-cols-4'} gap-2`}>
+          {(Object.keys(providerModels) as Array<keyof typeof providerModels>)
+            .filter(provider => isDev || provider !== 'ollama')
+            .map((provider) => (
             <button
               key={provider}
               type="button"
@@ -71,6 +76,7 @@ export default function ModelSelector({ value, onChange }: ModelSelectorProps) {
               {provider === 'openai' && '🤖 '}
               {provider === 'anthropic' && '🧠 '}
               {provider === 'gemini' && '✨ '}
+              {provider === 'ollama' && '🏠 '}
               {provider.charAt(0).toUpperCase() + provider.slice(1)}
             </button>
           ))}
@@ -95,8 +101,8 @@ export default function ModelSelector({ value, onChange }: ModelSelectorProps) {
         </select>
       </div>
 
-      {/* API Key - Only for non-OpenRouter providers */}
-      {value.provider !== 'openrouter' && (
+      {/* API Key - Only for non-OpenRouter and non-Ollama providers */}
+      {value.provider !== 'openrouter' && value.provider !== 'ollama' && (
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             API Key
@@ -129,6 +135,8 @@ export default function ModelSelector({ value, onChange }: ModelSelectorProps) {
           <strong>ℹ️ Note:</strong> {' '}
           {value.provider === 'openrouter'
             ? '🆓 Free models available! API key configured on backend. No additional setup needed.'
+            : value.provider === 'ollama'
+            ? '🏠 Local development mode. Requires Ollama running on localhost:11434.'
             : `${value.provider.charAt(0).toUpperCase() + value.provider.slice(1)} requires an API key. Your data will be sent to their servers.`
           }
         </div>

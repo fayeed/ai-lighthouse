@@ -15,6 +15,7 @@ auditRouter.post('/', async (req, res) => {
       llmProvider = 'openrouter',
       llmModel = 'meta-llama/llama-3.3-70b-instruct:free',
       llmApiKey,
+      llmBaseUrl,
       minImpactScore = 5,
       async = false
     } = req.body;
@@ -48,7 +49,10 @@ auditRouter.post('/', async (req, res) => {
       };
 
       // Add API key configuration
-      if (llmApiKey) {
+      if (llmProvider === 'ollama') {
+        // Ollama runs locally, no API key needed
+        scanOptions.llmConfig.baseUrl = llmBaseUrl || 'http://localhost:11434';
+      } else if (llmApiKey) {
         scanOptions.llmConfig.apiKey = llmApiKey;
       } else if (llmProvider === 'openrouter') {
         // Use environment variable for OpenRouter if no key provided
