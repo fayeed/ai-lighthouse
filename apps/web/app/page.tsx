@@ -9,6 +9,7 @@ import TechnicalTab from '../components/tabs/TechnicalTab';
 import Tooltip from '../components/Tooltip';
 import ThemeToggle from '../components/ThemeToggle';
 import ShareButton from '../components/ShareButton';
+import { trackEvent } from '../components/Analytics';
 import 'react-tooltip/dist/react-tooltip.css';
 
 export default function Home() {
@@ -127,6 +128,14 @@ export default function Home() {
     setLoading(true);
     setReportData(null);
 
+    // Track the analyze event
+    trackEvent.analyzeWebsite(
+      validatedUrl,
+      enableLLM,
+      enableLLM ? modelConfig.provider : undefined,
+      enableLLM ? modelConfig.model : undefined
+    );
+
     try {
       const requestBody: any = {
         url: validatedUrl,
@@ -180,9 +189,17 @@ export default function Home() {
       const interpretation = generateInterpretationMessage(data.data);
       setInterpretationMessage(interpretation);
       setReportData(data.data);
-      setScore(Math.round(data.data.aiReadiness.overall));
+      const finalScore = Math.round(data.data.aiReadiness.overall);
+      setScore(finalScore);
+      
+      // Track successful completion
+      trackEvent.analyzeComplete(validatedUrl, finalScore, enableLLM);
     } catch (err: any) {
-      setError(err.message || 'An error occurred during the audit');
+      const errorMessage = err.message || 'An error occurred during the audit';
+      setError(errorMessage);
+      
+      // Track error
+      trackEvent.analyzeError(validatedUrl, errorMessage, enableLLM);
     } finally {
       setLoading(false);
     }
