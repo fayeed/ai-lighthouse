@@ -49,6 +49,7 @@ Audit a single webpage for AI readiness.
 - `--cache-ttl <seconds>` - Cache TTL in seconds to avoid re-fetching
 - `--threshold <score>` - Minimum score threshold (exit 1 if below)
 - `--max-chunk-tokens <number>` - Maximum tokens per content chunk (default: 1200)
+- `--chunking-strategy <strategy>` - Chunking strategy: auto, heading-based, paragraph-based (default: auto)
 - `--enable-chunking` - Enable detailed content chunking analysis
 - `--enable-extractability` - Enable extractability mapping
 - `--enable-hallucination` - Enable hallucination detection
@@ -76,6 +77,17 @@ ai-lighthouse audit https://example.com \
   --enable-llm \
   --llm-provider ollama \
   --llm-model qwen2.5:0.5b
+
+# Force paragraph-based chunking for consistent chunk sizes
+ai-lighthouse audit https://example.com \
+  --enable-chunking \
+  --chunking-strategy paragraph-based \
+  --max-chunk-tokens 1000
+
+# Force heading-based chunking for semantic sections
+ai-lighthouse audit https://example.com \
+  --enable-chunking \
+  --chunking-strategy heading-based
 
 # CI/CD integration with score threshold
 ai-lighthouse audit https://example.com --threshold 80
