@@ -7,6 +7,8 @@ import AnalysisTab from '../components/tabs/AnalysisTab';
 import IssuesTab from '../components/tabs/IssuesTab';
 import TechnicalTab from '../components/tabs/TechnicalTab';
 import Tooltip from '../components/Tooltip';
+import ThemeToggle from '../components/ThemeToggle';
+import ShareButton from '../components/ShareButton';
 import 'react-tooltip/dist/react-tooltip.css';
 
 export default function Home() {
@@ -167,21 +169,26 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 transition-colors duration-300">
       <div className="container mx-auto px-4 py-8">
-        <header className="text-center mb-12">
-          <h1 className="text-5xl font-bold text-blue-900 mb-4">
+        <header className="text-center mb-12 relative">
+          {/* Theme Toggle in top right */}
+          <div className="absolute top-0 right-0">
+            <ThemeToggle />
+          </div>
+          
+          <h1 className="text-5xl font-bold text-blue-900 dark:text-blue-400 mb-4 animate-fade-in-up">
             🚨 AI Lighthouse
           </h1>
-          <p className="text-xl text-gray-700">
+          <p className="text-xl text-gray-700 dark:text-gray-300 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
             Analyze your website AI readiness
           </p>
         </header>
 
         <div className="max-w-2xl mx-auto mb-12">
-          <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-lg p-6">
+          <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 animate-scale-in">
             <div className="mb-4">
-              <label htmlFor="url" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="url" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Website URL
               </label>
               <input
@@ -196,7 +203,7 @@ export default function Home() {
                 }}
                 placeholder="https://example.com or example.com"
                 required
-                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 ${
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100 dark:bg-gray-700 dark:border-gray-600 transition-all ${
                   error && error.toLowerCase().includes('url') ? 'border-red-500' : 'border-gray-300'
                 }`}
               />
@@ -211,13 +218,13 @@ export default function Home() {
                   type="checkbox"
                   checked={enableLLM}
                   onChange={(e) => setEnableLLM(e.target.checked)}
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 dark:bg-gray-700"
                 />
-                <span className="text-sm text-gray-700">
+                <span className="text-sm text-gray-700 dark:text-gray-300">
                   Enable AI-powered analysis (LLM)
                 </span>
               </label>
-              <p className="text-xs text-gray-500 mt-1 ml-6">
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 ml-6">
                 Provides deeper insights using language models
               </p>
             </div>
@@ -248,7 +255,7 @@ export default function Home() {
           </form>
 
           {error && (
-            <div className="mt-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+            <div className="mt-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg animate-slide-in-right">
               <p className="font-medium">Error:</p>
               <p>{error}</p>
             </div>
@@ -257,11 +264,19 @@ export default function Home() {
 
         {reportData && (
           <div className="max-w-6xl mx-auto">
-            <div className="bg-white rounded-lg shadow-lg p-8">
-              <h2 className="text-3xl font-bold text-gray-900 mb-6">Audit Report</h2>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 animate-fade-in-up">
+              {/* Header with Share Button */}
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Audit Report</h2>
+                <ShareButton 
+                  score={Math.round(reportData.aiReadiness.overall)} 
+                  grade={reportData.aiReadiness.grade}
+                  url={url}
+                />
+              </div>
               
               {/* AI Readiness Banner */}
-              <div className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg p-6 mb-8">
+              <div className="bg-gradient-to-r from-purple-500 to-indigo-600 dark:from-purple-700 dark:to-indigo-800 text-white rounded-lg p-6 mb-8 animate-scale-in shadow-xl hover:shadow-2xl transition-shadow duration-300">
                 <div className="flex items-start gap-2 mb-2">
                   <h3 className="text-2xl font-bold">AI Readiness Score</h3>
                   <Tooltip content="Overall score indicating how well your website is optimized for AI systems like chatbots, search engines, and voice assistants. Higher scores mean better AI comprehension and visibility.
@@ -273,7 +288,7 @@ Example impact:
                     <span className="text-white/80 hover:text-white text-lg mt-0.5">ⓘ</span>
                   </Tooltip>
                 </div>
-                <div className="text-6xl font-bold mb-2">
+                <div className="text-6xl font-bold mb-2 animate-pulse-subtle">
                   {Math.round(reportData.aiReadiness.overall)}/100
                 </div>
                 <div className="text-xl mb-3">Grade: {reportData.aiReadiness.grade}</div>
@@ -289,16 +304,16 @@ Example impact:
 
               {/* Scoring Guide Section */}
               {showScoringGuide && (
-                <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-6 mb-8">
-                  <h3 className="text-xl font-bold text-gray-900 mb-4">📊 Understanding Your Score & Grade</h3>
+                <div className="bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-700 rounded-lg p-6 mb-8 animate-fade-in-up">
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">📊 Understanding Your Score & Grade</h3>
                   
                   <div className="space-y-6">
                     {/* How Score is Calculated */}
                     <div>
-                      <h4 className="font-semibold text-gray-900 mb-2">How the Score is Calculated:</h4>
-                      <div className="bg-white rounded-lg p-4 space-y-2 text-sm">
-                        <p className="text-gray-700">Your AI Readiness Score (0-100) is calculated by analyzing multiple dimensions of your website:</p>
-                        <ul className="list-disc list-inside space-y-1 text-gray-600 ml-2">
+                      <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">How the Score is Calculated:</h4>
+                      <div className="bg-white dark:bg-gray-800 rounded-lg p-4 space-y-2 text-sm">
+                        <p className="text-gray-700 dark:text-gray-300">Your AI Readiness Score (0-100) is calculated by analyzing multiple dimensions of your website:</p>
+                        <ul className="list-disc list-inside space-y-1 text-gray-600 dark:text-gray-400 ml-2">
                           <li><strong>Content Quality (20%):</strong> Text clarity, structure, readability</li>
                           <li><strong>Discoverability (20%):</strong> How easily AI can find your content</li>
                           <li><strong>Extractability (20%):</strong> How easily AI can extract information</li>
@@ -306,7 +321,7 @@ Example impact:
                           <li><strong>Trustworthiness (15%):</strong> Authority and reliability signals</li>
                           <li><strong>Technical (10%):</strong> HTML structure, semantic markup, accessibility</li>
                         </ul>
-                        <p className="text-gray-700 mt-3">
+                        <p className="text-gray-700 dark:text-gray-300 mt-3">
                           Each dimension is scored based on specific checks and rules. The weighted average gives you the overall score.
                         </p>
                       </div>
@@ -314,25 +329,25 @@ Example impact:
 
                     {/* Grade Breakdown */}
                     <div>
-                      <h4 className="font-semibold text-gray-900 mb-2">Grade Breakdown:</h4>
+                      <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">Grade Breakdown:</h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div className="bg-blue-50 border-l-4 border-blue-500 p-3 rounded">
-                          <div className="font-bold text-blue-800">A (90-100)</div>
-                          <p className="text-sm text-gray-700 mt-1">Excellent AI readiness. Your content is highly optimized for AI systems.</p>
+                        <div className="bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-500 p-3 rounded">
+                          <div className="font-bold text-blue-800 dark:text-blue-300">A (90-100)</div>
+                          <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">Excellent AI readiness. Your content is highly optimized for AI systems.</p>
                         </div>
-                        <div className="bg-blue-50 border-l-4 border-blue-500 p-3 rounded">
-                          <div className="font-bold text-blue-800">B (80-89)</div>
-                          <p className="text-sm text-gray-700 mt-1">Good AI readiness. Minor improvements will maximize AI comprehension.</p>
+                        <div className="bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-500 p-3 rounded">
+                          <div className="font-bold text-blue-800 dark:text-blue-300">B (80-89)</div>
+                          <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">Good AI readiness. Minor improvements will maximize AI comprehension.</p>
                         </div>
-                        <div className="bg-yellow-50 border-l-4 border-yellow-500 p-3 rounded">
-                          <div className="font-bold text-yellow-800">C (70-79)</div>
-                          <p className="text-sm text-gray-700 mt-1">Fair AI readiness. Several improvements needed for better AI understanding.</p>
+                        <div className="bg-yellow-50 dark:bg-yellow-900/30 border-l-4 border-yellow-500 p-3 rounded">
+                          <div className="font-bold text-yellow-800 dark:text-yellow-300">C (70-79)</div>
+                          <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">Fair AI readiness. Several improvements needed for better AI understanding.</p>
                         </div>
-                        <div className="bg-orange-50 border-l-4 border-orange-500 p-3 rounded">
-                          <div className="font-bold text-orange-800">D (60-69)</div>
-                          <p className="text-sm text-gray-700 mt-1">Poor AI readiness. Significant issues affecting AI comprehension.</p>
+                        <div className="bg-orange-50 dark:bg-orange-900/30 border-l-4 border-orange-500 p-3 rounded">
+                          <div className="font-bold text-orange-800 dark:text-orange-300">D (60-69)</div>
+                          <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">Poor AI readiness. Significant issues affecting AI comprehension.</p>
                         </div>
-                        <div className="bg-red-50 border-l-4 border-red-500 p-3 rounded md:col-span-2">
+                        <div className="bg-red-50 dark:bg-red-900/30 border-l-4 border-red-500 p-3 rounded md:col-span-2">
                           <div className="font-bold text-red-800">F (Below 60)</div>
                           <p className="text-sm text-gray-700 mt-1">Critical AI readiness issues. Major improvements required for AI systems to properly understand your content.</p>
                         </div>
@@ -354,19 +369,19 @@ Example impact:
 
               {/* What This Means For You - Quick Interpretation */}
               {reportData.aiReadiness && interpretationMessage && (
-                  <div className={`border-l-4 rounded-lg p-4 mb-6 ${
-                    score >= 90 ? 'bg-blue-50 border-blue-500' :
-                    score >= 75 ? 'bg-yellow-50 border-yellow-500' :
-                    score >= 60 ? 'bg-orange-50 border-orange-500' :
-                    'bg-red-50 border-red-500'
+                  <div className={`border-l-4 rounded-lg p-4 mb-6 animate-slide-in-right ${
+                    score >= 90 ? 'bg-blue-50 dark:bg-blue-900/30 border-blue-500' :
+                    score >= 75 ? 'bg-yellow-50 dark:bg-yellow-900/30 border-yellow-500' :
+                    score >= 60 ? 'bg-orange-50 dark:bg-orange-900/30 border-orange-500' :
+                    'bg-red-50 dark:bg-red-900/30 border-red-500'
                   }`}>
                     <div className="flex items-start gap-3">
                       <span className="text-2xl">
                         {score >= 90 ? '🎉' : score >= 75 ? '⚠️' : score >= 60 ? '⚠️' : '🚨'}
                       </span>
                       <div>
-                        <h3 className="font-bold text-gray-900 mb-1">What This Means For You</h3>
-                        <p className="text-gray-800 text-sm leading-relaxed">
+                        <h3 className="font-bold text-gray-900 dark:text-gray-100 mb-1">What This Means For You</h3>
+                        <p className="text-gray-800 dark:text-gray-300 text-sm leading-relaxed">
                           {interpretationMessage}
                         </p>
                       </div>
@@ -375,7 +390,7 @@ Example impact:
                 )}
 
               {/* Tabs Navigation */}
-              <div className="border-b border-gray-200 mb-6">
+              <div className="border-b border-gray-200 dark:border-gray-700 mb-6">
                 <nav className="-mb-px flex space-x-8">
                   {['overview', 'analysis', 'issues', 'technical'].map((tab) => (
                     <button
@@ -383,9 +398,9 @@ Example impact:
                       onClick={() => setActiveTab(tab)}
                       className={`${
                         activeTab === tab
-                          ? 'border-blue-500 text-blue-600'
-                          : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                      } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm capitalize`}
+                          ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                          : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
+                      } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm capitalize transition-colors duration-200`}
                     >
                       {tab}
                     </button>
