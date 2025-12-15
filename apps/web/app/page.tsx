@@ -22,15 +22,49 @@ export default function Home() {
     model: 'meta-llama/llama-3.3-70b-instruct:free',
   });
 
+  const validateUrl = (urlString: string): string | null => {
+    if (!urlString.trim()) {
+      setError('Please enter a URL');
+      return null;
+    }
+
+    let urlToValidate = urlString.trim();
+    if (!urlToValidate.match(/^https?:\/\//i)) {
+      urlToValidate = 'https://' + urlToValidate;
+    }
+
+    try {
+      const parsedUrl = new URL(urlToValidate);
+      if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
+        setError('URL must use http:// or https://');
+        return null;
+      }
+      return urlToValidate;
+    } catch (err) {
+      setError('Please enter a valid URL (e.g., https://example.com)');
+      return null;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError('');
+    
+    const validatedUrl = validateUrl(url);
+    if (!validatedUrl) {
+      return;
+    }
+
+    if (validatedUrl !== url) {
+      setUrl(validatedUrl);
+    }
+
+    setLoading(true);
     setReportData(null);
 
     try {
       const requestBody: any = {
-        url,
+        url: validatedUrl,
         enableLLM,
         minImpactScore: 5,
       };
@@ -87,14 +121,24 @@ export default function Home() {
                 Website URL
               </label>
               <input
-                type="url"
+                type="text"
                 id="url"
                 value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                placeholder="https://example.com"
+                onChange={(e) => {
+                  setUrl(e.target.value);
+                  if (error) {
+                    setError('');
+                  }
+                }}
+                placeholder="https://example.com or example.com"
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 ${
+                  error && error.toLowerCase().includes('url') ? 'border-red-500' : 'border-gray-300'
+                }`}
               />
+              {error && error.toLowerCase().includes('url') && (
+                <p className="text-red-600 text-sm mt-1">⚠️ {error}</p>
+              )}
             </div>
 
             <div className="mb-4">
