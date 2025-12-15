@@ -1,10 +1,12 @@
 /**
  * LLM Runner - Abstraction for calling different LLM providers
- * Supports OpenAI, Anthropic, and local models
+ * Supports OpenAI, Anthropic, OpenRouter, and local models
  */
 
+import { OpenRouter } from '@openrouter/sdk';
+
 export interface LLMConfig {
-  provider: 'openai' | 'anthropic' | 'local' | 'ollama';
+  provider: 'openai' | 'anthropic' | 'openrouter' | 'local' | 'ollama';
   model?: string;
   apiKey?: string;
   baseUrl?: string;
@@ -203,6 +205,58 @@ class OllamaProvider implements LLMProvider {
 }
 
 /**
+ * OpenRouter provider
+ */
+class OpenRouterProvider implements LLMProvider {
+  private client: OpenRouter;
+
+  constructor(private config: LLMConfig) {
+    this.client = new OpenRouter({
+      apiKey: config.apiKey || '',
+    });
+  }
+
+  async call(messages: LLMMessage[], options?: Partial<LLMConfig>): Promise<LLMResponse> {
+    const apiKey = options?.apiKey || this.config.apiKey;
+    const model = options?.model || this.config.model || 'meta-llama/llama-3.3-70b-instruct:free';
+    
+    if (!apiKey) {
+      throw new Error('OpenRouter API key is required');
+    }
+
+    // Update client if apiKey changed
+    if (options?.apiKey && options.apiKey !== this.config.apiKey) {
+      this.client = new OpenRouter({ apiKey: options.apiKey });
+    }
+
+    const response = await this.client.chat.send({
+      model,
+      messages: messages.map(msg => ({
+        role: msg.role,
+        content: msg.content,
+      })),
+      temperature: options?.temperature ?? this.config.temperature ?? 0.7,
+      maxTokens: options?.maxTokens ?? this.config.maxTokens ?? 2000,
+    });
+
+    return {
+      content: response.choices[0].message.content?.toString() || '',
+      usage: response.usage ? {
+        promptTokens: response.usage.promptTokens || 0,
+        completionTokens: response.usage.completionTokens || 0,
+        totalTokens: response.usage.totalTokens || 0,
+      } : undefined,
+      model: response.model || model,
+      finishReason: response.choices[0].finishReason?.toString() || '',
+    };
+  }
+
+  supportsStreaming(): boolean {
+    return true;
+  }
+}
+
+/**
  * Generic local provider (for custom endpoints)
  */
 class LocalProvider implements LLMProvider {
@@ -269,6 +323,8 @@ export class LLMRunner {
         return new OpenAIProvider(this.config);
       case 'anthropic':
         return new AnthropicProvider(this.config);
+      case 'openrouter':
+        return new OpenRouterProvider(this.config);
       case 'ollama':
         return new OllamaProvider(this.config);
       case 'local':
