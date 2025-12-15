@@ -14,6 +14,8 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [reportData, setReportData] = useState<any>(null);
+  const [interpretationMessage, setInterpretationMessage] = useState<string>('');
+  const [score, setScore] = useState<number>(0);
   const [enableLLM, setEnableLLM] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
   const [showScoringGuide, setShowScoringGuide] = useState(false);
@@ -44,6 +46,65 @@ export default function Home() {
       setError('Please enter a valid URL (e.g., https://example.com)');
       return null;
     }
+  };
+
+  const generateInterpretationMessage = (data: any): string => {
+    if (!data.aiReadiness) return '';
+
+    const score = Math.round(data.aiReadiness.overall);
+    const issues = data.auditReport?.issues || [];
+    const criticalIssues = issues.filter((i: any) => i.severity === 'critical').length;
+    const highIssues = issues.filter((i: any) => i.severity === 'high').length;
+    
+    const dimensions = data.aiReadiness.dimensions || {};
+    const weakDimensions = Object.entries(dimensions)
+      .filter(([_, dim]: [string, any]) => dim.score < 70)
+      .map(([name, _]) => name.replace(/([A-Z])/g, ' $1').trim().toLowerCase())
+      .slice(0, 2);
+    
+    const quickWins = data.aiReadiness.quickWins || [];
+    const easyFixes = quickWins.filter((w: any) => w.effort === 'low').slice(0, 2);
+    
+    let statusMessage = '';
+    let detailMessage = '';
+    let actionMessage = '';
+    
+    if (score >= 90) {
+      statusMessage = `Your site is excellent – AI systems can accurately understand and extract information from your content.`;
+      detailMessage = quickWins.length > 0 
+        ? `You have ${quickWins.length} minor optimization${quickWins.length > 1 ? 's' : ''} available to reach perfection.`
+        : `Your content is well-optimized for AI comprehension.`;
+      actionMessage = `Continue maintaining high-quality, well-structured content.`;
+    } else if (score >= 75) {
+      statusMessage = `Your site is good, but has ${criticalIssues + highIssues > 0 ? 'some critical' : 'minor'} ${
+        weakDimensions.length > 0 ? weakDimensions.join(' and ') : 'trustworthiness'
+      } ${weakDimensions.length > 1 || !weakDimensions.length ? 'risks' : 'issues'}.`;
+      detailMessage = easyFixes.length > 0
+        ? `${easyFixes.map((f: any) => f.issue.toLowerCase()).join(' and ')} will significantly raise your score.`
+        : `Addressing ${criticalIssues + highIssues} priority issue${criticalIssues + highIssues !== 1 ? 's' : ''} will improve AI understanding.`;
+      actionMessage = `Focus on ${weakDimensions.length > 0 ? 'improving ' + weakDimensions[0] : 'the high-priority issues below'}.`;
+    } else if (score >= 60) {
+      statusMessage = `Your site has moderate AI readiness with significant ${
+        weakDimensions.length > 0 ? weakDimensions.join(' and ') : 'structural'
+      } issues.`;
+      detailMessage = `AI systems may miss important details or misunderstand key information${
+        criticalIssues > 0 ? `, especially with ${criticalIssues} critical issue${criticalIssues !== 1 ? 's' : ''}` : ''
+      }.`;
+      actionMessage = easyFixes.length > 0
+        ? `Start with ${easyFixes[0].issue.toLowerCase()} for quick improvement.`
+        : `Prioritize fixing critical and high-severity issues.`;
+    } else {
+      statusMessage = `Your site has critical AI readiness issues affecting ${
+        weakDimensions.length > 0 ? weakDimensions.join(', ') : 'multiple dimensions'
+      }.`;
+      detailMessage = `AI systems will struggle to extract accurate information and may hallucinate facts about your business.`;
+      actionMessage = `Immediate action required: ${
+        data.aiReadiness.roadmap?.immediate?.[0]?.replace(/^[🔴🟠🟡🔵]\s*/, '') || 
+        'Address the critical issues listed below'
+      }.`;
+    }
+    
+    return `AI Readiness: ${score}/100 – ${statusMessage} ${detailMessage} ${actionMessage}`;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -94,7 +155,10 @@ export default function Home() {
         throw new Error(data.error || 'Audit failed');
       }
 
+      const interpretation = generateInterpretationMessage(data.data);
+      setInterpretationMessage(interpretation);
       setReportData(data.data);
+      setScore(Math.round(data.data.aiReadiness.overall));
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -287,6 +351,28 @@ Example impact:
                   </div>
                 </div>
               )}
+
+              {/* What This Means For You - Quick Interpretation */}
+              {reportData.aiReadiness && interpretationMessage && (
+                  <div className={`border-l-4 rounded-lg p-4 mb-6 ${
+                    score >= 90 ? 'bg-blue-50 border-blue-500' :
+                    score >= 75 ? 'bg-yellow-50 border-yellow-500' :
+                    score >= 60 ? 'bg-orange-50 border-orange-500' :
+                    'bg-red-50 border-red-500'
+                  }`}>
+                    <div className="flex items-start gap-3">
+                      <span className="text-2xl">
+                        {score >= 90 ? '🎉' : score >= 75 ? '⚠️' : score >= 60 ? '⚠️' : '🚨'}
+                      </span>
+                      <div>
+                        <h3 className="font-bold text-gray-900 mb-1">What This Means For You</h3>
+                        <p className="text-gray-800 text-sm leading-relaxed">
+                          {interpretationMessage}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
               {/* Tabs Navigation */}
               <div className="border-b border-gray-200 mb-6">
