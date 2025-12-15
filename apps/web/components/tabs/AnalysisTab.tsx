@@ -1,3 +1,5 @@
+import Tooltip from '../Tooltip';
+
 interface AnalysisTabProps {
   scanResult: any;
 }
@@ -96,7 +98,12 @@ export default function AnalysisTab({ scanResult }: AnalysisTabProps) {
       {/* Hallucination Report */}
       {scanResult?.hallucinationReport && (
         <div className="bg-red-50 border-2 border-red-200 rounded-lg p-6">
-          <h3 className="text-2xl font-bold text-gray-900 mb-4">⚠️ Hallucination Risk Assessment</h3>
+          <div className="flex items-center gap-2 mb-4">
+            <h3 className="text-2xl font-bold text-gray-900">⚠️ Hallucination Risk Assessment</h3>
+            <Tooltip content="Measures the risk of AI systems making incorrect assumptions or generating false information about your content. Lower scores indicate better content reliability.">
+              <span className="text-gray-500 hover:text-gray-700 cursor-help">ⓘ</span>
+            </Tooltip>
+          </div>
           <div className="text-4xl font-bold text-red-600 mb-4">
             Risk Score: {scanResult.hallucinationReport.hallucinationRiskScore}/100
           </div>
@@ -320,13 +327,23 @@ export default function AnalysisTab({ scanResult }: AnalysisTabProps) {
           <h3 className="text-2xl font-bold text-gray-900 mb-4">🔍 AI Misunderstanding Check</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
             <div className="bg-white p-3 rounded">
-              <div className="text-sm text-gray-600">Alignment Score</div>
+              <div className="flex items-center gap-1 mb-1">
+                <div className="text-sm text-gray-600">Alignment Score</div>
+                <Tooltip content="How well AI's understanding aligns with your actual content. Higher scores mean AI accurately reflects your key messages.">
+                  <span className="text-gray-400 hover:text-gray-600 cursor-help text-xs">ⓘ</span>
+                </Tooltip>
+              </div>
               <div className="text-2xl font-bold text-purple-600">
                 {scanResult.mirrorReport.summary.alignmentScore}/100
               </div>
             </div>
             <div className="bg-white p-3 rounded">
-              <div className="text-sm text-gray-600">Clarity Score</div>
+              <div className="flex items-center gap-1 mb-1">
+                <div className="text-sm text-gray-600">Clarity Score</div>
+                <Tooltip content="How clearly your content communicates to AI systems. Higher scores indicate better structure and semantic clarity.">
+                  <span className="text-gray-400 hover:text-gray-600 cursor-help text-xs">ⓘ</span>
+                </Tooltip>
+              </div>
               <div className="text-2xl font-bold text-purple-600">
                 {scanResult.mirrorReport.summary.clarityScore}/100
               </div>

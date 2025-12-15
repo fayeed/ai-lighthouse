@@ -11,8 +11,9 @@
     "next": "16.0.7",
     "react": "19.2.0",
     "react-dom": "19.2.0",
-    "scanner": "workspace:*",
-    "recharts": "^2.15.0"
+    "react-tooltip": "^5.30.0",
+    "recharts": "^2.15.0",
+    "scanner": "workspace:*"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

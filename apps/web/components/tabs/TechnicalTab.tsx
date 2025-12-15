@@ -1,3 +1,5 @@
+import Tooltip from '../Tooltip';
+
 interface TechnicalTabProps {
   scanResult: any;
 }
@@ -67,7 +69,12 @@ export default function TechnicalTab({ scanResult }: TechnicalTabProps) {
       {/* Extractability */}
       {scanResult?.extractability && (
         <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-6">
-          <h3 className="text-2xl font-bold text-gray-900 mb-4">🔄 Extractability</h3>
+          <div className="flex items-center gap-2 mb-4">
+            <h3 className="text-2xl font-bold text-gray-900">🔄 Extractability</h3>
+            <Tooltip content="How easily AI systems can extract and process your content. Considers HTML structure, rendering method, and content accessibility.">
+              <span className="text-gray-500 hover:text-gray-700 cursor-help">ⓘ</span>
+            </Tooltip>
+          </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
             <div className="bg-white p-3 rounded">
               <div className="text-sm text-gray-600">Overall Score</div>
@@ -123,7 +130,12 @@ export default function TechnicalTab({ scanResult }: TechnicalTabProps) {
       {/* Scoring Details */}
       {scanResult?.scoring && (
         <div className="bg-gray-50 border-2 border-gray-200 rounded-lg p-6">
-          <h3 className="text-2xl font-bold text-gray-900 mb-4">📊 Technical Scoring</h3>
+          <div className="flex items-center gap-2 mb-4">
+            <h3 className="text-2xl font-bold text-gray-900">📊 Technical Scoring</h3>
+            <Tooltip content="Comprehensive technical score based on all AI readiness checks including accessibility, structure, and metadata quality.">
+              <span className="text-gray-500 hover:text-gray-700 cursor-help">ⓘ</span>
+            </Tooltip>
+          </div>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
             <div className="bg-white p-3 rounded">
               <div className="text-sm text-gray-600">Overall Score</div>
@@ -148,7 +160,12 @@ export default function TechnicalTab({ scanResult }: TechnicalTabProps) {
           {/* Category Scores */}
           {scanResult.scoring.categoryScores && (
             <div>
-              <h4 className="font-semibold text-gray-700 mb-3">Category Breakdown</h4>
+              <div className="flex items-center gap-2 mb-3">
+                <h4 className="font-semibold text-gray-700">Category Breakdown</h4>
+                <Tooltip content="Individual scores for each AI readiness category: content quality, technical structure, crawlability, knowledge graph, and accessibility.">
+                  <span className="text-gray-400 hover:text-gray-600 cursor-help text-sm">ⓘ</span>
+                </Tooltip>
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {Object.entries(scanResult.scoring.categoryScores).map(([category, data]: [string, any]) => {
                   // Handle both formats: direct score or object with score property
