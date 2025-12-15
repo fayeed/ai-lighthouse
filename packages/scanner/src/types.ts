@@ -298,5 +298,6 @@ export interface ScanResult {
     };
     recommendations: string[];
   };
+  llmLimitExceeded?: boolean; // Flag indicating if LLM rate limit was hit during scan
 }
 

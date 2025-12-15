@@ -1,4 +1,6 @@
 import express from 'express';
+import rateLimit from 'express-rate-limit';
+import { redisClient } from '../index.js';
 import { analyzeUrlWithRules, calculateAIReadiness, exportAuditReport } from '../../../../packages/scanner/src/exports.js';
 
 export const auditRouter = express.Router();
@@ -6,8 +8,58 @@ export const auditRouter = express.Router();
 // Store for ongoing audits (in production, use Redis or similar)
 const auditJobs = new Map<string, any>();
 
+// LLM-specific rate limiter middleware using Redis
+const llmRateLimiter = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+  const { enableLLM, llmProvider } = req.body;
+  
+  // Only apply rate limiting for OpenRouter
+  if (!enableLLM || llmProvider !== 'openrouter') {
+    return next();
+  }
+
+  const ip = req.ip || req.socket.remoteAddress || 'unknown';
+  const key = `rl:llm:${ip}`;
+  const now = Date.now();
+  const windowMs = 60 * 60 * 1000; 
+  const maxLLMRequests = 5; // 5 LLM requests per hour
+
+  try {
+    const data = await redisClient.get(key);
+    let tracker = data ? JSON.parse(data.toString()) : null;
+    
+    if (!tracker || now > tracker.resetTime) {
+      tracker = { count: 0, resetTime: now + windowMs };
+    }
+
+    if (tracker.count >= maxLLMRequests) {
+      const remainingTime = Math.ceil((tracker.resetTime - now) / 1000 / 60); // minutes
+      
+      // Set warning on request object instead of blocking
+      (req as any).llmRateLimitWarning = {
+        type: 'llm_rate_limit',
+        message: `Internal LLM rate limit reached (${maxLLMRequests} requests per hour). Please try again in ${remainingTime} minute${remainingTime !== 1 ? 's' : ''}.`,
+        details: `Rate limit: ${maxLLMRequests} requests per hour per IP`
+      };
+      
+      // Disable LLM in the request body
+      req.body.enableLLM = false;
+    } else {
+      tracker.count++;
+      
+      await redisClient.set(key, JSON.stringify(tracker), {
+        PX: windowMs // Expire after window duration
+      });
+    }
+    
+    next();
+  } catch (error) {
+    console.error('Redis error in LLM rate limiter:', error);
+    next();
+  }
+};
+
 // POST /api/audit - Start a new audit
-auditRouter.post('/', async (req, res) => {
+auditRouter.post('/', llmRateLimiter, async (req, res) => {
   try {
     const { 
       url, 
@@ -95,7 +147,20 @@ auditRouter.post('/', async (req, res) => {
 
     // Synchronous mode - wait for completion
     console.log(`Starting audit for ${url}...`);
+    
+    // Check if rate limiter set a warning
+    let llmWarning = (req as any).llmRateLimitWarning || null;
+    
     const result = await analyzeUrlWithRules(url, scanOptions);
+    
+    // Check if LLM limit was exceeded during the scan
+    if (result.llmLimitExceeded && !llmWarning) {
+      llmWarning = {
+        type: 'llm_rate_limit',
+        message: 'LLM provider rate limit exceeded. AI-enhanced features were disabled for this scan.',
+        details: 'Rate limit exceeded during scan execution'
+      };
+    }
     
     console.log('Calculating AI readiness...');
     const aiReadiness = calculateAIReadiness(result);
@@ -111,6 +176,7 @@ auditRouter.post('/', async (req, res) => {
       success: true,
       url,
       timestamp: new Date().toISOString(),
+      warning: llmWarning,
       data: {
         auditReport,
         aiReadiness,
@@ -152,7 +218,19 @@ async function runAudit(jobId: string, url: string, scanOptions: any) {
   try {
     auditJobs.set(jobId, { status: 'running', progress: 10 });
     
+    let llmWarning = null;
+    
     const result = await analyzeUrlWithRules(url, scanOptions);
+    
+    // Check if LLM limit was exceeded during the scan
+    if (result.llmLimitExceeded) {
+      llmWarning = {
+        type: 'llm_rate_limit',
+        message: 'LLM provider rate limit exceeded. AI-enhanced features were disabled for this scan.',
+        details: 'Rate limit exceeded during scan execution'
+      };
+    }
+    
     auditJobs.set(jobId, { status: 'running', progress: 60 });
     
     const aiReadiness = calculateAIReadiness(result);
@@ -166,6 +244,7 @@ async function runAudit(jobId: string, url: string, scanOptions: any) {
       progress: 100,
       url,
       timestamp: new Date().toISOString(),
+      warning: llmWarning,
       data: {
         auditReport,
         aiReadiness,

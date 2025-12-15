@@ -1,10 +1,44 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import rateLimit from 'express-rate-limit';
+import { createClient } from 'redis';
+import { RedisStore } from 'rate-limit-redis';
 import { auditRouter } from './routes/audit.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+// Redis client setup
+const redisClient = createClient({
+  url: process.env.REDIS_URL || 'redis://localhost:6379'
+});
+
+redisClient.on('error', (err) => console.error('Redis Client Error', err));
+redisClient.on('connect', () => console.log('✅ Connected to Redis'));
+
+await redisClient.connect();
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10, 
+  message: 'Too many requests from this IP, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false, 
+  store: new RedisStore({
+    sendCommand: (...args: string[]) => redisClient.sendCommand(args),
+    prefix: 'rl:general:'
+  }),
+  handler: (req, res) => {
+    res.status(429).json({
+      error: 'Rate limit exceeded',
+      message: 'Too many requests. Please try again in 15 minutes.',
+      retryAfter: 900 // 15 minutes 
+    });
+  }
+});
+
+export { redisClient };
 
 // Middleware
 app.use(cors());
@@ -22,7 +56,7 @@ app.get('/health', (req, res) => {
 });
 
 // Routes
-app.use('/api/audit', auditRouter);
+app.use('/api/audit', limiter, auditRouter);
 
 // Error handling
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

@@ -17,6 +17,7 @@ export async function analyzeUrlWithRules(url: string, opts?: ScanOptions): Prom
   const options: ScanOptions = { timeoutMs: 15000, maxChunkTokens: 1200, ...opts };
   let html: string | undefined;
   const issues = [];
+  let llmLimitExceeded = false;
 
 const fetched = await fetchHtml(url, options.timeoutMs!, options.userAgent);
   if (fetched.status >= 400) {
@@ -155,20 +156,30 @@ const fetched = await fetchHtml(url, options.timeoutMs!, options.userAgent);
       };
     } catch (error) {
       console.error('LLM comprehension failed:', error);
-      // Add issue about LLM failure
-      issues.push({
-        id: 'LLMAPI-001',
-        title: 'LLM Comprehension Failed',
-        serverity: SEVERITY.LOW,
-        category: CATEGORY.LLMAPI,
-        description: `Failed to generate LLM comprehension: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        remediation: 'Check LLM API credentials and configuration.',
-        impactScore: 5,
-        location: { url },
-        tags: ['llm', 'api'],
-        confidence: 0.9,
-        timestamp: new Date().toISOString()
-      } as Issue);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const isRateLimit = errorMessage.includes('Rate limit exceeded') || 
+                          errorMessage.includes('rate limit') ||
+                          errorMessage.includes('free-models-per-day') ||
+                          errorMessage.includes('quota exceeded');
+      
+      if (isRateLimit) {
+        llmLimitExceeded = true;
+      } else {
+        // Add issue about LLM failure (only for non-rate-limit errors)
+        issues.push({
+          id: 'LLMAPI-001',
+          title: 'LLM Comprehension Failed',
+          serverity: SEVERITY.LOW,
+          category: CATEGORY.LLMAPI,
+          description: `Failed to generate LLM comprehension: ${errorMessage}`,
+          remediation: 'Check LLM API credentials and configuration.',
+          impactScore: 5,
+          location: { url },
+          tags: ['llm', 'api'],
+          confidence: 0.9,
+          timestamp: new Date().toISOString()
+        } as Issue);
+      }
     }
   }
 
@@ -205,6 +216,15 @@ const fetched = await fetchHtml(url, options.timeoutMs!, options.userAgent);
       };
     } catch (error) {
       console.error('Hallucination detection failed:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const isRateLimit = errorMessage.includes('Rate limit exceeded') || 
+                          errorMessage.includes('rate limit') ||
+                          errorMessage.includes('free-models-per-day') ||
+                          errorMessage.includes('quota exceeded');
+      
+      if (isRateLimit) {
+        llmLimitExceeded = true;
+      }
     }
   }
 
@@ -231,6 +251,15 @@ const fetched = await fetchHtml(url, options.timeoutMs!, options.userAgent);
       };
     } catch (error) {
       console.error('Entity extraction failed:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const isRateLimit = errorMessage.includes('Rate limit exceeded') || 
+                          errorMessage.includes('rate limit') ||
+                          errorMessage.includes('free-models-per-day') ||
+                          errorMessage.includes('quota exceeded');
+      
+      if (isRateLimit) {
+        llmLimitExceeded = true;
+      }
     }
   }
 
@@ -256,6 +285,15 @@ const fetched = await fetchHtml(url, options.timeoutMs!, options.userAgent);
       };
     } catch (error) {
       console.error('FAQ generation failed:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const isRateLimit = errorMessage.includes('Rate limit exceeded') || 
+                          errorMessage.includes('rate limit') ||
+                          errorMessage.includes('free-models-per-day') ||
+                          errorMessage.includes('quota exceeded');
+      
+      if (isRateLimit) {
+        llmLimitExceeded = true;
+      }
     }
   }
 
@@ -296,6 +334,15 @@ const fetched = await fetchHtml(url, options.timeoutMs!, options.userAgent);
       }
     } catch (error) {
       console.error('Mirror test failed:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const isRateLimit = errorMessage.includes('Rate limit exceeded') || 
+                          errorMessage.includes('rate limit') ||
+                          errorMessage.includes('free-models-per-day') ||
+                          errorMessage.includes('quota exceeded');
+      
+      if (isRateLimit) {
+        llmLimitExceeded = true;
+      }
     }
   }
 
@@ -326,6 +373,7 @@ const fetched = await fetchHtml(url, options.timeoutMs!, options.userAgent);
     hallucinationReport,
     entities, // Detailed entity extraction with metadata
     faqs, // Detailed FAQ generation with sources
-    mirrorReport
+    mirrorReport,
+    llmLimitExceeded // Flag indicating if LLM rate limit was hit
   };
 }
