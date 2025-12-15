@@ -1,17 +1,29 @@
-service:
-  type: web
-  name: ai-lighthouse-api
-  env: node
-  region: oregon
-  plan: free
-  buildCommand: bash scripts/render-build.sh
-  startCommand: bash scripts/render-start.sh
-  healthCheckPath: /health
-  autoDeploy: true
-  envVars:
-    - key: OPENROUTER_API_KEY
-      sync: false
-    - key: PORT
-      value: 10000
-    - key: NODE_ENV
-      value: production
+services:
+  - type: web
+    name: ai-lighthouse-api
+    env: node
+    region: oregon
+    plan: free
+    buildCommand: bash scripts/render-build.sh
+    startCommand: bash scripts/render-start.sh
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: PORT
+        value: 10000
+      - key: NODE_ENV
+        value: production
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: ai-lighthouse-kv
+          property: connectionString
+
+  - type: redis
+    name: ai-lighthouse-kv
+    region: oregon
+    plan: free
+    maxmemoryPolicy: allkeys-lru
+    ipAllowList: []
