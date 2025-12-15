@@ -215,8 +215,9 @@ function chunkByParagraphs($: CheerioAPI, container: any, maxTokens = 500): Cont
 export function chunkContent($: CheerioAPI, options: {
   maxTokensPerChunk?: number;
   includeHtml?: boolean;
+  strategy?: 'auto' | 'heading-based' | 'paragraph-based';
 } = {}): ChunkingResult {
-  const { maxTokensPerChunk = 500, includeHtml = false } = options;
+  const { maxTokensPerChunk = 500, includeHtml = false, strategy: forcedStrategy } = options;
   
   // Find main content container
   const main = $('main');
@@ -227,26 +228,37 @@ export function chunkContent($: CheerioAPI, options: {
   
   // Determine chunking strategy
   const hasHeadings = container.find('h1, h2, h3, h4, h5, h6').length > 0;
-  const strategy = hasHeadings ? 'heading-based' : 'paragraph-based';
-  
-  // Extract chunks
+  let strategy: string;
   let chunks: ContentChunk[] = [];
   
-  if (hasHeadings) {
-    chunks = chunkByHeadings($, container);
+  if (forcedStrategy) {
+    if (forcedStrategy === 'auto') {
+      strategy = hasHeadings ? 'heading-based' : 'paragraph-based';
+    } else {
+      strategy = forcedStrategy;
+    }
+  } else {
+    strategy = hasHeadings ? 'heading-based' : 'paragraph-based';
+  }
+  
+  if (strategy === 'heading-based') {
+    if (!hasHeadings) {
+      chunks = chunkByParagraphs($, container, maxTokensPerChunk);
+      strategy = 'paragraph-based (fallback)';
+    } else {
+      chunks = chunkByHeadings($, container);
+    }
   } else {
     chunks = chunkByParagraphs($, container, maxTokensPerChunk);
   }
   
-  // Add HTML snippets if requested
   if (includeHtml) {
     chunks = chunks.map(chunk => ({
       ...chunk,
-      htmlSnippet: container.html()?.substring(0, 500) // First 500 chars
+      htmlSnippet: container.html()?.substring(0, 500)
     }));
   }
   
-  // Calculate aggregate statistics
   const totalTokens = chunks.reduce((sum, c) => sum + c.tokenCount, 0);
   const totalChunks = chunks.length;
   const averageTokensPerChunk = totalChunks > 0 ? Math.round(totalTokens / totalChunks) : 0;

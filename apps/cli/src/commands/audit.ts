@@ -18,6 +18,7 @@ interface AuditOptions {
   cacheTtl?: number;
   threshold?: number;
   maxChunkTokens?: number;
+  chunkingStrategy?: 'auto' | 'heading-based' | 'paragraph-based';
   enableChunking?: boolean;
   enableExtractability?: boolean;
   enableHallucination?: boolean;
@@ -43,6 +44,7 @@ export function auditCommand(program: Command) {
     .option('--cache-ttl <seconds>', 'Cache TTL in seconds to avoid re-fetching', parseInt)
     .option('--threshold <score>', 'Minimum score threshold (exit 1 if below)', parseInt)
     .option('--max-chunk-tokens <number>', 'Maximum tokens per content chunk', parseInt, 1200)
+    .option('--chunking-strategy <strategy>', 'Chunking strategy: auto, heading-based, paragraph-based', 'auto')
     .option('--enable-chunking', 'Enable detailed content chunking analysis', false)
     .option('--enable-extractability', 'Enable extractability mapping', false)
     .option('--enable-hallucination', 'Enable hallucination detection', false)
@@ -65,6 +67,7 @@ export function auditCommand(program: Command) {
         // Build scan options
         const scanOptions: ScanOptions = {
           maxChunkTokens: options.maxChunkTokens,
+          chunkingStrategy: options.chunkingStrategy,
           enableChunking: options.enableChunking,
           enableExtractability: options.enableExtractability,
           enableHallucinationDetection: options.enableHallucination,

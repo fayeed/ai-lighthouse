@@ -102,7 +102,8 @@ const fetched = await fetchHtml(url, options.timeoutMs!, options.userAgent);
   if (options.enableChunking !== false) { // Enabled by default
     chunking = chunkContent($, {
       maxTokensPerChunk: options.maxChunkTokens || 500,
-      includeHtml: false
+      includeHtml: false,
+      strategy: options.chunkingStrategy || 'auto'
     });
   }
 

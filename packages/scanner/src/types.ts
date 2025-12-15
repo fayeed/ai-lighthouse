@@ -53,6 +53,7 @@ export interface ScanOptions {
   maxChunkTokens?: number;
   userAgent?: string;
   enableChunking?: boolean; // Enable detailed content chunking analysis
+  chunkingStrategy?: 'auto' | 'heading-based' | 'paragraph-based'; // Force specific chunking strategy (default: auto)
   enableExtractability?: boolean; // Enable extractability mapping
   enableLLM?: boolean; // Enable LLM comprehension analysis
   enableHallucinationDetection?: boolean; // Enable hallucination trigger detection
