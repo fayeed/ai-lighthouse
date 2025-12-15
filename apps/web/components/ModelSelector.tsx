@@ -3,7 +3,7 @@
 import { useState } from 'react';
 
 export interface ModelConfig {
-  provider: 'ollama' | 'openai' | 'anthropic' | 'gemini';
+  provider: 'openrouter' | 'openai' | 'anthropic' | 'gemini';
   model: string;
   apiKey?: string;
   baseUrl?: string;
@@ -15,7 +15,7 @@ interface ModelSelectorProps {
 }
 
 const providerModels = {
-  ollama: ['qwen2.5:0.5b'], // Backend will use this model
+  openrouter: ['meta-llama/llama-3.3-70b-instruct:free', 'google/gemini-2.0-flash-exp:free', 'meta-llama/llama-3.1-8b-instruct:free', 'microsoft/phi-3-mini-128k-instruct:free'],
   openai: ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-3.5-turbo'],
   anthropic: ['claude-3-5-sonnet-20241022', 'claude-3-5-haiku-20241022', 'claude-3-opus-20240229'],
   gemini: ['gemini-2.0-flash-exp', 'gemini-1.5-pro', 'gemini-1.5-flash'],
@@ -29,8 +29,8 @@ export default function ModelSelector({ value, onChange }: ModelSelectorProps) {
     onChange({
       provider,
       model: defaultModel,
-      apiKey: provider === 'ollama' ? undefined : value.apiKey,
-      baseUrl: provider === 'ollama' ? 'http://localhost:11434' : undefined,
+      apiKey: provider === 'openrouter' ? undefined : value.apiKey,
+      baseUrl: undefined,
     });
   };
 
@@ -45,8 +45,6 @@ export default function ModelSelector({ value, onChange }: ModelSelectorProps) {
   const handleBaseUrlChange = (baseUrl: string) => {
     onChange({ ...value, baseUrl });
   };
-
-  const needsApiKey = value.provider !== 'ollama';
 
   return (
     <div className="bg-gray-50 rounded-lg p-4 space-y-4">
@@ -69,7 +67,7 @@ export default function ModelSelector({ value, onChange }: ModelSelectorProps) {
                   : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
               }`}
             >
-              {provider === 'ollama' && '🏠 '}
+              {provider === 'openrouter' && '🌐 '}
               {provider === 'openai' && '🤖 '}
               {provider === 'anthropic' && '🧠 '}
               {provider === 'gemini' && '✨ '}
@@ -79,37 +77,26 @@ export default function ModelSelector({ value, onChange }: ModelSelectorProps) {
         </div>
       </div>
 
-      {/* Model Selection - Only for non-Ollama providers */}
-      {value.provider !== 'ollama' && (
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Model
-          </label>
-          <select
-            value={value.model}
-            onChange={(e) => handleModelChange(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            {providerModels[value.provider].map((model) => (
-              <option key={model} value={model}>
-                {model}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
+      {/* Model Selection */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Model
+        </label>
+        <select
+          value={value.model}
+          onChange={(e) => handleModelChange(e.target.value)}
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        >
+          {providerModels[value.provider].map((model) => (
+            <option key={model} value={model}>
+              {model}
+            </option>
+          ))}
+        </select>
+      </div>
 
-      {/* Base URL for Ollama - Hidden since it runs on backend */}
-      {value.provider === 'ollama' && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-          <div className="text-sm text-green-900">
-            <strong>✅ Local Processing:</strong> Ollama will run on the backend server using <span className="font-mono font-semibold">{value.model}</span>. No configuration needed.
-          </div>
-        </div>
-      )}
-
-      {/* API Key for Cloud Providers */}
-      {needsApiKey && (
+      {/* API Key - Only for non-OpenRouter providers */}
+      {value.provider !== 'openrouter' && (
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             API Key
@@ -140,8 +127,8 @@ export default function ModelSelector({ value, onChange }: ModelSelectorProps) {
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
         <div className="text-sm text-blue-900">
           <strong>ℹ️ Note:</strong> {' '}
-          {value.provider === 'ollama' 
-            ? 'Runs locally on the backend server. Fast, private, and free.'
+          {value.provider === 'openrouter'
+            ? '🆓 Free models available! API key configured on backend. No additional setup needed.'
             : `${value.provider.charAt(0).toUpperCase() + value.provider.slice(1)} requires an API key. Your data will be sent to their servers.`
           }
         </div>

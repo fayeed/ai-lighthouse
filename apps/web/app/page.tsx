@@ -15,9 +15,8 @@ export default function Home() {
   const [enableLLM, setEnableLLM] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
   const [modelConfig, setModelConfig] = useState<ModelConfig>({
-    provider: 'ollama',
-    model: 'qwen2.5:0.5b',
-    baseUrl: 'http://localhost:11434',
+    provider: 'openrouter',
+    model: 'meta-llama/llama-3.3-70b-instruct:free',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -37,9 +36,7 @@ export default function Home() {
         requestBody.llmProvider = modelConfig.provider;
         requestBody.llmModel = modelConfig.model;
         
-        if (modelConfig.provider === 'ollama') {
-          requestBody.llmBaseUrl = modelConfig.baseUrl || 'http://localhost:11434';
-        } else if (modelConfig.apiKey) {
+        if (modelConfig.apiKey) {
           requestBody.llmApiKey = modelConfig.apiKey;
         }
       }
