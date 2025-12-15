@@ -155,7 +155,12 @@ export default function Home() {
               <div className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg p-6 mb-8">
                 <div className="flex items-start gap-2 mb-2">
                   <h3 className="text-2xl font-bold">AI Readiness Score</h3>
-                  <Tooltip content="Overall score indicating how well your website is optimized for AI systems like chatbots, search engines, and voice assistants. Higher scores mean better AI comprehension and visibility.">
+                  <Tooltip content="Overall score indicating how well your website is optimized for AI systems like chatbots, search engines, and voice assistants. Higher scores mean better AI comprehension and visibility.
+
+Example impact:
+• 90+ score: ChatGPT accurately answers questions about your products
+• 60-90 score: Some details may be missed or misunderstood
+• Below 60: AI may struggle to extract key information or hallucinate facts">
                     <span className="text-white/80 hover:text-white text-lg mt-0.5">ⓘ</span>
                   </Tooltip>
                 </div>

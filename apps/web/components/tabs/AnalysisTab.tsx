@@ -1,3 +1,6 @@
+'use client';
+
+import { useState } from 'react';
 import Tooltip from '../Tooltip';
 
 interface AnalysisTabProps {
@@ -5,6 +8,10 @@ interface AnalysisTabProps {
 }
 
 export default function AnalysisTab({ scanResult }: AnalysisTabProps) {
+  const [showHallucinationExample, setShowHallucinationExample] = useState(false);
+  const [showAlignmentExample, setShowAlignmentExample] = useState(false);
+  const [showClarityExample, setShowClarityExample] = useState(false);
+
   return (
     <div className="space-y-8">
       {/* LLM Summary */}
@@ -104,6 +111,37 @@ export default function AnalysisTab({ scanResult }: AnalysisTabProps) {
               <span className="text-gray-500 hover:text-gray-700 cursor-help">ⓘ</span>
             </Tooltip>
           </div>
+
+          {/* Example Section */}
+          <div className="mb-4">
+            <button
+              onClick={() => setShowHallucinationExample(!showHallucinationExample)}
+              className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
+            >
+              {showHallucinationExample ? '▼' : '▶'} See Example
+            </button>
+            {showHallucinationExample && (
+              <div className="mt-3 bg-white border border-blue-200 rounded-lg p-4">
+                <div className="space-y-3">
+                  <div>
+                    <div className="text-sm font-semibold text-red-700 mb-1">❌ High Risk - Missing Specifics:</div>
+                    <div className="bg-red-50 p-3 rounded text-sm">
+                      <p className="text-gray-700 italic">"Our AI improves productivity"</p>
+                      <p className="text-red-600 mt-2 text-xs">⚠️ AI may invent: "30% productivity increase" when no number was provided</p>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-sm font-semibold text-green-700 mb-1">✓ Low Risk - Specific Facts:</div>
+                    <div className="bg-green-50 p-3 rounded text-sm">
+                      <p className="text-gray-700 italic">"Our AI improves productivity by 25% based on internal studies"</p>
+                      <p className="text-green-600 mt-2 text-xs">✓ AI can accurately cite the specific 25% figure</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
           <div className="text-4xl font-bold text-red-600 mb-4">
             Risk Score: {scanResult.hallucinationReport.hallucinationRiskScore}/100
           </div>
@@ -325,6 +363,7 @@ export default function AnalysisTab({ scanResult }: AnalysisTabProps) {
       {scanResult?.mirrorReport && (
         <div className="bg-purple-50 border-2 border-purple-200 rounded-lg p-6">
           <h3 className="text-2xl font-bold text-gray-900 mb-4">🔍 AI Misunderstanding Check</h3>
+          
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
             <div className="bg-white p-3 rounded">
               <div className="flex items-center gap-1 mb-1">
@@ -360,6 +399,74 @@ export default function AnalysisTab({ scanResult }: AnalysisTabProps) {
                 {scanResult.mirrorReport.summary.major}
               </div>
             </div>
+          </div>
+
+          {/* Alignment Example */}
+          <div className="mb-4">
+            <button
+              onClick={() => setShowAlignmentExample(!showAlignmentExample)}
+              className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
+            >
+              {showAlignmentExample ? '▼' : '▶'} See Alignment Example
+            </button>
+            {showAlignmentExample && (
+              <div className="mt-3 bg-white border border-purple-200 rounded-lg p-4">
+                <div className="space-y-3">
+                  <div>
+                    <div className="text-sm font-semibold text-gray-700 mb-2">Your Page Content:</div>
+                    <div className="bg-gray-50 p-3 rounded text-sm">
+                      <p className="text-gray-700">"We sell enterprise software for healthcare providers"</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <div className="text-sm font-semibold text-green-700 mb-1">✓ Good Alignment (90+):</div>
+                      <div className="bg-green-50 p-3 rounded text-sm">
+                        <p className="text-gray-700 italic">AI Summary: "Healthcare enterprise software vendor"</p>
+                        <p className="text-green-600 mt-2 text-xs">✓ Accurately captures industry and business type</p>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-sm font-semibold text-red-700 mb-1">❌ Poor Alignment (40-):</div>
+                      <div className="bg-red-50 p-3 rounded text-sm">
+                        <p className="text-gray-700 italic">AI Summary: "General software company"</p>
+                        <p className="text-red-600 mt-2 text-xs">❌ Misses critical details about industry focus</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Clarity Example */}
+          <div className="mb-4">
+            <button
+              onClick={() => setShowClarityExample(!showClarityExample)}
+              className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
+            >
+              {showClarityExample ? '▼' : '▶'} See Clarity Example
+            </button>
+            {showClarityExample && (
+              <div className="mt-3 bg-white border border-purple-200 rounded-lg p-4">
+                <div className="space-y-3">
+                  <div>
+                    <div className="text-sm font-semibold text-red-700 mb-1">❌ Poor Clarity - Vague:</div>
+                    <div className="bg-red-50 p-3 rounded text-sm">
+                      <p className="text-gray-700 italic">"Our solution helps businesses succeed in the modern world"</p>
+                      <p className="text-red-600 mt-2 text-xs">⚠️ Too generic - what solution? Which businesses? How does it help?</p>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-sm font-semibold text-green-700 mb-1">✓ Good Clarity - Specific:</div>
+                    <div className="bg-green-50 p-3 rounded text-sm">
+                      <p className="text-gray-700 italic">"Our CRM software helps sales teams track customer interactions, manage leads, and forecast revenue"</p>
+                      <p className="text-green-600 mt-2 text-xs">✓ Clear: product type (CRM), audience (sales teams), specific benefits</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {scanResult.mirrorReport.mismatches && scanResult.mirrorReport.mismatches.length > 0 && (

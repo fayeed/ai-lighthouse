@@ -1,3 +1,6 @@
+'use client';
+
+import { useState } from 'react';
 import Tooltip from '../Tooltip';
 
 interface TechnicalTabProps {
@@ -5,6 +8,9 @@ interface TechnicalTabProps {
 }
 
 export default function TechnicalTab({ scanResult }: TechnicalTabProps) {
+  const [showExtractabilityExample, setShowExtractabilityExample] = useState(false);
+  const [showTechnicalScoringExample, setShowTechnicalScoringExample] = useState(false);
+
   return (
     <div className="space-y-8">
       {/* Chunking */}
@@ -75,6 +81,51 @@ export default function TechnicalTab({ scanResult }: TechnicalTabProps) {
               <span className="text-gray-500 hover:text-gray-700 cursor-help">ⓘ</span>
             </Tooltip>
           </div>
+
+          {/* Example Section */}
+          <div className="mb-4">
+            <button
+              onClick={() => setShowExtractabilityExample(!showExtractabilityExample)}
+              className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
+            >
+              {showExtractabilityExample ? '▼' : '▶'} See Example
+            </button>
+            {showExtractabilityExample && (
+              <div className="mt-3 bg-white border border-yellow-200 rounded-lg p-4">
+                <div className="space-y-3">
+                  <div>
+                    <div className="text-sm font-semibold text-green-700 mb-1">✓ High Extractability (90+):</div>
+                    <div className="bg-green-50 p-3 rounded text-sm font-mono">
+                      <div className="text-gray-700">
+                        <span className="text-blue-600">&lt;article&gt;</span><br />
+                        <span className="ml-4"><span className="text-blue-600">&lt;h1&gt;</span>Product Features<span className="text-blue-600">&lt;/h1&gt;</span></span><br />
+                        <span className="ml-4"><span className="text-blue-600">&lt;p&gt;</span>Our CRM increases sales by 25%<span className="text-blue-600">&lt;/p&gt;</span></span><br />
+                        <span className="text-blue-600">&lt;/article&gt;</span>
+                      </div>
+                      <p className="text-green-600 mt-2 text-xs">✓ AI can immediately read and understand the content</p>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-sm font-semibold text-red-700 mb-1">❌ Low Extractability (30-):</div>
+                    <div className="bg-red-50 p-3 rounded text-sm space-y-2">
+                      <div className="font-mono text-gray-700">
+                        <span className="text-blue-600">&lt;div id="app"&gt;</span><span className="text-blue-600">&lt;/div&gt;</span><br />
+                        <span className="text-gray-500">// Content loaded via JavaScript</span>
+                      </div>
+                      <div className="text-xs text-red-600">❌ AI sees empty page, misses all content</div>
+                      <div className="border-t border-red-200 pt-2 mt-2">
+                        <div className="font-mono text-gray-700">
+                          <span className="text-blue-600">&lt;img src="features.png"&gt;</span>
+                        </div>
+                        <div className="text-xs text-red-600">❌ Text in image without alt text - AI can't read it</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
             <div className="bg-white p-3 rounded">
               <div className="text-sm text-gray-600">Overall Score</div>
@@ -136,6 +187,75 @@ export default function TechnicalTab({ scanResult }: TechnicalTabProps) {
               <span className="text-gray-500 hover:text-gray-700 cursor-help">ⓘ</span>
             </Tooltip>
           </div>
+
+          {/* Example Section */}
+          <div className="mb-4">
+            <button
+              onClick={() => setShowTechnicalScoringExample(!showTechnicalScoringExample)}
+              className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
+            >
+              {showTechnicalScoringExample ? '▼' : '▶'} See What Improves Your Score
+            </button>
+            {showTechnicalScoringExample && (
+              <div className="mt-3 bg-white border border-gray-200 rounded-lg p-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <div className="text-sm font-semibold text-green-700 mb-2">✓ High Score Elements:</div>
+                    <div className="bg-green-50 p-3 rounded space-y-2 text-sm">
+                      <div>
+                        <div className="font-semibold text-gray-700">Semantic HTML:</div>
+                        <div className="font-mono text-xs text-gray-600 mt-1">
+                          &lt;header&gt;, &lt;nav&gt;, &lt;main&gt;, &lt;article&gt;
+                        </div>
+                      </div>
+                      <div>
+                        <div className="font-semibold text-gray-700">Heading Hierarchy:</div>
+                        <div className="text-gray-600 text-xs">H1 → H2 → H3 (logical order)</div>
+                      </div>
+                      <div>
+                        <div className="font-semibold text-gray-700">Alt Text:</div>
+                        <div className="font-mono text-xs text-gray-600">
+                          &lt;img alt="Dashboard metrics"&gt;
+                        </div>
+                      </div>
+                      <div>
+                        <div className="font-semibold text-gray-700">Schema.org Data:</div>
+                        <div className="font-mono text-xs text-gray-600">
+                          JSON-LD structured data
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-sm font-semibold text-red-700 mb-2">❌ Low Score Elements:</div>
+                    <div className="bg-red-50 p-3 rounded space-y-2 text-sm">
+                      <div>
+                        <div className="font-semibold text-gray-700">Generic Tags:</div>
+                        <div className="font-mono text-xs text-gray-600 mt-1">
+                          &lt;div&gt;, &lt;span&gt; for everything
+                        </div>
+                      </div>
+                      <div>
+                        <div className="font-semibold text-gray-700">Poor Headings:</div>
+                        <div className="text-gray-600 text-xs">Multiple H1s, skipping levels</div>
+                      </div>
+                      <div>
+                        <div className="font-semibold text-gray-700">Missing Alt Text:</div>
+                        <div className="font-mono text-xs text-gray-600">
+                          &lt;img src="chart.png"&gt;
+                        </div>
+                      </div>
+                      <div>
+                        <div className="font-semibold text-gray-700">No Metadata:</div>
+                        <div className="text-gray-600 text-xs">Missing titles, descriptions</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
             <div className="bg-white p-3 rounded">
               <div className="text-sm text-gray-600">Overall Score</div>
@@ -162,7 +282,7 @@ export default function TechnicalTab({ scanResult }: TechnicalTabProps) {
             <div>
               <div className="flex items-center gap-2 mb-3">
                 <h4 className="font-semibold text-gray-700">Category Breakdown</h4>
-                <Tooltip content="Individual scores for each AI readiness category: content quality, technical structure, crawlability, knowledge graph, and accessibility.">
+                <Tooltip content="Individual scores for each AI readiness category:\n\n• Content Quality: Text clarity, structure, readability\n• Technical: HTML structure, semantic markup\n• Crawlability: robots.txt, sitemaps, canonical URLs\n• Knowledge Graph: Schema.org data, JSON-LD\n• Accessibility: ARIA labels, alt text, keyboard navigation">
                   <span className="text-gray-400 hover:text-gray-600 cursor-help text-sm">ⓘ</span>
                 </Tooltip>
               </div>
