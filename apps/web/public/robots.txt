@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 
 # Sitemaps
-Sitemap: https://ai-lighthouse.com/sitemap.xml
+Sitemap: https://ai-lighthouse-web.vercel.app/sitemap.xml
