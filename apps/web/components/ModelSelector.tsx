@@ -91,10 +91,10 @@ export default function ModelSelector({ value, onChange }: ModelSelectorProps) {
         <select
           value={value.model}
           onChange={(e) => handleModelChange(e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900"
         >
           {providerModels[value.provider].map((model) => (
-            <option key={model} value={model}>
+            <option key={model} value={model} className="bg-white text-gray-900">
               {model}
             </option>
           ))}
