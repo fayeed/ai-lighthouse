@@ -3,7 +3,7 @@
 import { Tooltip as ReactTooltip } from 'react-tooltip';
 
 interface TooltipProps {
-  content: string;
+  content: string | React.ReactNode;
   children: React.ReactNode;
   id?: string;
 }
@@ -13,7 +13,11 @@ export default function Tooltip({ content, children, id }: TooltipProps) {
 
   return (
     <>
-      <span data-tooltip-id={tooltipId} data-tooltip-content={content} className="cursor-help">
+      <span 
+        data-tooltip-id={tooltipId} 
+        {...(typeof content === 'string' ? { 'data-tooltip-content': content } : {})}
+        className="cursor-help"
+      >
         {children}
       </span>
       <ReactTooltip
@@ -25,10 +29,12 @@ export default function Tooltip({ content, children, id }: TooltipProps) {
           borderRadius: '0.5rem',
           padding: '0.5rem 0.75rem',
           fontSize: '0.875rem',
-          maxWidth: '16rem',
+          maxWidth: '20rem',
           zIndex: 50,
         }}
-      />
+      >
+        {typeof content !== 'string' && content}
+      </ReactTooltip>
     </>
   );
 }
