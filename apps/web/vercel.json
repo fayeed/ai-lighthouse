@@ -1,9 +1,6 @@
 {
-  "buildCommand": "pnpm install && pnpm run build",
+  "installCommand": "cd ../.. && pnpm install --no-frozen-lockfile",
+  "buildCommand": "cd ../.. && pnpm build:web",
   "outputDirectory": ".next",
-  "installCommand": "pnpm install",
-  "framework": "nextjs",
-  "env": {
-    "NEXT_PUBLIC_API_URL": "https://ai-lighthouse-api.onrender.com"
-  }
+  "framework": "nextjs"
 }
