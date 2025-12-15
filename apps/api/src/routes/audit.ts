@@ -5,8 +5,26 @@ import { analyzeUrlWithRules, calculateAIReadiness, exportAuditReport } from '..
 
 export const auditRouter = express.Router();
 
-// Store for ongoing audits (in production, use Redis or similar)
-const auditJobs = new Map<string, any>();
+// Helper functions for Redis-based job storage
+async function setAuditJob(jobId: string, jobData: any) {
+  try {
+    await redisClient.set(`audit:job:${jobId}`, JSON.stringify(jobData), {
+      EX: 3600 // Expire after 1 hour
+    });
+  } catch (error) {
+    console.error('Redis error storing job:', error);
+  }
+}
+
+async function getAuditJob(jobId: string) {
+  try {
+    const data = await redisClient.get(`audit:job:${jobId}`);
+    return data ? JSON.parse(data.toString()) : null;
+  } catch (error) {
+    console.error('Redis error retrieving job:', error);
+    return null;
+  }
+}
 
 // LLM-specific rate limiter middleware using Redis
 const llmRateLimiter = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -127,12 +145,12 @@ auditRouter.post('/', llmRateLimiter, async (req, res) => {
     // If async mode, start job and return job ID
     if (async) {
       const jobId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      auditJobs.set(jobId, { status: 'running', progress: 0 });
+      await setAuditJob(jobId, { status: 'running', progress: 0 });
 
       // Start audit in background
-      runAudit(jobId, url, scanOptions).catch(err => {
+      runAudit(jobId, url, scanOptions).catch(async err => {
         console.error(`Job ${jobId} failed:`, err);
-        auditJobs.set(jobId, { 
+        await setAuditJob(jobId, { 
           status: 'failed', 
           error: err.message 
         });
@@ -202,9 +220,9 @@ auditRouter.post('/', llmRateLimiter, async (req, res) => {
 });
 
 // GET /api/audit/:jobId - Check job status
-auditRouter.get('/:jobId', (req, res) => {
+auditRouter.get('/:jobId', async (req, res) => {
   const { jobId } = req.params;
-  const job = auditJobs.get(jobId);
+  const job = await getAuditJob(jobId);
 
   if (!job) {
     return res.status(404).json({ error: 'Job not found' });
@@ -216,7 +234,7 @@ auditRouter.get('/:jobId', (req, res) => {
 // Helper function to run audit asynchronously
 async function runAudit(jobId: string, url: string, scanOptions: any) {
   try {
-    auditJobs.set(jobId, { status: 'running', progress: 10 });
+    await setAuditJob(jobId, { status: 'running', progress: 10 });
     
     let llmWarning = null;
     
@@ -231,15 +249,15 @@ async function runAudit(jobId: string, url: string, scanOptions: any) {
       };
     }
     
-    auditJobs.set(jobId, { status: 'running', progress: 60 });
+    await setAuditJob(jobId, { status: 'running', progress: 60 });
     
     const aiReadiness = calculateAIReadiness(result);
-    auditJobs.set(jobId, { status: 'running', progress: 80 });
+    await setAuditJob(jobId, { status: 'running', progress: 80 });
     
     const auditReportJson = exportAuditReport(result);
     const auditReport = JSON.parse(auditReportJson);
     
-    auditJobs.set(jobId, { 
+    await setAuditJob(jobId, { 
       status: 'completed', 
       progress: 100,
       url,
@@ -259,7 +277,7 @@ async function runAudit(jobId: string, url: string, scanOptions: any) {
       }
     });
   } catch (error: any) {
-    auditJobs.set(jobId, { 
+    await setAuditJob(jobId, { 
       status: 'failed', 
       error: error.message,
       stack: error.stack
