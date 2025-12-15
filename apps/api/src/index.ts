@@ -9,6 +9,10 @@ import { auditRouter } from './routes/audit.js';
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Trust proxy - required when behind reverse proxy (Render, Heroku, etc.)
+// This allows express-rate-limit to correctly identify users by IP
+app.set('trust proxy', 1);
+
 // Redis client setup
 const redisClient = createClient({
   url: process.env.REDIS_URL || 'redis://localhost:6379'
