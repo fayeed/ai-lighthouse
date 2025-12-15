@@ -17,6 +17,21 @@ const dimensionDescriptions: Record<string, string> = {
 };
 
 export default function OverviewTab({ aiReadiness }: OverviewTabProps) {
+  // Helper function to get score color based on value
+  const getScoreColor = (score: number) => {
+    if (score >= 90) return 'text-blue-600';    // Excellent (low risk)
+    if (score >= 75) return 'text-yellow-600';  // Good (medium risk)
+    if (score >= 60) return 'text-orange-600';  // Fair (high risk)
+    return 'text-red-600';                      // Poor (critical risk)
+  };
+
+  const getBorderColor = (score: number) => {
+    if (score >= 90) return 'border-blue-500';
+    if (score >= 75) return 'border-yellow-500';
+    if (score >= 60) return 'border-orange-500';
+    return 'border-red-500';
+  };
+
   return (
     <div>
       {/* Dimensions */}
@@ -25,7 +40,7 @@ export default function OverviewTab({ aiReadiness }: OverviewTabProps) {
           <h3 className="text-2xl font-bold text-gray-900 mb-4">Dimension Scores</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {Object.entries(aiReadiness.dimensions).map(([key, dim]: [string, any]) => (
-              <div key={key} className="bg-gray-50 border-l-4 border-blue-500 rounded-lg p-4">
+              <div key={key} className={`bg-gray-50 border-l-4 ${getBorderColor(dim.score)} rounded-lg p-4`}>
                 <div className="flex items-center gap-2">
                   <div className="font-semibold text-lg text-gray-900 capitalize">
                     {key.replace(/([A-Z])/g, ' $1').trim()}
@@ -36,7 +51,7 @@ export default function OverviewTab({ aiReadiness }: OverviewTabProps) {
                     </Tooltip>
                   )}
                 </div>
-                <div className="text-3xl font-bold text-blue-600 my-2">
+                <div className={`text-3xl font-bold ${getScoreColor(dim.score)} my-2`}>
                   {Math.round(dim.score)}/100
                 </div>
                 <div className="text-sm text-gray-600 capitalize">{dim.status}</div>

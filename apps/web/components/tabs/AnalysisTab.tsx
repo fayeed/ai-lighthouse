@@ -88,7 +88,7 @@ export default function AnalysisTab({ scanResult }: AnalysisTabProps) {
                       <div className="text-gray-700 text-sm">A: {faq.suggestedAnswer}</div>
                       {faq.importance && (
                         <span className={`inline-block mt-2 px-2 py-1 text-xs rounded ${
-                          faq.importance === 'high' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'
+                          faq.importance === 'high' ? 'bg-orange-100 text-orange-800' : 'bg-gray-100 text-gray-800'
                         }`}>
                           {faq.importance} priority
                         </span>
@@ -157,13 +157,13 @@ export default function AnalysisTab({ scanResult }: AnalysisTabProps) {
               </div>
               <div className="bg-white p-3 rounded">
                 <div className="text-sm text-gray-600">Verified</div>
-                <div className="text-2xl font-bold text-green-600">
+                <div className="text-2xl font-bold text-blue-600">
                   {scanResult.hallucinationReport.factCheckSummary.verifiedFacts}
                 </div>
               </div>
               <div className="bg-white p-3 rounded">
                 <div className="text-sm text-gray-600">Unverified</div>
-                <div className="text-2xl font-bold text-orange-600">
+                <div className="text-2xl font-bold text-yellow-600">
                   {scanResult.hallucinationReport.factCheckSummary.unverifiedFacts}
                 </div>
               </div>
@@ -209,13 +209,13 @@ export default function AnalysisTab({ scanResult }: AnalysisTabProps) {
                   {/* Verified Facts */}
                   {verifiedFacts.length > 0 && (
                     <div>
-                      <strong className="text-green-700">✓ Verified Facts ({verifiedFacts.length}):</strong>
+                      <strong className="text-blue-700">✓ Verified Facts ({verifiedFacts.length}):</strong>
                       <div className="space-y-2 mt-2 max-h-60 overflow-y-auto">
                         {verifiedFacts.map((verification: any, idx: number) => (
-                          <div key={verification.fact.id || idx} className="bg-white p-3 rounded border-l-4 border-green-500">
+                          <div key={verification.fact.id || idx} className="bg-white p-3 rounded border-l-4 border-blue-500">
                             <div className="text-gray-900 text-sm font-medium">{verification.fact.statement}</div>
                             <div className="flex items-center gap-3 mt-1">
-                              <span className="text-xs px-2 py-0.5 rounded bg-green-100 text-green-800">
+                              <span className="text-xs px-2 py-0.5 rounded bg-blue-100 text-blue-800">
                                 Verified
                               </span>
                               <span className="text-xs text-gray-500 capitalize">
@@ -227,7 +227,7 @@ export default function AnalysisTab({ scanResult }: AnalysisTabProps) {
                                 </span>
                               )}
                               {verification.evidence?.similarity !== undefined && (
-                                <span className="text-xs text-green-600">
+                                <span className="text-xs text-blue-600">
                                   {Math.round(verification.evidence.similarity * 100)}% match
                                 </span>
                               )}
@@ -246,14 +246,14 @@ export default function AnalysisTab({ scanResult }: AnalysisTabProps) {
                   {/* Unverified Facts */}
                   {unverifiedFacts.length > 0 && (
                     <div>
-                      <strong className="text-orange-700">⚠ Unverified Facts ({unverifiedFacts.length}):</strong>
+                      <strong className="text-yellow-700">⚠ Unverified Facts ({unverifiedFacts.length}):</strong>
                       <p className="text-sm text-gray-600 mt-1">These facts need manual verification as they couldn't be confirmed in the page content</p>
                       <div className="space-y-2 mt-2 max-h-60 overflow-y-auto">
                         {unverifiedFacts.map((verification: any, idx: number) => (
-                          <div key={verification.fact.id || idx} className="bg-white p-3 rounded border-l-4 border-orange-500">
+                          <div key={verification.fact.id || idx} className="bg-white p-3 rounded border-l-4 border-yellow-500">
                             <div className="text-gray-900 text-sm font-medium">{verification.fact.statement}</div>
                             <div className="flex items-center gap-3 mt-1">
-                              <span className="text-xs px-2 py-0.5 rounded bg-orange-100 text-orange-800">
+                              <span className="text-xs px-2 py-0.5 rounded bg-yellow-100 text-yellow-800">
                                 Needs Verification
                               </span>
                               <span className="text-xs text-gray-500 capitalize">
@@ -332,7 +332,9 @@ export default function AnalysisTab({ scanResult }: AnalysisTabProps) {
                   .filter((t: any) => t.severity === 'high' || t.severity === 'critical')
                   .slice(0, 5)
                   .map((trigger: any, idx: number) => (
-                    <div key={idx} className="bg-white p-4 rounded border-l-4 border-red-500">
+                    <div key={idx} className={`bg-white p-4 rounded border-l-4 ${
+                      trigger.severity === 'critical' ? 'border-red-500' : 'border-orange-500'
+                    }`}>
                       <div className="font-semibold text-red-900 uppercase text-sm">
                         {trigger.type} - {trigger.severity}
                       </div>
@@ -474,14 +476,16 @@ export default function AnalysisTab({ scanResult }: AnalysisTabProps) {
               <strong className="text-gray-700">Priority Mismatches:</strong>
               <div className="space-y-3 mt-3">
                 {scanResult.mirrorReport.mismatches
-                  .filter((m: any) => m.severity === 'critical' || m.severity === 'major')
+                  .filter((m: any) => m.severity === 'critical' || m.severity === 'major' || m.severity === 'high')
                   .slice(0, 5)
                   .map((mismatch: any, idx: number) => (
                     <div key={idx} className={`bg-white p-4 rounded border-l-4 ${
-                      mismatch.severity === 'critical' ? 'border-red-500' : 'border-orange-500'
+                      mismatch.severity === 'critical' ? 'border-red-500' : 
+                      (mismatch.severity === 'high' || mismatch.severity === 'major') ? 'border-orange-500' : 'border-yellow-500'
                     }`}>
                       <div className="font-semibold text-gray-900">
-                        {mismatch.severity === 'critical' ? '🔴' : '🟡'} {mismatch.field}
+                        {mismatch.severity === 'critical' ? '🔴' : 
+                         (mismatch.severity === 'high' || mismatch.severity === 'major') ? '🟠' : '🟡'} {mismatch.field}
                       </div>
                       <div className="text-gray-700 text-sm mt-1">{mismatch.description}</div>
                       <div className="bg-green-50 p-2 rounded mt-2 text-sm text-green-800">

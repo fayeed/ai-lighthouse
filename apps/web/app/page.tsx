@@ -252,8 +252,8 @@ Example impact:
                     <div>
                       <h4 className="font-semibold text-gray-900 mb-2">Grade Breakdown:</h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div className="bg-green-50 border-l-4 border-green-500 p-3 rounded">
-                          <div className="font-bold text-green-800">A (90-100)</div>
+                        <div className="bg-blue-50 border-l-4 border-blue-500 p-3 rounded">
+                          <div className="font-bold text-blue-800">A (90-100)</div>
                           <p className="text-sm text-gray-700 mt-1">Excellent AI readiness. Your content is highly optimized for AI systems.</p>
                         </div>
                         <div className="bg-blue-50 border-l-4 border-blue-500 p-3 rounded">

@@ -297,9 +297,10 @@ export default function TechnicalTab({ scanResult }: TechnicalTabProps) {
                           {data.category.replace(/-/g, ' ')}
                         </span>
                         <span className={`text-lg font-bold ${
-                          scoreValue >= 80 ? 'text-green-600' :
-                          scoreValue >= 60 ? 'text-yellow-600' :
-                          'text-red-600'
+                          scoreValue >= 90 ? 'text-blue-600' :    // Excellent (low risk)
+                          scoreValue >= 75 ? 'text-yellow-600' :  // Good (medium risk)
+                          scoreValue >= 60 ? 'text-orange-600' :  // Fair (high risk)
+                          'text-red-600'                          // Poor (critical risk)
                         }`}>
                           {Math.round(scoreValue)}/100
                         </span>
