@@ -2,6 +2,8 @@ import express from 'express';
 import rateLimit from 'express-rate-limit';
 import { redisClient } from '../index.js';
 import { analyzeUrlWithRules, calculateAIReadiness, exportAuditReport } from '../../../../packages/scanner/src/exports.js';
+import { auditRequestSchema, validateRequest } from '../validation/schemas.js';
+import { logger, logAuditStart, logAuditComplete, logAuditError, logRateLimitHit } from '../utils/logger.js';
 
 export const auditRouter = express.Router();
 
@@ -52,6 +54,8 @@ const llmRateLimiter = async (req: express.Request, res: express.Response, next:
     if (tracker.count >= maxLLMRequests) {
       const remainingTime = Math.ceil((tracker.resetTime - now) / 1000 / 60); // minutes
       
+      logRateLimitHit(ip, 'llm');
+      
       // Set warning on request object instead of blocking
       (req as any).llmRateLimitWarning = {
         type: 'llm_rate_limit',
@@ -71,14 +75,19 @@ const llmRateLimiter = async (req: express.Request, res: express.Response, next:
     
     next();
   } catch (error) {
-    console.error('Redis error in LLM rate limiter:', error);
+    logger.error('Redis error in LLM rate limiter', { error });
     next();
   }
 };
 
 // POST /api/audit - Start a new audit
-auditRouter.post('/', llmRateLimiter, async (req, res) => {
+auditRouter.post('/', validateRequest(auditRequestSchema), llmRateLimiter, async (req, res) => {
+  const startTime = Date.now();
+  const ip = req.ip || 'unknown';
+  
   try {
+    // Use validated data from middleware
+    const validatedData = (req as any).validatedData;
     const { 
       url, 
       enableLLM = false,
@@ -87,23 +96,16 @@ auditRouter.post('/', llmRateLimiter, async (req, res) => {
       llmApiKey,
       llmBaseUrl,
       minImpactScore = 5,
+      maxChunkTokens = 1200,
       async = false
-    } = req.body;
+    } = validatedData;
 
-    if (!url) {
-      return res.status(400).json({ error: 'URL is required' });
-    }
-
-    // Validate URL format
-    try {
-      new URL(url);
-    } catch {
-      return res.status(400).json({ error: 'Invalid URL format' });
-    }
+    // Log audit start
+    logAuditStart(url, enableLLM, ip);
 
     // Configure scan options
     const scanOptions: any = {
-      maxChunkTokens: 1200,
+      maxChunkTokens,
       enableChunking: true,
       enableExtractability: true,
       enableHallucinationDetection: enableLLM,
@@ -164,7 +166,7 @@ auditRouter.post('/', llmRateLimiter, async (req, res) => {
     }
 
     // Synchronous mode - wait for completion
-    console.log(`Starting audit for ${url}...`);
+    logger.info('Starting synchronous audit', { url, enableLLM });
     
     // Check if rate limiter set a warning
     let llmWarning = (req as any).llmRateLimitWarning || null;
@@ -180,14 +182,15 @@ auditRouter.post('/', llmRateLimiter, async (req, res) => {
       };
     }
     
-    console.log('Calculating AI readiness...');
+    logger.info('Calculating AI readiness', { url });
     const aiReadiness = calculateAIReadiness(result);
     
-    console.log('Generating audit report...');
+    logger.info('Generating audit report', { url });
     const auditReportJson = exportAuditReport(result);
     const auditReport = JSON.parse(auditReportJson);
 
-    console.log('Audit complete!');
+    const duration = Date.now() - startTime;
+    logAuditComplete(url, duration, true, ip);
     
     // Return comprehensive data
     return res.json({
@@ -210,7 +213,10 @@ auditRouter.post('/', llmRateLimiter, async (req, res) => {
     });
 
   } catch (error: any) {
-    console.error('Audit error:', error);
+    const duration = Date.now() - startTime;
+    const validatedData = (req as any).validatedData;
+    logAuditError(validatedData?.url || 'unknown', error, ip);
+    
     return res.status(500).json({
       error: 'Audit failed',
       message: error.message,
