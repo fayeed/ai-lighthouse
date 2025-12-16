@@ -350,18 +350,19 @@ Example impact:
                     <div>
                       <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">How the Score is Calculated:</h4>
                       <div className="bg-white dark:bg-gray-800 rounded-lg p-4 space-y-2 text-sm">
-                        <p className="text-gray-700 dark:text-gray-300">Your AI Readiness Score (0-100) is calculated by analyzing multiple dimensions of your website:</p>
+                        <p className="text-gray-700 dark:text-gray-300">Your AI Readiness Score (0-100) uses advanced scoring with dynamic weights and confidence tracking:</p>
                         <ul className="list-disc list-inside space-y-1 text-gray-600 dark:text-gray-400 ml-2">
-                          <li><strong>Content Quality (20%):</strong> Text clarity, structure, readability</li>
-                          <li><strong>Discoverability (20%):</strong> How easily AI can find your content</li>
-                          <li><strong>Extractability (20%):</strong> How easily AI can extract information</li>
-                          <li><strong>Comprehensibility (15%):</strong> How well AI understands your content</li>
-                          <li><strong>Trustworthiness (15%):</strong> Authority and reliability signals</li>
-                          <li><strong>Technical (10%):</strong> HTML structure, semantic markup, accessibility</li>
+                          <li><strong>Content Quality (30%):</strong> Clarity, structure, readability, and depth</li>
+                          <li><strong>Comprehensibility (25%):</strong> How well AI understands your messaging and structure</li>
+                          <li><strong>Extractability (20%):</strong> How easily AI can extract information from your HTML</li>
+                          <li><strong>Discoverability (15%):</strong> How easily AI crawlers can find and index your content</li>
+                          <li><strong>Trustworthiness (10%):</strong> Factual accuracy and hallucination prevention</li>
                         </ul>
-                        <p className="text-gray-700 dark:text-gray-300 mt-3">
-                          Each dimension is scored based on specific checks and rules. The weighted average gives you the overall score.
-                        </p>
+                        <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/30 rounded border-l-4 border-blue-500">
+                          <p className="text-gray-700 dark:text-gray-300 text-xs">
+                            <strong>Advanced Features:</strong> Weights automatically adjust based on data confidence. Scores use diminishing returns to prevent single issues from over-penalizing. Balance penalties apply if dimensions are uneven. ROI-based quick wins prioritize high-impact, low-effort fixes.
+                          </p>
+                        </div>
                       </div>
                     </div>
 
@@ -370,35 +371,85 @@ Example impact:
                       <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">Grade Breakdown:</h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div className="bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-500 p-3 rounded">
-                          <div className="font-bold text-blue-800 dark:text-blue-300">A (90-100)</div>
-                          <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">Excellent AI readiness. Your content is highly optimized for AI systems.</p>
+                          <div className="font-bold text-blue-800 dark:text-blue-300">A+ (95-100)</div>
+                          <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">Exceptional - Top 1% of sites. AI systems have perfect comprehension.</p>
                         </div>
                         <div className="bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-500 p-3 rounded">
-                          <div className="font-bold text-blue-800 dark:text-blue-300">B (80-89)</div>
-                          <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">Good AI readiness. Minor improvements will maximize AI comprehension.</p>
+                          <div className="font-bold text-blue-800 dark:text-blue-300">A (90-94)</div>
+                          <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">Excellent - Well optimized with only minor improvements needed.</p>
+                        </div>
+                        <div className="bg-blue-100 dark:bg-blue-800/30 border-l-4 border-blue-400 p-3 rounded">
+                          <div className="font-bold text-blue-700 dark:text-blue-400">A- (85-89)</div>
+                          <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">Very good - Minor improvements will reach excellence.</p>
+                        </div>
+                        <div className="bg-green-50 dark:bg-green-900/30 border-l-4 border-green-500 p-3 rounded">
+                          <div className="font-bold text-green-800 dark:text-green-300">B+ (80-84)</div>
+                          <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">Good - Solid foundation with some gaps to address.</p>
+                        </div>
+                        <div className="bg-green-50 dark:bg-green-900/30 border-l-4 border-green-500 p-3 rounded">
+                          <div className="font-bold text-green-800 dark:text-green-300">B (75-79)</div>
+                          <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">Above average - Multiple improvements will boost comprehension.</p>
                         </div>
                         <div className="bg-yellow-50 dark:bg-yellow-900/30 border-l-4 border-yellow-500 p-3 rounded">
-                          <div className="font-bold text-yellow-800 dark:text-yellow-300">C (70-79)</div>
-                          <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">Fair AI readiness. Several improvements needed for better AI understanding.</p>
+                          <div className="font-bold text-yellow-800 dark:text-yellow-300">B- (70-74)</div>
+                          <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">Average - Needs work in several areas.</p>
+                        </div>
+                        <div className="bg-yellow-50 dark:bg-yellow-900/30 border-l-4 border-yellow-500 p-3 rounded">
+                          <div className="font-bold text-yellow-800 dark:text-yellow-300">C+ (65-69)</div>
+                          <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">Below average - Multiple issues affecting AI understanding.</p>
                         </div>
                         <div className="bg-orange-50 dark:bg-orange-900/30 border-l-4 border-orange-500 p-3 rounded">
-                          <div className="font-bold text-orange-800 dark:text-orange-300">D (60-69)</div>
-                          <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">Poor AI readiness. Significant issues affecting AI comprehension.</p>
+                          <div className="font-bold text-orange-800 dark:text-orange-300">C (60-64)</div>
+                          <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">Poor - Significant issues requiring attention.</p>
+                        </div>
+                        <div className="bg-orange-50 dark:bg-orange-900/30 border-l-4 border-orange-500 p-3 rounded">
+                          <div className="font-bold text-orange-800 dark:text-orange-300">C- (55-59)</div>
+                          <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">Very poor - Major issues preventing AI comprehension.</p>
+                        </div>
+                        <div className="bg-red-50 dark:bg-red-900/30 border-l-4 border-red-500 p-3 rounded">
+                          <div className="font-bold text-red-800 dark:text-red-300">D (45-54)</div>
+                          <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">Critical - Fundamental problems blocking AI understanding.</p>
                         </div>
                         <div className="bg-red-50 dark:bg-red-900/30 border-l-4 border-red-500 p-3 rounded md:col-span-2">
-                          <div className="font-bold text-red-800">F (Below 60)</div>
-                          <p className="text-sm text-gray-700 mt-1">Critical AI readiness issues. Major improvements required for AI systems to properly understand your content.</p>
+                          <div className="font-bold text-red-800 dark:text-red-300">F (Below 45)</div>
+                          <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">Failing - Content is essentially unusable by AI. Immediate comprehensive overhaul required.</p>
                         </div>
                       </div>
                     </div>
 
                     {/* What This Means */}
                     <div>
-                      <h4 className="font-semibold text-gray-900 mb-2">What This Means For You:</h4>
-                      <div className="bg-white rounded-lg p-4 space-y-2 text-sm text-gray-700">
-                        <p>• <strong>High scores (A-B):</strong> AI chatbots like ChatGPT, Claude, and search engines can accurately answer questions about your products/services</p>
-                        <p>• <strong>Medium scores (C-D):</strong> AI may miss important details or misunderstand key information</p>
-                        <p>• <strong>Low scores (F):</strong> AI systems struggle to extract information and may hallucinate facts when asked about your business</p>
+                      <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">What This Means For You:</h4>
+                      <div className="bg-white dark:bg-gray-800 rounded-lg p-4 space-y-2 text-sm text-gray-700 dark:text-gray-300">
+                        <p>• <strong>A grades (85-100):</strong> AI chatbots like ChatGPT, Claude, and Perplexity accurately answer questions about your products/services with high confidence</p>
+                        <p>• <strong>B grades (70-84):</strong> AI generally understands your content but may miss nuances or require clarification for complex topics</p>
+                        <p>• <strong>C grades (55-69):</strong> AI frequently misses important details, may misunderstand key information, or require multiple attempts to extract facts</p>
+                        <p>• <strong>D-F grades (Below 55):</strong> AI systems struggle to extract accurate information and may hallucinate facts when asked about your business, products, or services</p>
+                      </div>
+                    </div>
+
+                    {/* Statistical Context */}
+                    <div>
+                      <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">Statistical Context:</h4>
+                      <div className="bg-white dark:bg-gray-800 rounded-lg p-4 text-sm">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <div className="font-semibold text-gray-900 dark:text-gray-100">Average Site:</div>
+                            <div className="text-gray-600 dark:text-gray-400">60-65 (C/C+)</div>
+                          </div>
+                          <div>
+                            <div className="font-semibold text-gray-900 dark:text-gray-100">Good Site:</div>
+                            <div className="text-gray-600 dark:text-gray-400">75-80 (B/B+)</div>
+                          </div>
+                          <div>
+                            <div className="font-semibold text-gray-900 dark:text-gray-100">Excellent Site:</div>
+                            <div className="text-gray-600 dark:text-gray-400">85-90 (A-/A)</div>
+                          </div>
+                          <div>
+                            <div className="font-semibold text-gray-900 dark:text-gray-100">Best-in-Class:</div>
+                            <div className="text-gray-600 dark:text-gray-400">92-96 (A/A+)</div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
