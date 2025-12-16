@@ -4,6 +4,7 @@ import { redisClient } from '../index.js';
 import { analyzeUrlWithRules, calculateAIReadiness, exportAuditReport } from '../../../../packages/scanner/src/exports.js';
 import { auditRequestSchema, validateRequest } from '../validation/schemas.js';
 import { logger, logAuditStart, logAuditComplete, logAuditError, logRateLimitHit } from '../utils/logger.js';
+import { cacheMiddleware } from '../middleware/cache.js';
 
 export const auditRouter = express.Router();
 
@@ -81,7 +82,7 @@ const llmRateLimiter = async (req: express.Request, res: express.Response, next:
 };
 
 // POST /api/audit - Start a new audit
-auditRouter.post('/', validateRequest(auditRequestSchema), llmRateLimiter, async (req, res) => {
+auditRouter.post('/', cacheMiddleware(1800), validateRequest(auditRequestSchema), llmRateLimiter, async (req, res) => {
   const startTime = Date.now();
   const ip = req.ip || 'unknown';
   
