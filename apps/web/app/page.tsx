@@ -1,14 +1,18 @@
 'use client';
 
 import { useState } from 'react';
-import ModelSelector, { ModelConfig } from '../components/ModelSelector';
+import { ModelConfig } from '../components/ModelSelector';
 import OverviewTab from '../components/tabs/OverviewTab';
 import AnalysisTab from '../components/tabs/AnalysisTab';
 import IssuesTab from '../components/tabs/IssuesTab';
 import TechnicalTab from '../components/tabs/TechnicalTab';
-import Tooltip from '../components/Tooltip';
-import ThemeToggle from '../components/ThemeToggle';
 import ShareButton from '../components/ShareButton';
+import HeroSection from '../components/HeroSection';
+import AuditForm from '../components/AuditForm';
+import ScoreDisplay from '../components/ScoreDisplay';
+import ScoringGuide from '../components/ScoringGuide';
+import WarningModal from '../components/WarningModal';
+import InterpretationBanner from '../components/InterpretationBanner';
 import { trackEvent } from '../components/Analytics';
 import 'react-tooltip/dist/react-tooltip.css';
 
@@ -208,97 +212,20 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 transition-colors duration-300">
       <div className="container mx-auto px-4 py-8">
-        <header className="text-center mb-12 relative">
-          {/* Theme Toggle in top right */}
-          <div className="absolute top-0 right-0">
-            <ThemeToggle />
-          </div>
-          
-          <h1 className="text-5xl font-bold text-blue-900 dark:text-blue-400 mb-4 animate-fade-in-up flex items-center justify-center gap-3">
-            <img src="/icon.png" alt="AI Lighthouse" className="w-12 h-12" />
-            AI Lighthouse
-          </h1>
-          <p className="text-xl text-gray-700 dark:text-gray-300 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-            Analyze your website AI readiness
-          </p>
-        </header>
+        <HeroSection />
 
-        <div className="max-w-2xl mx-auto mb-12">
-          <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 animate-scale-in">
-            <div className="mb-4">
-              <label htmlFor="url" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Website URL
-              </label>
-              <input
-                type="text"
-                id="url"
-                value={url}
-                onChange={(e) => {
-                  setUrl(e.target.value);
-                  if (error) {
-                    setError('');
-                  }
-                }}
-                placeholder="https://example.com or example.com"
-                required
-                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100 dark:bg-gray-700 dark:border-gray-600 transition-all ${
-                  error && error.toLowerCase().includes('url') ? 'border-red-500' : 'border-gray-300'
-                }`}
-              />
-              {error && error.toLowerCase().includes('url') && (
-                <p className="text-red-600 text-sm mt-1">⚠️ {error}</p>
-              )}
-            </div>
-
-            <div className="mb-4">
-              <label className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  checked={enableLLM}
-                  onChange={(e) => setEnableLLM(e.target.checked)}
-                  className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 dark:bg-gray-700"
-                />
-                <span className="text-sm text-gray-700 dark:text-gray-300">
-                  Enable AI-powered analysis (LLM)
-                </span>
-              </label>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 ml-6">
-                Provides deeper insights using language models
-              </p>
-            </div>
-
-            {enableLLM && (
-              <div className="mb-6">
-                <ModelSelector value={modelConfig} onChange={setModelConfig} />
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? (
-                <span className="flex items-center justify-center">
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Analyzing...
-                </span>
-              ) : (
-                'Analyze Website'
-              )}
-            </button>
-          </form>
-
-          {error && (
-            <div className="mt-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg animate-slide-in-right">
-              <p className="font-medium">Error:</p>
-              <p>{error}</p>
-            </div>
-          )}
-        </div>
+        <AuditForm
+          url={url}
+          setUrl={setUrl}
+          loading={loading}
+          error={error}
+          setError={setError}
+          enableLLM={enableLLM}
+          setEnableLLM={setEnableLLM}
+          modelConfig={modelConfig}
+          setModelConfig={setModelConfig}
+          onSubmit={handleSubmit}
+        />
 
         {reportData && (
           <div className="max-w-6xl mx-auto">
@@ -314,169 +241,23 @@ export default function Home() {
               </div>
               
               {/* AI Readiness Banner */}
-              <div className="bg-gradient-to-r from-purple-500 to-indigo-600 dark:from-purple-700 dark:to-indigo-800 text-white rounded-lg p-6 mb-8 animate-scale-in shadow-xl hover:shadow-2xl transition-shadow duration-300">
-                <div className="flex items-start gap-2 mb-2">
-                  <h3 className="text-2xl font-bold">AI Readiness Score</h3>
-                  <Tooltip content="Overall score indicating how well your website is optimized for AI systems like chatbots, search engines, and voice assistants. Higher scores mean better AI comprehension and visibility.
-
-Example impact:
-• 90+ score: ChatGPT accurately answers questions about your products
-• 60-90 score: Some details may be missed or misunderstood
-• Below 60: AI may struggle to extract key information or hallucinate facts">
-                    <span className="text-white/80 hover:text-white text-lg mt-0.5">ⓘ</span>
-                  </Tooltip>
-                </div>
-                <div className="text-6xl font-bold mb-2 animate-pulse-subtle">
-                  {Math.round(reportData.aiReadiness.overall)}/100
-                </div>
-                <div className="text-xl mb-3">Grade: {reportData.aiReadiness.grade}</div>
-                
-                {/* Scoring Guide Button */}
-                <button
-                  onClick={() => setShowScoringGuide(!showScoringGuide)}
-                  className="text-sm text-white/90 hover:text-white underline flex items-center gap-1"
-                >
-                  {showScoringGuide ? '▼' : '▶'} How is this calculated?
-                </button>
-              </div>
+              <ScoreDisplay
+                score={Math.round(reportData.aiReadiness.overall)}
+                grade={reportData.aiReadiness.grade}
+                showScoringGuide={showScoringGuide}
+                setShowScoringGuide={setShowScoringGuide}
+              />
 
               {/* Scoring Guide Section */}
-              {showScoringGuide && (
-                <div className="bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-700 rounded-lg p-6 mb-8 animate-fade-in-up">
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">📊 Understanding Your Score & Grade</h3>
-                  
-                  <div className="space-y-6">
-                    {/* How Score is Calculated */}
-                    <div>
-                      <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">How the Score is Calculated:</h4>
-                      <div className="bg-white dark:bg-gray-800 rounded-lg p-4 space-y-2 text-sm">
-                        <p className="text-gray-700 dark:text-gray-300">Your AI Readiness Score (0-100) uses advanced scoring with dynamic weights and confidence tracking:</p>
-                        <ul className="list-disc list-inside space-y-1 text-gray-600 dark:text-gray-400 ml-2">
-                          <li><strong>Content Quality (30%):</strong> Clarity, structure, readability, and depth</li>
-                          <li><strong>Comprehensibility (25%):</strong> How well AI understands your messaging and structure</li>
-                          <li><strong>Extractability (20%):</strong> How easily AI can extract information from your HTML</li>
-                          <li><strong>Discoverability (15%):</strong> How easily AI crawlers can find and index your content</li>
-                          <li><strong>Trustworthiness (10%):</strong> Factual accuracy and hallucination prevention</li>
-                        </ul>
-                        <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/30 rounded border-l-4 border-blue-500">
-                          <p className="text-gray-700 dark:text-gray-300 text-xs">
-                            <strong>Advanced Features:</strong> Weights automatically adjust based on data confidence. Scores use diminishing returns to prevent single issues from over-penalizing. Balance penalties apply if dimensions are uneven. ROI-based quick wins prioritize high-impact, low-effort fixes.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Grade Breakdown */}
-                    <div>
-                      <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">Grade Breakdown:</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div className="bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-500 p-3 rounded">
-                          <div className="font-bold text-blue-800 dark:text-blue-300">A+ (95-100)</div>
-                          <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">Exceptional - Top 1% of sites. AI systems have perfect comprehension.</p>
-                        </div>
-                        <div className="bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-500 p-3 rounded">
-                          <div className="font-bold text-blue-800 dark:text-blue-300">A (90-94)</div>
-                          <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">Excellent - Well optimized with only minor improvements needed.</p>
-                        </div>
-                        <div className="bg-blue-100 dark:bg-blue-800/30 border-l-4 border-blue-400 p-3 rounded">
-                          <div className="font-bold text-blue-700 dark:text-blue-400">A- (85-89)</div>
-                          <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">Very good - Minor improvements will reach excellence.</p>
-                        </div>
-                        <div className="bg-green-50 dark:bg-green-900/30 border-l-4 border-green-500 p-3 rounded">
-                          <div className="font-bold text-green-800 dark:text-green-300">B+ (80-84)</div>
-                          <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">Good - Solid foundation with some gaps to address.</p>
-                        </div>
-                        <div className="bg-green-50 dark:bg-green-900/30 border-l-4 border-green-500 p-3 rounded">
-                          <div className="font-bold text-green-800 dark:text-green-300">B (75-79)</div>
-                          <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">Above average - Multiple improvements will boost comprehension.</p>
-                        </div>
-                        <div className="bg-yellow-50 dark:bg-yellow-900/30 border-l-4 border-yellow-500 p-3 rounded">
-                          <div className="font-bold text-yellow-800 dark:text-yellow-300">B- (70-74)</div>
-                          <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">Average - Needs work in several areas.</p>
-                        </div>
-                        <div className="bg-yellow-50 dark:bg-yellow-900/30 border-l-4 border-yellow-500 p-3 rounded">
-                          <div className="font-bold text-yellow-800 dark:text-yellow-300">C+ (65-69)</div>
-                          <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">Below average - Multiple issues affecting AI understanding.</p>
-                        </div>
-                        <div className="bg-orange-50 dark:bg-orange-900/30 border-l-4 border-orange-500 p-3 rounded">
-                          <div className="font-bold text-orange-800 dark:text-orange-300">C (60-64)</div>
-                          <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">Poor - Significant issues requiring attention.</p>
-                        </div>
-                        <div className="bg-orange-50 dark:bg-orange-900/30 border-l-4 border-orange-500 p-3 rounded">
-                          <div className="font-bold text-orange-800 dark:text-orange-300">C- (55-59)</div>
-                          <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">Very poor - Major issues preventing AI comprehension.</p>
-                        </div>
-                        <div className="bg-red-50 dark:bg-red-900/30 border-l-4 border-red-500 p-3 rounded">
-                          <div className="font-bold text-red-800 dark:text-red-300">D (45-54)</div>
-                          <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">Critical - Fundamental problems blocking AI understanding.</p>
-                        </div>
-                        <div className="bg-red-50 dark:bg-red-900/30 border-l-4 border-red-500 p-3 rounded md:col-span-2">
-                          <div className="font-bold text-red-800 dark:text-red-300">F (Below 45)</div>
-                          <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">Failing - Content is essentially unusable by AI. Immediate comprehensive overhaul required.</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* What This Means */}
-                    <div>
-                      <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">What This Means For You:</h4>
-                      <div className="bg-white dark:bg-gray-800 rounded-lg p-4 space-y-2 text-sm text-gray-700 dark:text-gray-300">
-                        <p>• <strong>A grades (85-100):</strong> AI chatbots like ChatGPT, Claude, and Perplexity accurately answer questions about your products/services with high confidence</p>
-                        <p>• <strong>B grades (70-84):</strong> AI generally understands your content but may miss nuances or require clarification for complex topics</p>
-                        <p>• <strong>C grades (55-69):</strong> AI frequently misses important details, may misunderstand key information, or require multiple attempts to extract facts</p>
-                        <p>• <strong>D-F grades (Below 55):</strong> AI systems struggle to extract accurate information and may hallucinate facts when asked about your business, products, or services</p>
-                      </div>
-                    </div>
-
-                    {/* Statistical Context */}
-                    <div>
-                      <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">Statistical Context:</h4>
-                      <div className="bg-white dark:bg-gray-800 rounded-lg p-4 text-sm">
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <div className="font-semibold text-gray-900 dark:text-gray-100">Average Site:</div>
-                            <div className="text-gray-600 dark:text-gray-400">60-65 (C/C+)</div>
-                          </div>
-                          <div>
-                            <div className="font-semibold text-gray-900 dark:text-gray-100">Good Site:</div>
-                            <div className="text-gray-600 dark:text-gray-400">75-80 (B/B+)</div>
-                          </div>
-                          <div>
-                            <div className="font-semibold text-gray-900 dark:text-gray-100">Excellent Site:</div>
-                            <div className="text-gray-600 dark:text-gray-400">85-90 (A-/A)</div>
-                          </div>
-                          <div>
-                            <div className="font-semibold text-gray-900 dark:text-gray-100">Best-in-Class:</div>
-                            <div className="text-gray-600 dark:text-gray-400">92-96 (A/A+)</div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
+              {showScoringGuide && <ScoringGuide />}
 
               {/* What This Means For You - Quick Interpretation */}
               {reportData.aiReadiness && interpretationMessage && (
-                  <div className={`border-l-4 rounded-lg p-4 mb-6 animate-slide-in-right ${
-                    score >= 90 ? 'bg-blue-50 dark:bg-blue-900/30 border-blue-500' :
-                    score >= 75 ? 'bg-yellow-50 dark:bg-yellow-900/30 border-yellow-500' :
-                    score >= 60 ? 'bg-orange-50 dark:bg-orange-900/30 border-orange-500' :
-                    'bg-red-50 dark:bg-red-900/30 border-red-500'
-                  }`}>
-                    <div className="flex items-start gap-3">
-                      <span className="text-2xl">
-                        {score >= 90 ? '🎉' : score >= 75 ? '⚠️' : score >= 60 ? '⚠️' : '🚨'}
-                      </span>
-                      <div>
-                        <h3 className="font-bold text-gray-900 dark:text-gray-100 mb-1">What This Means For You</h3>
-                        <p className="text-gray-800 dark:text-gray-300 text-sm leading-relaxed">
-                          {interpretationMessage}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
+                <InterpretationBanner
+                  score={score}
+                  message={interpretationMessage}
+                />
+              )}
 
               {/* Tabs Navigation */}
               <div className="border-b border-gray-200 dark:border-gray-700 mb-6">
@@ -522,42 +303,12 @@ Example impact:
       </div>
 
       {/* Warning Modal */}
-      {showWarningModal && warningMessage && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={() => setShowWarningModal(false)}>
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6 animate-scale-in" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-start gap-3 mb-4">
-              <span className="text-3xl">⚠️</span>
-              <div className="flex-1">
-                <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-                  LLM Rate Limit Reached
-                </h3>
-                <p className="text-gray-700 dark:text-gray-300 mb-3">
-                  {warningMessage.message}
-                </p>
-                {warningMessage.details && (
-                  <div className="bg-gray-100 dark:bg-gray-700 p-3 rounded text-sm text-gray-600 dark:text-gray-400 mb-3">
-                    <strong>Details:</strong> {warningMessage.details}
-                  </div>
-                )}
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Your scan completed successfully with basic features. To use AI-enhanced features, you can:
-                </p>
-                <ul className="list-disc list-inside text-sm text-gray-600 dark:text-gray-400 mt-2 space-y-1">
-                  <li>Wait and try again later</li>
-                  <li>Add credits to your LLM provider account</li>
-                  <li>Use a different API key</li>
-                  <li>Disable LLM features and run basic scans</li>
-                </ul>
-              </div>
-            </div>
-            <button
-              onClick={() => setShowWarningModal(false)}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded transition-colors duration-200"
-            >
-              Got it
-            </button>
-          </div>
-        </div>
+      {warningMessage && (
+        <WarningModal
+          show={showWarningModal}
+          onClose={() => setShowWarningModal(false)}
+          message={warningMessage}
+        />
       )}
     </div>
   );
