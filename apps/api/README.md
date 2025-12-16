@@ -1,44 +1,87 @@
 # AI Lighthouse API
 
-Express backend API for AI Lighthouse scanner.
+Express backend API for AI Lighthouse website auditing with enterprise-grade security.
 
-## Features
+## ✨ Features
 
+### Core Functionality
 - ✅ Synchronous and asynchronous audit modes
-- ✅ LLM integration support (Ollama, OpenRouter, etc.)
-- ✅ CORS enabled for frontend integration
+- ✅ LLM integration support (OpenRouter, OpenAI, Anthropic, Gemini, Ollama)
+- ✅ Comprehensive website analysis (AI readiness, SEO, accessibility)
 - ✅ Job status tracking for long-running audits
-- ✅ Comprehensive error handling
-- ✅ Redis-based rate limiting (general: 10/15min, LLM: 5/hour)
+
+### 🔒 Security & Protection (NEW!)
+- ✅ **Input validation** with Zod schemas
+- ✅ **Structured logging** with Winston
+- ✅ **Request timeout protection** (120s default)
+- ✅ **Comprehensive health checks** (liveness, readiness)
+- ✅ **Multi-tier rate limiting** (general + LLM-specific)
+- ✅ **Abuse detection system** (pattern analysis, fingerprinting)
+- ✅ **SSRF protection** (blocks internal IPs, metadata endpoints)
+- ✅ **Graceful error handling** with detailed responses
+
+### 🛡️ No Authentication Required
+The API uses defense-in-depth security without requiring user sign-in:
+- Rate limiting prevents abuse
+- Behavioral pattern detection blocks malicious actors
+- Input validation prevents injection attacks
+- Request fingerprinting tracks suspicious activity
+
+📖 See [SECURITY.md](./SECURITY.md) for detailed security documentation
 
 ## Prerequisites
 
 - Node.js 18+
-- Redis server (local or remote)
+- Redis server (required for rate limiting and abuse detection)
+- pnpm package manager
 
-## Getting Started
+## Quick Start
+
+See [QUICKSTART.md](./QUICKSTART.md) for detailed setup instructions.
 
 ```bash
 # Install dependencies
 pnpm install
 
-# Start Redis (if running locally)
-redis-server
+# Set up environment
+cp .env.example .env
+# Edit .env and configure REDIS_URL
 
-# Or use Docker
+# Start Redis
 docker run -d -p 6379:6379 redis:alpine
 
 # Start development server
 pnpm dev
-
-# Build for production
-pnpm build
-
-# Start production server
-pnpm start
 ```
 
-The API will run on `http://localhost:3002`
+The API will run on `http://localhost:3001`
+
+## 📊 Health Monitoring
+
+### Health Check Endpoints
+
+- `GET /health` - Comprehensive health check (Redis, memory, API status)
+- `GET /health/live` - Liveness probe (for container orchestration)
+- `GET /health/ready` - Readiness probe (for load balancers)
+
+Example:
+```bash
+curl http://localhost:3001/health
+```
+
+Response:
+```json
+{
+  "status": "healthy",
+  "timestamp": "2025-12-16T...",
+  "uptime": 3600,
+  "checks": {
+    "redis": { "status": "up", "responseTime": 5 },
+    "memory": { "status": "ok", "percentage": 45 },
+    "api": { "status": "up", "version": "1.0.0" }
+  }
+}
+```
 
 ## API Endpoints
 
