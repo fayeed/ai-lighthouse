@@ -460,7 +460,10 @@ Example impact:
               )}
 
               {activeTab === 'technical' && reportData.scanResult && (
-                <TechnicalTab scanResult={reportData.scanResult} />
+                <TechnicalTab 
+                  scanResult={reportData.scanResult}
+                  auditReport={reportData.auditReport}
+                />
               )}
             </div>
           </div>
