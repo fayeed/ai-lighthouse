@@ -82,4 +82,23 @@ export const trackEvent = {
       });
     }
   },
+
+  error: (errorMessage: string, context?: Record<string, any>) => {
+    const eventData = {
+      error_message: errorMessage,
+      ...context,
+    };
+
+    // Track with Vercel Analytics
+    track('error', eventData);
+
+    // Track with Google Analytics if available
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'exception', {
+        description: errorMessage,
+        fatal: false,
+        ...context,
+      });
+    }
+  },
 };
