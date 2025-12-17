@@ -230,9 +230,25 @@ class OpenRouterProvider implements LLMProvider {
       this.client = new OpenRouter({ apiKey: options.apiKey });
     }
 
+    // Log request start
+    const requestStartTime = Date.now();
+    console.log('[OpenRouter] Starting request', {
+      model,
+      timeout,
+      messageCount: messages.length,
+      firstMessagePreview: messages[0]?.content?.substring(0, 100),
+      temperature: options?.temperature ?? this.config.temperature ?? 0.7,
+      maxTokens: options?.maxTokens ?? this.config.maxTokens ?? 2000,
+    });
+
     // OpenRouter SDK doesn't support AbortSignal, so we use Promise.race for timeout
+    let timeoutId: NodeJS.Timeout;
     const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error(`OpenRouter request timeout after ${timeout}ms`)), timeout);
+      timeoutId = setTimeout(() => {
+        const elapsed = Date.now() - requestStartTime;
+        console.error('[OpenRouter] Request timeout', { elapsed, timeout, model });
+        reject(new Error(`OpenRouter request timeout after ${timeout}ms`));
+      }, timeout);
     });
 
     const requestPromise = this.client.chat.send({
@@ -243,7 +259,29 @@ class OpenRouterProvider implements LLMProvider {
       })),
       temperature: options?.temperature ?? this.config.temperature ?? 0.7,
       maxTokens: options?.maxTokens ?? this.config.maxTokens ?? 2000,
-    });
+    })
+      .then(res => {
+        const elapsed = Date.now() - requestStartTime;
+        console.log('[OpenRouter] Request completed', {
+          model,
+          elapsed: `${elapsed}ms`,
+          tokens: res.usage?.totalTokens,
+          finishReason: res.choices[0]?.finishReason,
+        });
+        clearTimeout(timeoutId); // Clear timeout on success
+        return res;
+      })
+      .catch(err => {
+        const elapsed = Date.now() - requestStartTime;
+        console.error('[OpenRouter] Request failed', {
+          model,
+          elapsed: `${elapsed}ms`,
+          error: err.message,
+          stack: err.stack,
+        });
+        clearTimeout(timeoutId); // Clear timeout on error
+        throw err;
+      });
 
     const response = await Promise.race([requestPromise, timeoutPromise]);
 
