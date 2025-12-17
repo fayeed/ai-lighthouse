@@ -159,6 +159,7 @@ export async function handleDataDeletionRequest(ip: string): Promise<{
       success: false,
       deletedItems,
       message: 'Failed to delete all data. Some items may have been deleted.',
+      note: 'AI Lighthouse does not store persistent user data. All data was temporary and would have automatically expired within 1 hour to 30 days.',
     };
   }
 }
