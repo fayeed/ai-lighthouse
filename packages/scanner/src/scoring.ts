@@ -205,6 +205,53 @@ export function getLetterGrade(score: number): string {
 }
 
 /**
+ * Get score threshold category
+ */
+export function getScoreThreshold(score: number): {
+  category: string;
+  description: string;
+  color: string;
+} {
+  if (score >= 90) {
+    return {
+      category: 'AI-optimized',
+      description: 'Excellent - Top 10% of sites. AI systems have near-perfect comprehension.',
+      color: 'blue'
+    };
+  }
+  if (score >= 75) {
+    return {
+      category: 'Safe but improvable',
+      description: 'Good - Above average. Some improvements will enhance AI understanding.',
+      color: 'green'
+    };
+  }
+  if (score < 75) {
+    return {
+      category: 'Likely misunderstood by AI',
+      description: 'Needs work - AI systems may struggle with accurate comprehension.',
+      color: 'orange'
+    };
+  }
+  return {
+    category: 'At risk',
+    description: 'Critical - Fundamental issues preventing AI understanding.',
+    color: 'red'
+  };
+}
+
+/**
+ * Get statistical context for score
+ */
+export function getStatisticalContext(score: number): string {
+  if (score >= 92) return 'Your site is in the top 5% - best-in-class AI optimization';
+  if (score >= 85) return 'Your site is in the top 15% - excellent AI readiness';
+  if (score >= 75) return 'Your site is above average (most AI-visible sites score 60-80)';
+  if (score >= 60) return 'Your site is average (most AI-visible sites score 60-80)';
+  return 'Your site is below average - significant improvements needed';
+}
+
+/**
  * Generate a human-readable summary of the scoring
  */
 export function generateScoringSummary(result: ScoringResult): string {

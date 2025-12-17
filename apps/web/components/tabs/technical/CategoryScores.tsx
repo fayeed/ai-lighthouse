@@ -42,14 +42,19 @@ export default function CategoryScores({ categoryScores }: CategoryScoresProps) 
                     <span className="text-gray-400 hover:text-gray-600 cursor-help text-xs">ⓘ</span>
                   </Tooltip>
                 </div>
-                <span className={`text-lg font-bold ${
-                  scoreValue >= 90 ? 'text-blue-600 dark:text-blue-400' :    // Excellent (low risk)
-                  scoreValue >= 75 ? 'text-yellow-600 dark:text-yellow-400' :  // Good (medium risk)
-                  scoreValue >= 60 ? 'text-orange-600 dark:text-orange-400' :  // Fair (high risk)
-                  'text-red-600 dark:text-red-400'                          // Poor (critical risk)
-                }`}>
-                  {Math.round(scoreValue)}/100
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className={`text-lg font-bold ${
+                    scoreValue >= 90 ? 'text-blue-600 dark:text-blue-400' :    // AI-optimized
+                    scoreValue >= 75 ? 'text-green-600 dark:text-green-400' :  // Safe but improvable
+                    scoreValue >= 60 ? 'text-orange-600 dark:text-orange-400' : // Needs work
+                    'text-red-600 dark:text-red-400'                          // Critical
+                  }`}>
+                    {Math.round(scoreValue)}/100
+                  </span>
+                  {scoreValue >= 90 && <span className="text-xs text-blue-600 dark:text-blue-400">✓</span>}
+                  {scoreValue >= 75 && scoreValue < 90 && <span className="text-xs text-green-600 dark:text-green-400">⚡</span>}
+                  {scoreValue < 75 && <span className="text-xs text-orange-600 dark:text-orange-400">⚠</span>}
+                </div>
               </div>
               {typeof data === 'object' && data?.issueCount !== undefined && (
                 <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">

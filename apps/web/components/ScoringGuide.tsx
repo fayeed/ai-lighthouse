@@ -88,25 +88,54 @@ export default function ScoringGuide() {
 
         {/* Statistical Context */}
         <div>
-          <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">Statistical Context:</h4>
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 text-sm">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <div className="font-semibold text-gray-900 dark:text-gray-100">Average Site:</div>
-                <div className="text-gray-600 dark:text-gray-400">60-65 (C/C+)</div>
+          <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">📈 Statistical Context & Benchmarks:</h4>
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-blue-50 dark:bg-blue-900/30 p-3 rounded">
+                <div className="font-semibold text-gray-900 dark:text-gray-100">🏆 Best-in-Class (Top 5%)</div>
+                <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">92-100</div>
+                <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">AI-optimized sites that set the standard</div>
               </div>
-              <div>
-                <div className="font-semibold text-gray-900 dark:text-gray-100">Good Site:</div>
-                <div className="text-gray-600 dark:text-gray-400">75-80 (B/B+)</div>
+              <div className="bg-green-50 dark:bg-green-900/30 p-3 rounded">
+                <div className="font-semibold text-gray-900 dark:text-gray-100">✨ Excellent (Top 15%)</div>
+                <div className="text-2xl font-bold text-green-600 dark:text-green-400">85-91</div>
+                <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">Strong AI readiness, minimal issues</div>
               </div>
-              <div>
-                <div className="font-semibold text-gray-900 dark:text-gray-100">Excellent Site:</div>
-                <div className="text-gray-600 dark:text-gray-400">85-90 (A-/A)</div>
+              <div className="bg-yellow-50 dark:bg-yellow-900/30 p-3 rounded">
+                <div className="font-semibold text-gray-900 dark:text-gray-100">👍 Above Average</div>
+                <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">75-84</div>
+                <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">Safe but improvable - good foundation</div>
               </div>
-              <div>
-                <div className="font-semibold text-gray-900 dark:text-gray-100">Best-in-Class:</div>
-                <div className="text-gray-600 dark:text-gray-400">92-96 (A/A+)</div>
+              <div className="bg-orange-50 dark:bg-orange-900/30 p-3 rounded">
+                <div className="font-semibold text-gray-900 dark:text-gray-100">⚠️ Average (Most Sites)</div>
+                <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">60-74</div>
+                <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">Typical range - needs optimization</div>
               </div>
+            </div>
+            <div className="bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 p-3 rounded border border-red-200 dark:border-red-700">
+              <div className="font-semibold text-red-900 dark:text-red-300">🚨 Below 75: Likely misunderstood by AI systems</div>
+              <div className="text-sm text-gray-700 dark:text-gray-300 mt-1">
+                Sites below this threshold often experience AI hallucinations, missed information, and poor representation in AI-powered answers.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* What This Means Practically */}
+        <div>
+          <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">🎯 Is This Good Enough to Ship?</h4>
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 space-y-2 text-sm">
+            <div className="flex items-start gap-2">
+              <span className="text-blue-500 font-bold">90-100:</span>
+              <span className="text-gray-700 dark:text-gray-300">✅ Ship with confidence - AI will accurately represent your brand</span>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="text-green-500 font-bold">75-89:</span>
+              <span className="text-gray-700 dark:text-gray-300">✅ Safe to ship - but prioritize quick wins for better results</span>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="text-orange-500 font-bold">&lt;75:</span>
+              <span className="text-gray-700 dark:text-gray-300">⚠️ Address critical issues first - AI may misrepresent your content</span>
             </div>
           </div>
         </div>
