@@ -29,6 +29,7 @@ export default function Home() {
   const [showScoringGuide, setShowScoringGuide] = useState(false);
   const [showWarningModal, setShowWarningModal] = useState(false);
   const [warningMessage, setWarningMessage] = useState<{ message: string; details?: string } | null>(null);
+  const [viewMode, setViewMode] = useState<'simple' | 'complex'>('simple');
   const [modelConfig, setModelConfig] = useState<ModelConfig>({
     provider: 'openrouter',
     model: 'meta-llama/llama-3.3-70b-instruct:free',
@@ -207,7 +208,44 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 transition-colors duration-300">
       <div className="container mx-auto px-4 py-8">
-        <HeroSection />
+        {/* Header with View Toggle */}
+        <div className="text-center mb-8">
+          <div className="flex justify-between items-start mb-4">
+            <div className="flex-1"></div>
+            <div className="flex-1 text-center">
+              <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-3">
+                🚨 AI Lighthouse
+              </h1>
+            </div>
+            <div className="flex-1 flex justify-end">
+              <div className="inline-flex items-center bg-white dark:bg-gray-800 rounded-lg shadow-sm p-1">
+                <button
+                  onClick={() => setViewMode('simple')}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
+                    viewMode === 'simple'
+                      ? 'bg-blue-600 text-white'
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                  }`}
+                >
+                  Simple
+                </button>
+                <button
+                  onClick={() => setViewMode('complex')}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
+                    viewMode === 'complex'
+                      ? 'bg-blue-600 text-white'
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                  }`}
+                >
+                  Detailed
+                </button>
+              </div>
+            </div>
+          </div>
+          <p className="text-lg text-gray-600 dark:text-gray-300">
+            Analyze your website's AI readiness
+          </p>
+        </div>
 
         <AuditForm
           url={url}
@@ -222,7 +260,133 @@ export default function Home() {
           onSubmit={handleSubmit}
         />
 
-        {reportData && (
+        {reportData && viewMode === 'simple' && (
+          <div className="max-w-6xl mx-auto">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 md:p-8 animate-fade-in-up">
+              {/* Score - Primary Focus */}
+              <div className="text-center mb-6">
+                <ScoreDisplay
+                  score={Math.round(reportData.aiReadiness.overall)}
+                  grade={reportData.aiReadiness.grade}
+                  showScoringGuide={showScoringGuide}
+                  setShowScoringGuide={setShowScoringGuide}
+                />
+                {showScoringGuide && <ScoringGuide />}
+              </div>
+
+              {/* What This Means */}
+              {interpretationMessage && (
+                <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">What This Means</h3>
+                  <p className="text-sm text-gray-700 dark:text-gray-300">{interpretationMessage}</p>
+                </div>
+              )}
+
+              {/* Key Metrics */}
+              {reportData.aiReadiness && reportData.aiReadiness.dimensions && (
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">Key Metrics</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                      <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Extractability</p>
+                      <p className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                        {Math.round(reportData.aiReadiness.dimensions.extractability?.score || 0)}/100
+                      </p>
+                    </div>
+                    <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                      <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Content Quality</p>
+                      <p className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                        {Math.round(reportData.aiReadiness.dimensions.contentQuality?.score || 0)}/100
+                      </p>
+                    </div>
+                    <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                      <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Discoverability</p>
+                      <p className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                        {Math.round(reportData.aiReadiness.dimensions.discoverability?.score || 0)}/100
+                      </p>
+                    </div>
+                    <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                      <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Comprehensibility</p>
+                      <p className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                        {Math.round(reportData.aiReadiness.dimensions.comprehensibility?.score || 0)}/100
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Priority Actions */}
+              {reportData.auditReport?.issues && reportData.auditReport.issues.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">Priority Actions</h3>
+                  <div className="space-y-3">
+                    {reportData.auditReport.issues
+                      .filter((issue: any) => issue.severity === 'critical' || issue.severity === 'high')
+                      .slice(0, 5)
+                      .map((issue: any, idx: number) => (
+                        <div key={idx} className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border-l-4 border-red-500">
+                          <div className="flex items-start gap-3 mb-2">
+                            <span className="text-lg">
+                              {issue.severity === 'critical' ? '🔴' : '🟠'}
+                            </span>
+                            <div className="flex-1">
+                              <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">{issue.message}</p>
+                              <p className="text-xs text-gray-600 dark:text-gray-400 uppercase font-semibold">
+                                {issue.category} • {issue.severity}
+                              </p>
+                            </div>
+                          </div>
+                          {issue.recommendation && (
+                            <div className="ml-8 mt-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-md">
+                              <p className="text-xs font-medium text-blue-900 dark:text-blue-300">
+                                💡 Action: {issue.recommendation}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Quick Wins */}
+              {reportData.auditReport?.issues && (
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">Quick Wins</h3>
+                  <div className="space-y-2">
+                    {reportData.auditReport.issues
+                      .filter((issue: any) => issue.severity === 'medium' || issue.severity === 'low')
+                      .slice(0, 3)
+                      .map((issue: any, idx: number) => (
+                        <div key={idx} className="flex items-start gap-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                          <span className="text-lg">✅</span>
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{issue.message}</p>
+                            {issue.recommendation && (
+                              <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                                {issue.recommendation}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Share Button */}
+              <div className="flex justify-center pt-4">
+                <ShareButton 
+                  score={Math.round(reportData.aiReadiness.overall)} 
+                  grade={reportData.aiReadiness.grade}
+                  url={url}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {reportData && viewMode === 'complex' && (
           <div className="max-w-6xl mx-auto">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 animate-fade-in-up">
               {/* Header with Share Button */}
