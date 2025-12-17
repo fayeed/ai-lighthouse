@@ -1,6 +1,7 @@
 'use client';
 
 import ModelSelector, { ModelConfig } from './ModelSelector';
+import ScanEstimate from './ScanEstimate';
 
 interface AuditFormProps {
   url: string;
@@ -75,6 +76,11 @@ export default function AuditForm({
         {enableLLM && (
           <div className="mb-6">
             <ModelSelector value={modelConfig} onChange={setModelConfig} />
+            <ScanEstimate 
+              enableLLM={enableLLM} 
+              provider={modelConfig.provider}
+              model={modelConfig.model}
+            />
           </div>
         )}
 

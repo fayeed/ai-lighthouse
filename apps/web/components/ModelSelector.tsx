@@ -134,7 +134,7 @@ export default function ModelSelector({ value, onChange }: ModelSelectorProps) {
         <div className={`text-sm ${value.provider === 'openrouter' ? 'text-yellow-900 dark:text-yellow-300' : 'text-blue-900 dark:text-blue-300'}`}>
           <strong>{value.provider === 'openrouter' ? '⏱️ Note:' : 'ℹ️ Note:'}</strong> {' '}
           {value.provider === 'openrouter'
-            ? '🆓 Free models available! API key configured on backend. OpenRouter can be slower than other providers (expect 30-90s response times). Please be patient.'
+            ? '🆓 Free models available! API key configured on backend.'
             : value.provider === 'ollama'
             ? '🏠 Local development mode. Requires Ollama running on localhost:11434.'
             : `${value.provider.charAt(0).toUpperCase() + value.provider.slice(1)} requires an API key. Your data will be sent to their servers.`
