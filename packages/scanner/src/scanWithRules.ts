@@ -130,32 +130,179 @@ const fetched = await fetchHtml(url, options.timeoutMs!, options.userAgent);
 
   // LLM comprehension analysis (if enabled)
   let llm;
+  let hallucinationReport;
+  let entities;
+  let faqs;
+  let mirrorReport;
+
   if (options.enableLLM && options.llmConfig) {
     try {
-      const comprehension = await generateLLMComprehension($, url, {
-        provider: options.llmConfig.provider,
-        apiKey: options.llmConfig.apiKey,
-        baseUrl: options.llmConfig.baseUrl,
-        model: options.llmConfig.model,
-        maxTokens: options.llmConfig.maxTokens,
-        temperature: options.llmConfig.temperature
-      });
+      console.log('[LLM] Starting parallel LLM operations');
+      const llmStartTime = Date.now();
 
-      llm = {
-        summary: comprehension.summary,
-        pageType: comprehension.pageType,
-        topEntities: comprehension.topEntities,
-        questions: comprehension.questions,
-        suggestedFAQ: comprehension.suggestedFAQ,
-        readingLevel: comprehension.readingLevel,
-        keyTopics: comprehension.keyTopics,
-        sentiment: comprehension.sentiment,
-        technicalDepth: comprehension.technicalDepth,
-        structureQuality: comprehension.structureQuality,
-        pageTypeInsights: comprehension.pageTypeInsights
-      };
+      // Run all LLM operations in parallel
+      const [
+        comprehensionResult,
+        hallucinationResult,
+        entityResult,
+        faqResult,
+        mirrorResult
+      ] = await Promise.all([
+        // Comprehension
+        generateLLMComprehension($, url, {
+          provider: options.llmConfig.provider,
+          apiKey: options.llmConfig.apiKey,
+          baseUrl: options.llmConfig.baseUrl,
+          model: options.llmConfig.model,
+          maxTokens: options.llmConfig.maxTokens,
+          temperature: options.llmConfig.temperature
+        }).catch(error => {
+          console.error('LLM comprehension failed:', error);
+          return null;
+        }),
+
+        // Hallucination detection
+        (options.enableHallucinationDetection !== false
+          ? detectHallucinations($, url, {
+              provider: options.llmConfig.provider,
+              apiKey: options.llmConfig.apiKey,
+              baseUrl: options.llmConfig.baseUrl,
+              model: options.llmConfig.model
+            }).catch(error => {
+              console.error('Hallucination detection failed:', error);
+              return null;
+            })
+          : Promise.resolve(null)
+        ),
+
+        // Entity extraction
+        extractNamedEntities($, {
+          enableLLM: true,
+          llmConfig: options.llmConfig,
+          minConfidence: 0.5
+        }).catch(error => {
+          console.error('Entity extraction failed:', error);
+          return null;
+        }),
+
+        // FAQ generation
+        generateFAQs($, {
+          enableLLM: true,
+          llmConfig: options.llmConfig,
+          maxFAQs: 15
+        }).catch(error => {
+          console.error('FAQ generation failed:', error);
+          return null;
+        }),
+
+        // Mirror test
+        runMirrorTest($, {
+          provider: options.llmConfig.provider,
+          apiKey: options.llmConfig.apiKey,
+          baseUrl: options.llmConfig.baseUrl,
+          model: options.llmConfig.model,
+          maxTokens: options.llmConfig.maxTokens,
+          temperature: options.llmConfig.temperature
+        }).catch(error => {
+          console.error('Mirror test failed:', error);
+          return null;
+        })
+      ]);
+
+      const llmDuration = Date.now() - llmStartTime;
+      console.log(`[LLM] All parallel operations completed in ${llmDuration}ms`);
+
+      // Process comprehension result
+      if (comprehensionResult) {
+        llm = {
+          summary: comprehensionResult.summary,
+          pageType: comprehensionResult.pageType,
+          topEntities: comprehensionResult.topEntities,
+          questions: comprehensionResult.questions,
+          suggestedFAQ: comprehensionResult.suggestedFAQ,
+          readingLevel: comprehensionResult.readingLevel,
+          keyTopics: comprehensionResult.keyTopics,
+          sentiment: comprehensionResult.sentiment,
+          technicalDepth: comprehensionResult.technicalDepth,
+          structureQuality: comprehensionResult.structureQuality,
+          pageTypeInsights: comprehensionResult.pageTypeInsights
+        };
+      }
+
+      // Process hallucination result
+      if (hallucinationResult) {
+        const hallucinationIssues = hallucinationTriggersToIssues(hallucinationResult);
+        issues.push(...hallucinationIssues);
+
+        hallucinationReport = {
+          hallucinationRiskScore: hallucinationResult.hallucinationRiskScore,
+          triggers: hallucinationResult.triggers.map(t => ({
+            type: t.type,
+            severity: t.severity,
+            description: t.description,
+            confidence: t.confidence
+          })),
+          factCheckSummary: hallucinationResult.factCheckSummary,
+          recommendations: hallucinationResult.recommendations,
+          verifications: hallucinationResult.verifications,
+        };
+      }
+
+      // Process entity result
+      if (entityResult) {
+        entities = {
+          entities: entityResult.entities.map(e => ({
+            name: e.name,
+            type: e.type,
+            confidence: e.confidence,
+            locator: e.locator,
+            metadata: e.metadata
+          })),
+          summary: entityResult.summary,
+          schemaMapping: entityResult.schemaMapping
+        };
+      }
+
+      // Process FAQ result
+      if (faqResult) {
+        faqs = {
+          faqs: faqResult.faqs.map(f => ({
+            question: f.question,
+            suggestedAnswer: f.suggestedAnswer,
+            importance: f.importance,
+            confidence: f.confidence,
+            source: f.source
+          })),
+          summary: faqResult.summary
+        };
+      }
+
+      // Process mirror result
+      if (mirrorResult) {
+        mirrorReport = mirrorResult;
+        
+        // Add critical mismatches as issues
+        for (const mismatch of mirrorResult.mismatches) {
+          if (mismatch.severity === 'critical' || mismatch.severity === 'major') {
+            issues.push({
+              id: `LLMCONF-MIRROR-${mismatch.field.toUpperCase()}`,
+              title: `AI Misunderstanding: ${mismatch.field}`,
+              severity: mismatch.severity === 'critical' ? SEVERITY.HIGH : SEVERITY.MEDIUM,
+              category: CATEGORY.LLMCON,
+              description: mismatch.description,
+              remediation: mismatch.recommendation,
+              impactScore: mismatch.severity === 'critical' ? 8 : 6,
+              location: { url },
+              tags: ['ai-interpretation', 'messaging', 'mirror-test'],
+              confidence: mismatch.confidence,
+              timestamp: new Date().toISOString()
+            } as Issue);
+          }
+        }
+      }
+
     } catch (error) {
-      console.error('LLM comprehension failed:', error);
+      console.error('LLM operations failed:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       const isRateLimit = errorMessage.includes('Rate limit exceeded') || 
                           errorMessage.includes('rate limit') ||
@@ -168,10 +315,10 @@ const fetched = await fetchHtml(url, options.timeoutMs!, options.userAgent);
         // Add issue about LLM failure (only for non-rate-limit errors)
         issues.push({
           id: 'LLMAPI-001',
-          title: 'LLM Comprehension Failed',
+          title: 'LLM Operations Failed',
           severity: SEVERITY.LOW,
           category: CATEGORY.LLMAPI,
-          description: `Failed to generate LLM comprehension: ${errorMessage}`,
+          description: `Failed to complete LLM operations: ${errorMessage}`,
           remediation: 'Check LLM API credentials and configuration.',
           impactScore: 5,
           location: { url },
@@ -181,27 +328,13 @@ const fetched = await fetchHtml(url, options.timeoutMs!, options.userAgent);
         } as Issue);
       }
     }
-  }
-
-  // Hallucination detection (if enabled)
-  let hallucinationReport;
-  if (options.enableHallucinationDetection !== false) { // Enabled by default when LLM is available
+  } else if (options.enableHallucinationDetection !== false) {
+    // Run hallucination detection without LLM (local heuristics only)
     try {
-      // Use LLM if available and enabled, otherwise use local heuristics only
-      const llmConfig = (options.enableLLM && options.llmConfig) ? {
-        provider: options.llmConfig.provider,
-        apiKey: options.llmConfig.apiKey,
-        baseUrl: options.llmConfig.baseUrl,
-        model: options.llmConfig.model
-      } : undefined;
-
-      const report = await detectHallucinations($, url, llmConfig);
-      
-      // Convert triggers to issues
+      const report = await detectHallucinations($, url, undefined);
       const hallucinationIssues = hallucinationTriggersToIssues(report);
       issues.push(...hallucinationIssues);
 
-      // Add to result
       hallucinationReport = {
         hallucinationRiskScore: report.hallucinationRiskScore,
         triggers: report.triggers.map(t => ({
@@ -216,131 +349,6 @@ const fetched = await fetchHtml(url, options.timeoutMs!, options.userAgent);
       };
     } catch (error) {
       console.error('Hallucination detection failed:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      const isRateLimit = errorMessage.includes('Rate limit exceeded') || 
-                          errorMessage.includes('rate limit') ||
-                          errorMessage.includes('free-models-per-day') ||
-                          errorMessage.includes('quota exceeded');
-      
-      if (isRateLimit) {
-        llmLimitExceeded = true;
-      }
-    }
-  }
-
-  // Named entity extraction (uses dedicated entity extractor)
-  let entities;
-  if (options.enableLLM && options.llmConfig) {
-    try {
-      const entityResult = await extractNamedEntities($, {
-        enableLLM: true,
-        llmConfig: options.llmConfig,
-        minConfidence: 0.5
-      });
-      
-      entities = {
-        entities: entityResult.entities.map(e => ({
-          name: e.name,
-          type: e.type,
-          confidence: e.confidence,
-          locator: e.locator,
-          metadata: e.metadata
-        })),
-        summary: entityResult.summary,
-        schemaMapping: entityResult.schemaMapping
-      };
-    } catch (error) {
-      console.error('Entity extraction failed:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      const isRateLimit = errorMessage.includes('Rate limit exceeded') || 
-                          errorMessage.includes('rate limit') ||
-                          errorMessage.includes('free-models-per-day') ||
-                          errorMessage.includes('quota exceeded');
-      
-      if (isRateLimit) {
-        llmLimitExceeded = true;
-      }
-    }
-  }
-
-  // FAQ generation (uses dedicated FAQ generator)
-  let faqs;
-  if (options.enableLLM && options.llmConfig) {
-    try {
-      const faqResult = await generateFAQs($, {
-        enableLLM: true,
-        llmConfig: options.llmConfig,
-        maxFAQs: 15
-      });
-      
-      faqs = {
-        faqs: faqResult.faqs.map(f => ({
-          question: f.question,
-          suggestedAnswer: f.suggestedAnswer,
-          importance: f.importance,
-          confidence: f.confidence,
-          source: f.source
-        })),
-        summary: faqResult.summary
-      };
-    } catch (error) {
-      console.error('FAQ generation failed:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      const isRateLimit = errorMessage.includes('Rate limit exceeded') || 
-                          errorMessage.includes('rate limit') ||
-                          errorMessage.includes('free-models-per-day') ||
-                          errorMessage.includes('quota exceeded');
-      
-      if (isRateLimit) {
-        llmLimitExceeded = true;
-      }
-    }
-  }
-
-  // LLM Mirror Test (requires LLM)
-  let mirrorReport;
-  if (options.enableLLM && options.llmConfig) {
-    try {
-      const report = await runMirrorTest($, {
-        provider: options.llmConfig.provider,
-        apiKey: options.llmConfig.apiKey,
-        baseUrl: options.llmConfig.baseUrl,
-        model: options.llmConfig.model,
-        maxTokens: options.llmConfig.maxTokens,
-        temperature: options.llmConfig.temperature
-      });
-
-      mirrorReport = report;
-      
-      // Add critical mismatches as issues
-      for (const mismatch of report.mismatches) {
-        if (mismatch.severity === 'critical' || mismatch.severity === 'major') {
-          issues.push({
-            id: `LLMCONF-MIRROR-${mismatch.field.toUpperCase()}`,
-            title: `AI Misunderstanding: ${mismatch.field}`,
-            severity: mismatch.severity === 'critical' ? SEVERITY.HIGH : SEVERITY.MEDIUM,
-            category: CATEGORY.LLMCON,
-            description: mismatch.description,
-            remediation: mismatch.recommendation,
-            impactScore: mismatch.severity === 'critical' ? 8 : 6,
-            location: { url },
-            tags: ['ai-interpretation', 'messaging', 'mirror-test'],
-            confidence: mismatch.confidence,
-            timestamp: new Date().toISOString()
-          } as Issue);
-        }
-      }
-    } catch (error) {
-      console.error('Mirror test failed:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      const isRateLimit = errorMessage.includes('Rate limit exceeded') || 
-                          errorMessage.includes('rate limit') ||
-                          errorMessage.includes('free-models-per-day') ||
-                          errorMessage.includes('quota exceeded');
-      
-      if (isRateLimit) {
-        llmLimitExceeded = true;
-      }
     }
   }
 

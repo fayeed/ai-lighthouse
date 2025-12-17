@@ -136,23 +136,30 @@ auditRouter.post('/', cacheMiddleware(1800), validateRequest(auditRequestSchema)
         model: llmModel,
       };
 
+      logger.info('Configuring LLM', { provider: llmProvider, model: llmModel });
+
       // Add API key configuration
       if (llmProvider === 'ollama') {
         // Ollama runs locally, no API key needed
         scanOptions.llmConfig.baseUrl = llmBaseUrl || 'http://localhost:11434';
+        logger.info('Using Ollama', { baseUrl: scanOptions.llmConfig.baseUrl });
       } else if (llmApiKey) {
         scanOptions.llmConfig.apiKey = llmApiKey;
+        logger.info('Using provided API key', { provider: llmProvider, keyLength: llmApiKey.length });
       } else if (llmProvider === 'openrouter') {
         // Use environment variable for OpenRouter if no key provided
         const defaultKey = process.env.OPENROUTER_API_KEY;
         if (defaultKey) {
           scanOptions.llmConfig.apiKey = defaultKey;
+          logger.info('Using OpenRouter with environment API key', { keyLength: defaultKey.length });
         } else {
+          logger.error('OpenRouter API key missing');
           const error = ErrorTypes.LLM_API_KEY_REQUIRED('OpenRouter');
           return res.status(error.statusCode).json(error.toJSON());
         }
       } else {
         // For other cloud providers (OpenAI, Anthropic, Gemini)
+        logger.error('API key required for provider', { provider: llmProvider });
         const error = ErrorTypes.LLM_API_KEY_REQUIRED(llmProvider);
         return res.status(error.statusCode).json(error.toJSON());
       }
@@ -187,12 +194,18 @@ auditRouter.post('/', cacheMiddleware(1800), validateRequest(auditRequestSchema)
     }
 
     // Synchronous mode - wait for completion
-    logger.info('Starting synchronous audit', { url, enableLLM });
+    logger.info('Starting synchronous audit', { url, enableLLM, provider: llmProvider, model: llmModel });
     
     // Check if rate limiter set a warning
     let llmWarning = (req as any).llmRateLimitWarning || null;
     
+    const scanStartTime = Date.now();
+    logger.info('Beginning URL analysis', { url, options: scanOptions });
+    
     const result = await analyzeUrlWithRules(url, scanOptions);
+    
+    const scanDuration = Date.now() - scanStartTime;
+    logger.info('URL analysis completed', { url, duration: `${scanDuration}ms` });
     
     // Check if LLM limit was exceeded during the scan
     if (result.llmLimitExceeded && !llmWarning) {
