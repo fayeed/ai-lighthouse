@@ -130,11 +130,11 @@ export default function ModelSelector({ value, onChange }: ModelSelectorProps) {
       )}
 
       {/* Info Box */}
-      <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg p-3">
-        <div className="text-sm text-blue-900 dark:text-blue-300">
-          <strong>ℹ️ Note:</strong> {' '}
+      <div className={`${value.provider === 'openrouter' ? 'bg-yellow-50 dark:bg-yellow-900/30 border-yellow-200 dark:border-yellow-700' : 'bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-700'} border rounded-lg p-3`}>
+        <div className={`text-sm ${value.provider === 'openrouter' ? 'text-yellow-900 dark:text-yellow-300' : 'text-blue-900 dark:text-blue-300'}`}>
+          <strong>{value.provider === 'openrouter' ? '⏱️ Note:' : 'ℹ️ Note:'}</strong> {' '}
           {value.provider === 'openrouter'
-            ? '🆓 Free models available! API key configured on backend. No additional setup needed.'
+            ? '🆓 Free models available! API key configured on backend. OpenRouter can be slower than other providers (expect 30-90s response times). Please be patient.'
             : value.provider === 'ollama'
             ? '🏠 Local development mode. Requires Ollama running on localhost:11434.'
             : `${value.provider.charAt(0).toUpperCase() + value.provider.slice(1)} requires an API key. Your data will be sent to their servers.`

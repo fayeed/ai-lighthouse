@@ -5,8 +5,9 @@ import { redisClient } from '../index.js';
 /**
  * Request timeout middleware
  * Prevents requests from hanging indefinitely
+ * Default 180s to accommodate slow LLM providers like OpenRouter
  */
-export const requestTimeout = (timeoutMs: number = 120000) => {
+export const requestTimeout = (timeoutMs: number = 180000) => {
   return (req: Request, res: Response, next: NextFunction) => {
     const timeout = setTimeout(() => {
       if (!res.headersSent) {

@@ -219,6 +219,7 @@ class OpenRouterProvider implements LLMProvider {
   async call(messages: LLMMessage[], options?: Partial<LLMConfig>): Promise<LLMResponse> {
     const apiKey = options?.apiKey || this.config.apiKey;
     const model = options?.model || this.config.model || 'meta-llama/llama-3.3-70b-instruct:free';
+    const timeout = options?.timeout ?? this.config.timeout ?? 90000; // 90s for OpenRouter (slower than other providers)
     
     if (!apiKey) {
       throw new Error('OpenRouter API key is required');
@@ -229,7 +230,12 @@ class OpenRouterProvider implements LLMProvider {
       this.client = new OpenRouter({ apiKey: options.apiKey });
     }
 
-    const response = await this.client.chat.send({
+    // OpenRouter SDK doesn't support AbortSignal, so we use Promise.race for timeout
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error(`OpenRouter request timeout after ${timeout}ms`)), timeout);
+    });
+
+    const requestPromise = this.client.chat.send({
       model,
       messages: messages.map(msg => ({
         role: msg.role,
@@ -238,6 +244,8 @@ class OpenRouterProvider implements LLMProvider {
       temperature: options?.temperature ?? this.config.temperature ?? 0.7,
       maxTokens: options?.maxTokens ?? this.config.maxTokens ?? 2000,
     });
+
+    const response = await Promise.race([requestPromise, timeoutPromise]);
 
     return {
       content: response.choices[0].message.content?.toString() || '',

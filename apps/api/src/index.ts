@@ -76,7 +76,7 @@ app.use(validateContentType);
 app.use(express.json({ limit: '1mb' }));
 
 // Timeout handling (after body parsing)
-app.use(requestTimeout(120000)); // 2 minutes timeout
+app.use(requestTimeout(180000)); // 3 minutes timeout (LLM requests can be slow)
 
 // Request logging
 app.use(requestLogger);
