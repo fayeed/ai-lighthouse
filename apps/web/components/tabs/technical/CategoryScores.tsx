@@ -31,11 +31,11 @@ export default function CategoryScores({ categoryScores }: CategoryScoresProps) 
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-1">
                   <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                    {categoryCode}
+                    {categoryInfo.name}
                   </span>
                   <Tooltip content={
                     <div className="text-xs">
-                      <div className="font-semibold mb-1">{categoryInfo.name}</div>
+                      <div className="font-semibold mb-1">{categoryCode}</div>
                       <div>{categoryInfo.description}</div>
                     </div>
                   }>
