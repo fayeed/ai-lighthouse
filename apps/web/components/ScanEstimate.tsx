@@ -83,60 +83,18 @@ export default function ScanEstimate({ enableLLM, provider, model }: ScanEstimat
 
   const { min, max, estimate, speed } = getEstimate();
 
+  // Don't show for basic scans
   if (!enableLLM && estimate < 10) {
-    return (
-      <div className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-        ⚡ Estimated time: ~{formatTime(estimate)}
-      </div>
-    );
+    return null;
   }
 
   return (
-    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-5 m-4 mt-1">
-      <div className="flex items-start gap-2">
-        <div className="text-2xl">⏱️</div>
-        <div className="flex-1">
-          <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
-            Estimated Scan Time
-          </div>
-          <div className="text-xs text-gray-600 dark:text-gray-300 mt-1">
-            {min === max ? (
-              <span>~{formatTime(estimate)}</span>
-            ) : (
-              <span>{formatTime(min)} - {formatTime(max)} (avg: {formatTime(estimate)})</span>
-            )}
-          </div>
-          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            {speed}
-            {enableLLM && (
-              <>
-                {' • '}
-                {provider === 'ollama' 
-                  ? 'Local processing (depends on your hardware)'
-                  : 'Cloud AI analysis'}
-              </>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {estimate > 30 && (
-        <div className="mt-2 text-xs text-amber-600 dark:text-amber-400">
-          ⚠️ This may take a while. Consider using a faster model for quicker results.
-        </div>
-      )}
-
-      {enableLLM && provider === 'ollama' && (
-        <div className="mt-2 text-xs text-blue-600 dark:text-blue-400">
-          💡 Tip: Smaller models (0.5B-3B) are much faster for basic analysis
-        </div>
-      )}
-
-      {enableLLM && provider === 'openrouter' && (
-        <div className="mt-2 text-xs text-amber-600 dark:text-amber-400">
-          ⚠️ Note: Free tier uses shared infrastructure - can be slow during peak times. For faster results, use OpenAI or Gemini.
-        </div>
-      )}
+    <div className="text-xs text-gray-500 dark:text-gray-400 mt-2 flex items-center gap-2">
+      <span>⏱️</span>
+      <span>
+        {formatTime(estimate)} • {speed}
+        {provider === 'openrouter' && ' (shared infrastructure)'}
+      </span>
     </div>
   );
 }
