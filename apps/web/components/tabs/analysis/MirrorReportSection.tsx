@@ -17,8 +17,32 @@ interface MirrorReportSummary {
   major: number;
 }
 
+interface LLMInterpretation {
+  productName?: string;
+  purpose?: string;
+  keyFeatures?: string[];
+  keyBenefits?: string[];
+  targetAudience?: string;
+  pricing?: string;
+  category?: string;
+  valueProposition?: string;
+  confidence: number;
+}
+
+interface IntendedMessaging {
+  productName?: string;
+  description?: string;
+  tagline?: string;
+  keyFeatures?: string[];
+  benefits?: string[];
+  valueProposition?: string;
+  source: string;
+}
+
 interface MirrorReport {
   summary: MirrorReportSummary;
+  llmInterpretation?: LLMInterpretation;
+  intendedMessaging?: IntendedMessaging[];
   mismatches?: Mismatch[];
   recommendations?: string[];
 }
@@ -107,6 +131,75 @@ export default function MirrorReportSection({ mirrorReport }: MirrorReportSectio
 
       <ExampleSection title="See Alignment Example" examples={alignmentExamples} />
       <ExampleSection title="See Clarity Example" examples={clarityExamples} />
+
+      {/* AI Interpretation - What AI Actually Understood */}
+      {mirrorReport.llmInterpretation && (
+        <div className="mb-6 bg-blue-50 dark:bg-blue-900/30 p-4 rounded-lg border border-blue-200 dark:border-blue-700">
+          <div className="flex items-center gap-2 mb-3">
+            <h4 className="text-lg font-bold text-gray-900 dark:text-gray-100">🤖 What AI Actually Understood</h4>
+            <span className="text-sm text-gray-500 dark:text-gray-400">({Math.round(mirrorReport.llmInterpretation.confidence * 100)}% confident)</span>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {mirrorReport.llmInterpretation.productName && (
+              <div>
+                <div className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Product Name</div>
+                <div className="text-sm text-gray-900 dark:text-gray-100">{mirrorReport.llmInterpretation.productName}</div>
+              </div>
+            )}
+            
+            {mirrorReport.llmInterpretation.purpose && (
+              <div className="md:col-span-2">
+                <div className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Main Purpose</div>
+                <div className="text-sm text-gray-900 dark:text-gray-100">{mirrorReport.llmInterpretation.purpose}</div>
+              </div>
+            )}
+            
+            {mirrorReport.llmInterpretation.valueProposition && (
+              <div className="md:col-span-2">
+                <div className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">💎 Unique Value</div>
+                <div className="text-sm font-medium text-purple-700 dark:text-purple-300">{mirrorReport.llmInterpretation.valueProposition}</div>
+              </div>
+            )}
+            
+            {mirrorReport.llmInterpretation.keyBenefits && mirrorReport.llmInterpretation.keyBenefits.length > 0 && (
+              <div>
+                <div className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Key Benefits</div>
+                <ul className="text-sm text-gray-900 dark:text-gray-100 list-disc list-inside space-y-1">
+                  {mirrorReport.llmInterpretation.keyBenefits.map((benefit, idx) => (
+                    <li key={idx}>{benefit}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            
+            {mirrorReport.llmInterpretation.keyFeatures && mirrorReport.llmInterpretation.keyFeatures.length > 0 && (
+              <div>
+                <div className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Key Features</div>
+                <ul className="text-sm text-gray-900 dark:text-gray-100 list-disc list-inside space-y-1">
+                  {mirrorReport.llmInterpretation.keyFeatures.slice(0, 3).map((feature, idx) => (
+                    <li key={idx}>{feature}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            
+            {mirrorReport.llmInterpretation.targetAudience && (
+              <div>
+                <div className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Target Audience</div>
+                <div className="text-sm text-gray-900 dark:text-gray-100">{mirrorReport.llmInterpretation.targetAudience}</div>
+              </div>
+            )}
+            
+            {mirrorReport.llmInterpretation.category && (
+              <div>
+                <div className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Category</div>
+                <div className="text-sm text-gray-900 dark:text-gray-100">{mirrorReport.llmInterpretation.category}</div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Recommendations Section */}
       {mirrorReport.recommendations && mirrorReport.recommendations.length > 0 && (

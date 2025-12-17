@@ -152,72 +152,74 @@ export interface ScoringResult {
   normalizedScore: number;
 }
 
+/**
+ * Main scan result interface
+ * Reorganized for clarity with logical groupings
+ */
 export interface ScanResult {
+  // ===== METADATA =====
   url: string;
-  timestamp?: number; // ISO timestamp
+  timestamp?: number;
+  llmLimitExceeded?: boolean; // Flag if LLM rate limit was hit
+  
+  // ===== ISSUES & SCORING =====
   issues: Issue[];
-  scores: Record<string, number>; // Legacy simple scores
-  scoring?: ScoringResult; // New comprehensive scoring
-  chunking?: ChunkingAnalysis; // Detailed chunking analysis
-  extractability?: ExtractabilityAnalysis; // Extractability mapping
+  scores: Record<string, number>; // Legacy category scores (for backward compatibility)
+  scoring?: ScoringResult; // Comprehensive scoring system with weights and breakdowns
+  
+  // ===== TECHNICAL ANALYSIS =====
+  /** Content chunking analysis - how content splits for RAG/embeddings */
+  chunking?: ChunkingAnalysis;
+  
+  /** Extractability mapping - how easily content can be parsed from HTML */
+  extractability?: ExtractabilityAnalysis;
+  
+  // ===== AI COMPREHENSION =====
+  /** High-level AI understanding and content analysis */
   llm?: {
+    // Content Understanding
     summary: string;
     pageType?: string;
-    pageTypeInsights?: string[];  // LLM-generated recommendations specific to this page type
+    pageTypeInsights?: string[]; // AI-generated recommendations for this page type
+    keyTopics?: string[];
+    
+    // Content Characteristics
+    readingLevel?: {
+      grade: number;
+      description: string;
+    };
+    sentiment?: 'positive' | 'neutral' | 'negative';
+    technicalDepth?: 'beginner' | 'intermediate' | 'advanced' | 'expert';
+    structureQuality?: 'poor' | 'fair' | 'good' | 'excellent';
+    
+    // Extracted Elements (high-level summaries for UI)
     topEntities: Array<{
       name: string;
       type: string;
       relevance: number;
       mentions?: number;
     }>;
+    
     questions: Array<{
       question: string;
       category: 'what' | 'why' | 'how' | 'when' | 'where' | 'who';
       difficulty: 'basic' | 'intermediate' | 'advanced';
     }>;
+    
     suggestedFAQ: Array<{
       question: string;
       suggestedAnswer: string;
       importance: 'high' | 'medium' | 'low';
     }>;
-    readingLevel?: {
-      grade: number;
-      description: string;
-    };
-    keyTopics?: string[];
-    sentiment?: 'positive' | 'neutral' | 'negative';
-    technicalDepth?: 'beginner' | 'intermediate' | 'advanced' | 'expert';
-    structureQuality?: 'poor' | 'fair' | 'good' | 'excellent';
   };
-  hallucinationReport?: {
-    hallucinationRiskScore: number; // 0-100
-    triggers: Array<{
-      type: 'missing_fact' | 'contradiction' | 'ambiguity' | 'inconsistency';
-      severity: SEVERITY;
-      description: string;
-      confidence: number;
-    }>;
-    factCheckSummary: {
-      totalFacts: number;
-      verifiedFacts: number;
-      unverifiedFacts: number;
-      contradictions: number;
-      ambiguities: number;
-    };
-    recommendations: string[];
-    verifications: {
-      fact: string;
-      verified: boolean;
-      evidence?: string[];
-      contradictions?: string[];
-      ambiguities?: string[];
-    }
-  };
+  
+  // ===== DETAILED EXTRACTIONS =====
+  /** Detailed entity extraction with metadata and locations (for advanced use) */
   entities?: {
     entities: Array<{
       name: string;
       type: 'organization' | 'product' | 'person' | 'date' | 'number' | 'location' | 'email' | 'url' | 'phone';
-      confidence: number; // 0-1
+      confidence: number;
       locator: {
         selector?: string;
         textSnippet: string;
@@ -239,12 +241,14 @@ export interface ScanResult {
     };
     schemaMapping?: Record<string, any[]>;
   };
+  
+  /** Detailed FAQ generation with sources and confidence (for advanced use) */
   faqs?: {
     faqs: Array<{
       question: string;
       suggestedAnswer: string;
       importance: 'high' | 'medium' | 'low';
-      confidence: number; // 0-1
+      confidence: number;
       source: 'llm' | 'heuristic' | 'schema';
     }>;
     summary: {
@@ -257,8 +261,35 @@ export interface ScanResult {
       averageConfidence: number;
     };
   };
-  // Note: llm.topEntities and llm.suggestedFAQ provide high-level overview
-  // while entities and faqs provide detailed extraction with metadata
+  
+  // ===== QUALITY & ACCURACY CHECKS =====
+  /** Hallucination risk assessment and fact verification */
+  hallucinationReport?: {
+    hallucinationRiskScore: number; // 0-100
+    triggers: Array<{
+      type: 'missing_fact' | 'contradiction' | 'ambiguity' | 'inconsistency';
+      severity: SEVERITY;
+      description: string;
+      confidence: number;
+    }>;
+    factCheckSummary: {
+      totalFacts: number;
+      verifiedFacts: number;
+      unverifiedFacts: number;
+      contradictions: number;
+      ambiguities: number;
+    };
+    recommendations: string[];
+    verifications: Array<{
+      fact: string;
+      verified: boolean;
+      evidence?: string[];
+      contradictions?: string[];
+      ambiguities?: string[];
+    }>;
+  };
+  
+  /** AI messaging alignment - how AI interprets vs. intended messaging */
   mirrorReport?: {
     intendedMessaging: Array<{
       productName?: string;
@@ -298,6 +329,5 @@ export interface ScanResult {
     };
     recommendations: string[];
   };
-  llmLimitExceeded?: boolean; // Flag indicating if LLM rate limit was hit during scan
 }
 

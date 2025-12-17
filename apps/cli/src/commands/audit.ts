@@ -648,6 +648,55 @@ function generateHTMLReport(report: any, aiReadiness: any, scanResult: any): str
         <div><strong>🟡 Major Issues:</strong> ${scanResult.mirrorReport.summary.major}</div>
       </div>
       
+      ${scanResult.mirrorReport.llmInterpretation ? `
+        <div style="background: #dbeafe; padding: 16px; border-radius: 8px; margin-bottom: 16px; border: 1px solid #3b82f6;">
+          <div style="font-weight: bold; margin-bottom: 12px; color: #1e40af;">
+            🤖 What AI Actually Understood (${Math.round(scanResult.mirrorReport.llmInterpretation.confidence * 100)}% confident)
+          </div>
+          
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+            ${scanResult.mirrorReport.llmInterpretation.productName ? `
+              <div>
+                <div style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 4px;">PRODUCT NAME</div>
+                <div style="font-size: 14px;">${scanResult.mirrorReport.llmInterpretation.productName}</div>
+              </div>
+            ` : ''}
+            
+            ${scanResult.mirrorReport.llmInterpretation.purpose ? `
+              <div style="grid-column: 1 / -1;">
+                <div style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 4px;">MAIN PURPOSE</div>
+                <div style="font-size: 14px;">${scanResult.mirrorReport.llmInterpretation.purpose}</div>
+              </div>
+            ` : ''}
+            
+            ${scanResult.mirrorReport.llmInterpretation.valueProposition ? `
+              <div style="grid-column: 1 / -1;">
+                <div style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 4px;">💎 UNIQUE VALUE</div>
+                <div style="font-size: 14px; font-weight: 600; color: #7c3aed;">${scanResult.mirrorReport.llmInterpretation.valueProposition}</div>
+              </div>
+            ` : ''}
+            
+            ${scanResult.mirrorReport.llmInterpretation.keyBenefits && scanResult.mirrorReport.llmInterpretation.keyBenefits.length > 0 ? `
+              <div>
+                <div style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 4px;">KEY BENEFITS</div>
+                <ul style="font-size: 14px; margin: 0; padding-left: 20px;">
+                  ${scanResult.mirrorReport.llmInterpretation.keyBenefits.map((b: string) => `<li style="margin: 4px 0;">${b}</li>`).join('')}
+                </ul>
+              </div>
+            ` : ''}
+            
+            ${scanResult.mirrorReport.llmInterpretation.keyFeatures && scanResult.mirrorReport.llmInterpretation.keyFeatures.length > 0 ? `
+              <div>
+                <div style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 4px;">KEY FEATURES</div>
+                <ul style="font-size: 14px; margin: 0; padding-left: 20px;">
+                  ${scanResult.mirrorReport.llmInterpretation.keyFeatures.slice(0, 3).map((f: string) => `<li style="margin: 4px 0;">${f}</li>`).join('')}
+                </ul>
+              </div>
+            ` : ''}
+          </div>
+        </div>
+      ` : ''}
+      
       ${scanResult.mirrorReport.mismatches && scanResult.mirrorReport.mismatches.length > 0 ? `
         <div style="margin-top: 20px;">
           <strong>Priority Mismatches:</strong>

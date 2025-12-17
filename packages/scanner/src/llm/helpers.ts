@@ -192,9 +192,34 @@ export function safeJSONParse<T = any>(content: string, context: string = 'LLM r
     cleanContent = cleanContent.trim();
     
     // Try to find JSON object/array if surrounded by other text
-    const jsonMatch = cleanContent.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
+    // Match the FIRST complete JSON object or array
+    const jsonMatch = cleanContent.match(/(\{(?:[^{}]|\{[^{}]*\})*\})/);
     if (jsonMatch) {
-      cleanContent = jsonMatch[0];
+      cleanContent = jsonMatch[1];
+    }
+    
+    // Additional cleanup: ensure no trailing content after closing brace
+    const firstCloseBrace = cleanContent.indexOf('}');
+    const lastOpenBrace = cleanContent.lastIndexOf('{');
+    
+    // Only keep content from first { to matching }
+    if (firstCloseBrace !== -1 && lastOpenBrace === 0) {
+      // Find the matching closing brace for the opening one
+      let braceCount = 0;
+      let endPos = -1;
+      for (let i = 0; i < cleanContent.length; i++) {
+        if (cleanContent[i] === '{') braceCount++;
+        if (cleanContent[i] === '}') {
+          braceCount--;
+          if (braceCount === 0) {
+            endPos = i + 1;
+            break;
+          }
+        }
+      }
+      if (endPos !== -1) {
+        cleanContent = cleanContent.substring(0, endPos);
+      }
     }
     
     // Attempt to parse

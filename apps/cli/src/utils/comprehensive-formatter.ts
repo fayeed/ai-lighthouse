@@ -281,6 +281,43 @@ function formatMirrorReportSection(report: any): string {
   lines.push(`  ${chalk.bold('Critical Issues:').padEnd(25)} ${chalk.red(report.summary.critical)}`);
   lines.push(`  ${chalk.bold('Major Issues:').padEnd(25)} ${chalk.yellow(report.summary.major)}`);
 
+  // AI Interpretation - What AI Actually Understood
+  if (report.llmInterpretation) {
+    lines.push('');
+    lines.push(chalk.bold.blue('🤖 What AI Actually Understood'));
+    lines.push(chalk.dim(`   (${Math.round(report.llmInterpretation.confidence * 100)}% confident)`));
+    
+    if (report.llmInterpretation.productName) {
+      lines.push(`  ${chalk.bold('Product:')} ${report.llmInterpretation.productName}`);
+    }
+    
+    if (report.llmInterpretation.purpose) {
+      lines.push(`  ${chalk.bold('Purpose:')} ${report.llmInterpretation.purpose}`);
+    }
+    
+    if (report.llmInterpretation.valueProposition) {
+      lines.push(`  ${chalk.bold.magenta('💎 Value:')} ${report.llmInterpretation.valueProposition}`);
+    }
+    
+    if (report.llmInterpretation.keyBenefits && report.llmInterpretation.keyBenefits.length > 0) {
+      lines.push(`  ${chalk.bold('Benefits:')}`);
+      report.llmInterpretation.keyBenefits.forEach((benefit: string) => {
+        lines.push(`    • ${benefit}`);
+      });
+    }
+    
+    if (report.llmInterpretation.keyFeatures && report.llmInterpretation.keyFeatures.length > 0) {
+      lines.push(`  ${chalk.bold('Features:')}`);
+      report.llmInterpretation.keyFeatures.slice(0, 3).forEach((feature: string) => {
+        lines.push(`    • ${feature}`);
+      });
+    }
+    
+    if (report.llmInterpretation.targetAudience) {
+      lines.push(`  ${chalk.bold('Audience:')} ${report.llmInterpretation.targetAudience}`);
+    }
+  }
+
   if (report.mismatches && report.mismatches.length > 0) {
     const priorityMismatches = report.mismatches.filter(
       (m: any) => m.severity === 'critical' || m.severity === 'major'

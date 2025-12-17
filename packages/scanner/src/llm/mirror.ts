@@ -15,9 +15,11 @@ export interface IntendedMessaging {
   tagline?: string;
   description?: string;
   keyFeatures?: string[];
+  benefits?: string[]; // What problems it solves
   targetAudience?: string;
   pricing?: string;
   category?: string;
+  valueProposition?: string; // Unique selling point
   source: 'h1' | 'meta' | 'schema' | 'hero';
 }
 
@@ -25,9 +27,11 @@ export interface LLMInterpretation {
   productName?: string;
   purpose?: string;
   keyFeatures?: string[];
+  keyBenefits?: string[]; // Problems it solves
   targetAudience?: string;
   pricing?: string;
   category?: string;
+  valueProposition?: string; // What makes it unique/different
   confidence: number; // 0-1, how confident the LLM is in its interpretation
 }
 
@@ -66,11 +70,23 @@ function extractIntendedMessaging($: CheerioAPI): IntendedMessaging[] {
   const h1 = $('h1').first().text().trim();
   if (h1) {
     const heroSection = $('h1').first().closest('section, div[class*="hero"], header');
-    const heroText = heroSection.find('p').first().text().trim();
+    const heroText = heroSection.find('p, .subtitle, .tagline, [class*="description"]').first().text().trim();
+    const tagline = heroSection.find('.tagline, [class*="tagline"], [class*="subtitle"]').first().text().trim();
+    
+    // Extract benefits from hero bullets/lists
+    const benefits: string[] = [];
+    heroSection.find('ul li, .benefit, [class*="benefit"]').each((_, elem) => {
+      const text = $(elem).text().trim();
+      if (text && text.length > 10 && text.length < 200) {
+        benefits.push(text);
+      }
+    });
     
     messaging.push({
       productName: h1,
+      tagline: tagline || undefined,
       description: heroText || undefined,
+      benefits: benefits.length > 0 ? benefits : undefined,
       source: 'hero'
     });
   }
@@ -194,36 +210,41 @@ Page Content:
 ${content}
 """
 
-Answer these questions as if you're an AI assistant seeing this page for the first time:
+As an AI assistant reading this page for the first time, extract the following information:
 
-1. What is the name of the product/service?
-2. What is its main purpose? (1-2 sentences)
-3. What are the key features or capabilities? (list 3-5)
-4. Who is the target audience?
-5. What is the pricing model? (if mentioned)
-6. What category/industry is this in?
-7. How confident are you in your understanding? (0.0-1.0)
+1. **Product/Service Name**: The exact name as presented
+2. **Main Purpose**: What does it do? (1-2 clear sentences)
+3. **Key Features**: Specific capabilities or functionalities (3-5 items)
+4. **Key Benefits**: Problems it solves or outcomes it delivers (2-4 items)
+5. **Target Audience**: Who should use this? Be specific.
+6. **Pricing**: Pricing model if clearly mentioned (free, paid, subscription, etc.)
+7. **Category**: What industry/category/type of solution is this?
+8. **Value Proposition**: What makes this unique or different from alternatives? (1 sentence)
+9. **Confidence**: How confident are you in this understanding? (0.0-1.0)
 
-Return ONLY valid JSON (no other text):
+Return ONLY valid JSON (no markdown, no explanations):
 {
-  "productName": "Name of product/service",
-  "purpose": "What it does in 1-2 sentences",
-  "keyFeatures": ["Feature 1", "Feature 2", "Feature 3"],
-  "targetAudience": "Who should use this",
-  "pricing": "Pricing model if mentioned, or null",
-  "category": "Industry/category",
+  "productName": "Exact product/service name or null",
+  "purpose": "Clear statement of what it does or null",
+  "keyFeatures": ["Feature 1", "Feature 2"] or [],
+  "keyBenefits": ["Benefit 1", "Benefit 2"] or [],
+  "targetAudience": "Specific audience description or null",
+  "pricing": "Pricing model or null",
+  "category": "Industry/category or null",
+  "valueProposition": "What makes it unique or null",
   "confidence": 0.85
 }
 
-IMPORTANT:
-- Only include information explicitly stated on the page
-- If something is unclear or not mentioned, use null
-- Be honest about your confidence level
-- Don't make assumptions or fill in gaps`;
+CRITICAL RULES:
+- Extract ONLY what is explicitly stated on the page
+- Use null for anything unclear or not mentioned
+- Don't infer or assume information
+- Be conservative - when in doubt, lower your confidence score
+- Features describe WHAT it does; Benefits describe WHY it matters`;
 
   try {
     const response = await runner.callWithSystem(
-      'You are an expert at analyzing web content and understanding product messaging. Be precise and only report what you can verify from the content. Return ONLY valid JSON with no markdown formatting.',
+      'You are an expert at analyzing web content and understanding product messaging. Be precise and only report what you can verify from the content. CRITICAL: Return ONLY the JSON object with no other text, explanations, or formatting before or after. No markdown, no comments, no additional text.',
       prompt,
       {
         maxTokens: 1000,
@@ -231,19 +252,47 @@ IMPORTANT:
       }
     );
     
+    // Log raw response for debugging
+    if (response.content.length > 500) {
+      console.log('[Mirror Test] LLM response (truncated):', response.content.substring(0, 200) + '...');
+    } else {
+      console.log('[Mirror Test] LLM response:', response.content);
+    }
+    
     const interpretation = safeJSONParse(response.content, 'LLM interpretation');
     
     return {
       productName: interpretation.productName || undefined,
       purpose: interpretation.purpose || undefined,
       keyFeatures: interpretation.keyFeatures || undefined,
+      keyBenefits: interpretation.keyBenefits || undefined,
       targetAudience: interpretation.targetAudience || undefined,
       pricing: interpretation.pricing || undefined,
       category: interpretation.category || undefined,
+      valueProposition: interpretation.valueProposition || undefined,
       confidence: Math.min(1.0, interpretation.confidence || 0.5)
     };
   } catch (err) {
     console.error('LLM interpretation failed:', err);
+    
+    // If JSON parsing failed but we have some content, try to extract basic info
+    if (err instanceof Error && err.message.includes('parse JSON')) {
+      console.warn('[Mirror Test] Attempting fallback extraction from malformed response');
+      
+      // Return a minimal interpretation with low confidence
+      return {
+        productName: undefined,
+        purpose: undefined,
+        keyFeatures: undefined,
+        keyBenefits: undefined,
+        targetAudience: undefined,
+        pricing: undefined,
+        category: undefined,
+        valueProposition: undefined,
+        confidence: 0.1 // Very low confidence since parsing failed
+      };
+    }
+    
     throw new Error(`Failed to get LLM interpretation: ${err instanceof Error ? err.message : 'Unknown error'}`);
   }
 }
@@ -311,36 +360,85 @@ function findMismatches(
     });
   }
   
-  // 2. Purpose/description mismatch
+  // 2. Purpose/description mismatch (using smarter semantic comparison)
   if (consolidated.description && interpreted.purpose) {
-    const intendedWords = new Set(consolidated.description.toLowerCase().split(/\s+/).filter(w => w.length > 4));
-    const interpretedWords = new Set(interpreted.purpose.toLowerCase().split(/\s+/).filter(w => w.length > 4));
+    // Extract key concept words (nouns, verbs) - filter out common words
+    const stopWords = new Set(['the', 'and', 'for', 'with', 'that', 'this', 'from', 'your', 'our', 'their']);
+    const intendedWords = new Set(
+      consolidated.description.toLowerCase()
+        .split(/\s+/)
+        .filter(w => w.length > 4 && !stopWords.has(w))
+    );
+    const interpretedWords = new Set(
+      interpreted.purpose.toLowerCase()
+        .split(/\s+/)
+        .filter(w => w.length > 4 && !stopWords.has(w))
+    );
     
-    // Calculate word overlap
+    // Calculate semantic overlap
     const overlap = [...intendedWords].filter(w => interpretedWords.has(w)).length;
     const similarity = overlap / Math.max(intendedWords.size, interpretedWords.size);
     
-    if (similarity < 0.3) {
+    // More lenient threshold and better messaging
+    if (similarity < 0.2) {
       mismatches.push({
         field: 'purpose',
         intended: consolidated.description,
         interpreted: interpreted.purpose,
         severity: 'major',
-        description: `AI understands the purpose as "${interpreted.purpose}" which differs significantly from intended description "${consolidated.description}"`,
-        recommendation: 'Clarify the main value proposition in the hero section and meta description. Use clear, simple language.',
-        confidence: 0.8
+        description: `AI interprets the purpose as "${interpreted.purpose}" which uses different concepts than intended description "${consolidated.description}". Semantic overlap: ${Math.round(similarity * 100)}%`,
+        recommendation: 'Align the meta description, H1 tagline, and opening paragraph to use the same key terms. Make the value proposition crystal clear in the first sentence.',
+        confidence: 0.75 + (1 - similarity) * 0.15 // Higher confidence if worse mismatch
       });
     }
   } else if (consolidated.description && !interpreted.purpose) {
     mismatches.push({
       field: 'purpose',
       intended: consolidated.description,
-      interpreted: 'Unclear',
-      severity: 'major',
-      description: 'AI could not clearly understand what the product does',
-      recommendation: 'Add a clear, concise description in the first paragraph. Start with "This is..." or "We help you...".',
-      confidence: 0.75
+      interpreted: 'Could not determine',
+      severity: 'critical',
+      description: 'AI could not extract a clear purpose from the content despite meta description being present',
+      recommendation: 'Move the core value proposition from meta tags into visible content. Start with a clear "[Product] helps [audience] [do something]" statement in the hero section.',
+      confidence: 0.85
     });
+  }
+  
+  // 2b. Value Proposition comparison (new)
+  if (consolidated.valueProposition && interpreted.valueProposition) {
+    const intendedVP = consolidated.valueProposition.toLowerCase();
+    const interpretedVP = interpreted.valueProposition.toLowerCase();
+    
+    // Check if value props are aligned
+    if (!intendedVP.includes(interpretedVP.substring(0, 20)) && 
+        !interpretedVP.includes(intendedVP.substring(0, 20))) {
+      mismatches.push({
+        field: 'valueProposition',
+        intended: consolidated.valueProposition,
+        interpreted: interpreted.valueProposition,
+        severity: 'major',
+        description: `AI identifies unique value as "${interpreted.valueProposition}" which differs from intended positioning "${consolidated.valueProposition}"`,
+        recommendation: 'Make your unique selling proposition more prominent and consistent across hero, features, and about sections.',
+        confidence: 0.7
+      });
+    }
+  }
+  
+  // 2c. Features comparison (new)
+  if (consolidated.keyFeatures && interpreted.keyFeatures && 
+      consolidated.keyFeatures.length > 0 && interpreted.keyFeatures.length > 0) {
+    
+    // Check if AI found fewer features than mentioned
+    if (interpreted.keyFeatures.length < consolidated.keyFeatures.length * 0.6) {
+      mismatches.push({
+        field: 'keyFeatures',
+        intended: `${consolidated.keyFeatures.length} features listed`,
+        interpreted: `Only ${interpreted.keyFeatures.length} features understood`,
+        severity: 'minor',
+        description: `AI only identified ${interpreted.keyFeatures.length} of ${consolidated.keyFeatures.length} intended features`,
+        recommendation: 'Make features more prominent and scannable. Use bullet points, icons, or a dedicated features section near the top.',
+        confidence: 0.65
+      });
+    }
   }
   
   // 3. Target audience mismatch
@@ -436,15 +534,27 @@ function calculateScores(
   // Clarity score: based on LLM confidence and completeness
   let clarityScore = interpreted.confidence * 100;
   
-  // Penalize missing information
-  const fields = [
-    interpreted.productName,
-    interpreted.purpose,
-    interpreted.keyFeatures,
-    interpreted.targetAudience
+  // Penalize missing information (weighted by importance)
+  const essentialFields = [
+    { value: interpreted.productName, weight: 1.5 },
+    { value: interpreted.purpose, weight: 2.0 },
+    { value: interpreted.keyFeatures && interpreted.keyFeatures.length > 0, weight: 1.0 },
+    { value: interpreted.targetAudience, weight: 0.8 },
+    { value: interpreted.valueProposition, weight: 0.7 }
   ];
-  const completeness = fields.filter(Boolean).length / fields.length;
+  
+  const totalWeight = essentialFields.reduce((sum, f) => sum + f.weight, 0);
+  const achievedWeight = essentialFields
+    .filter(f => f.value)
+    .reduce((sum, f) => sum + f.weight, 0);
+  
+  const completeness = achievedWeight / totalWeight;
   clarityScore *= completeness;
+  
+  // Bonus for having benefits clearly stated
+  if (interpreted.keyBenefits && interpreted.keyBenefits.length >= 2) {
+    clarityScore = Math.min(100, clarityScore * 1.1);
+  }
   
   clarityScore = Math.max(0, Math.min(100, clarityScore));
   
@@ -486,11 +596,23 @@ function generateRecommendations(
   }
   
   if (!interpreted.purpose) {
-    recommendations.push('Add a clear elevator pitch in the first 1-2 sentences explaining what the product does and who it\'s for.');
+    recommendations.push('Add a clear elevator pitch above the fold: "[Product] helps [audience] [achieve outcome] by [unique approach]". Make it the first thing visible.');
   }
   
   if (!interpreted.keyFeatures || interpreted.keyFeatures.length < 3) {
-    recommendations.push('Make key features more prominent using bullet points or feature cards near the top of the page.');
+    recommendations.push('Create a scannable features section with 3-5 key capabilities. Use icons, bold headings, and 1-2 sentence descriptions for each.');
+  }
+  
+  if (!interpreted.keyBenefits || interpreted.keyBenefits.length < 2) {
+    recommendations.push('Clearly state the problems you solve or outcomes you deliver. Use "You can..." or "Helps you..." phrasing to make benefits concrete.');
+  }
+  
+  if (!interpreted.valueProposition) {
+    recommendations.push('Add a clear differentiation statement: "Unlike [alternatives], we [unique approach]". Make your competitive advantage obvious.');
+  }
+  
+  if (interpreted.confidence && interpreted.confidence < 0.5) {
+    recommendations.push('URGENT: AI confidence is very low (<50%). Your messaging may be too vague, complex, or inconsistent. Simplify and use concrete, specific language.');
   }
   
   return recommendations;
