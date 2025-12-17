@@ -14,6 +14,7 @@ import ScoringGuide from '../components/ScoringGuide';
 import WarningModal from '../components/WarningModal';
 import InterpretationBanner from '../components/InterpretationBanner';
 import PrivacyNotice from '../components/PrivacyNotice';
+import ThemeToggle from '../components/ThemeToggle';
 import { trackEvent } from '../components/Analytics';
 import 'react-tooltip/dist/react-tooltip.css';
 
@@ -217,7 +218,8 @@ export default function Home() {
                 🚨 AI Lighthouse
               </h1>
             </div>
-            <div className="flex-1 flex justify-end">
+            <div className="flex-1 flex justify-end gap-3">
+              <ThemeToggle />
               <div className="inline-flex items-center bg-white dark:bg-gray-800 rounded-lg shadow-sm p-1">
                 <button
                   onClick={() => setViewMode('simple')}
@@ -258,6 +260,7 @@ export default function Home() {
           modelConfig={modelConfig}
           setModelConfig={setModelConfig}
           onSubmit={handleSubmit}
+          hasResults={!!reportData}
         />
 
         {reportData && viewMode === 'simple' && (
