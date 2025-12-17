@@ -13,6 +13,7 @@ import ScoreDisplay from '../components/ScoreDisplay';
 import ScoringGuide from '../components/ScoringGuide';
 import WarningModal from '../components/WarningModal';
 import InterpretationBanner from '../components/InterpretationBanner';
+import PrivacyNotice from '../components/PrivacyNotice';
 import { trackEvent } from '../components/Analytics';
 import 'react-tooltip/dist/react-tooltip.css';
 
@@ -169,15 +170,9 @@ export default function Home() {
       const data = await response.json();
 
       if (!response.ok) {
-        if (response.status === 429) {
-          const retryAfter = data.retryAfter || 900; // Default to 15 minutes
-          const minutes = Math.ceil(retryAfter / 60);
-          
-          if (data.error === 'LLM rate limit exceeded') {
-            throw new Error(`LLM rate limit exceeded. You can make ${minutes > 60 ? Math.ceil(retryAfter / 3600) + ' hour' : minutes + ' minute'}${minutes !== 1 && minutes <= 60 ? 's' : ''} or disable LLM features to continue.`);
-          }
-          
-          throw new Error(`Rate limit exceeded. Please try again in ${minutes} minute${minutes !== 1 ? 's' : ''}.`);
+        // Handle actionable errors from API
+        if (data.action) {
+          throw new Error(`${data.message}\n\n💡 ${data.action}`);
         }
         throw new Error(data.message || data.error || 'Audit failed');
       }
@@ -310,6 +305,9 @@ export default function Home() {
           message={warningMessage}
         />
       )}
+
+      {/* Privacy Notice */}
+      <PrivacyNotice />
     </div>
   );
 }

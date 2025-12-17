@@ -5,6 +5,7 @@ import { analyzeUrlWithRules, calculateAIReadiness, exportAuditReport } from '..
 import { auditRequestSchema, validateRequest } from '../validation/schemas.js';
 import { logger, logAuditStart, logAuditComplete, logAuditError, logRateLimitHit } from '../utils/logger.js';
 import { cacheMiddleware } from '../middleware/cache.js';
+import { ErrorTypes, estimateScanDuration, formatDuration } from '../utils/errors.js';
 
 export const auditRouter = express.Router();
 
@@ -104,6 +105,20 @@ auditRouter.post('/', cacheMiddleware(1800), validateRequest(auditRequestSchema)
     // Log audit start
     logAuditStart(url, enableLLM, ip);
 
+    // Estimate scan duration
+    const timeEstimate = estimateScanDuration({
+      enableLLM,
+      enableChunking: true,
+      enableExtractability: true,
+      enableHallucinationDetection: enableLLM,
+    });
+
+    logger.info('Scan time estimate', {
+      url,
+      estimate: timeEstimate,
+      enableLLM,
+    });
+
     // Configure scan options
     const scanOptions: any = {
       maxChunkTokens,
@@ -133,15 +148,13 @@ auditRouter.post('/', cacheMiddleware(1800), validateRequest(auditRequestSchema)
         if (defaultKey) {
           scanOptions.llmConfig.apiKey = defaultKey;
         } else {
-          return res.status(400).json({ 
-            error: 'API key is required for OpenRouter. Please provide an API key or set OPENROUTER_API_KEY environment variable.' 
-          });
+          const error = ErrorTypes.LLM_API_KEY_REQUIRED('OpenRouter');
+          return res.status(error.statusCode).json(error.toJSON());
         }
       } else {
         // For other cloud providers (OpenAI, Anthropic, Gemini)
-        return res.status(400).json({ 
-          error: `API key is required for ${llmProvider}` 
-        });
+        const error = ErrorTypes.LLM_API_KEY_REQUIRED(llmProvider);
+        return res.status(error.statusCode).json(error.toJSON());
       }
     }
 
@@ -162,7 +175,14 @@ auditRouter.post('/', cacheMiddleware(1800), validateRequest(auditRequestSchema)
       return res.json({ 
         jobId, 
         status: 'started',
-        checkUrl: `/api/audit/${jobId}`
+        checkUrl: `/api/audit/${jobId}`,
+        estimatedTime: {
+          min: timeEstimate.min,
+          max: timeEstimate.max,
+          estimate: timeEstimate.estimate,
+          description: timeEstimate.description,
+          message: `Estimated completion: ${formatDuration(timeEstimate.estimate)}`
+        }
       });
     }
 
@@ -199,6 +219,11 @@ auditRouter.post('/', cacheMiddleware(1800), validateRequest(auditRequestSchema)
       url,
       timestamp: new Date().toISOString(),
       warning: llmWarning,
+      scanDuration: {
+        actual: Math.round(duration / 1000),
+        estimated: timeEstimate.estimate,
+        message: `Scan completed in ${formatDuration(Math.round(duration / 1000))}`
+      },
       data: {
         auditReport,
         aiReadiness,
@@ -218,9 +243,22 @@ auditRouter.post('/', cacheMiddleware(1800), validateRequest(auditRequestSchema)
     const validatedData = (req as any).validatedData;
     logAuditError(validatedData?.url || 'unknown', error, ip);
     
-    return res.status(500).json({
-      error: 'Audit failed',
-      message: error.message,
+    // Map known errors to actionable errors
+    let apiError;
+    if (error.message?.includes('fetch failed') || error.message?.includes('ENOTFOUND')) {
+      apiError = ErrorTypes.URL_UNREACHABLE(validatedData?.url || 'unknown', error.message);
+    } else if (error.message?.includes('timeout')) {
+      apiError = ErrorTypes.TIMEOUT(duration);
+    } else if (error.message?.includes('API key') || error.message?.includes('authentication')) {
+      apiError = ErrorTypes.LLM_API_KEY_INVALID(validatedData?.llmProvider || 'unknown');
+    } else if (error.message?.includes('quota') || error.message?.includes('billing')) {
+      apiError = ErrorTypes.LLM_QUOTA_EXCEEDED(validatedData?.llmProvider || 'unknown');
+    } else {
+      apiError = ErrorTypes.SCAN_FAILED(error.message);
+    }
+    
+    return res.status(apiError.statusCode).json({
+      ...apiError.toJSON(),
       ...(process.env.NODE_ENV === 'development' && { stack: error.stack })
     });
   }

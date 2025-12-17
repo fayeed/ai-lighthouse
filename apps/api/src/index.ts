@@ -5,6 +5,7 @@ import rateLimit from 'express-rate-limit';
 import { createClient } from 'redis';
 import { RedisStore } from 'rate-limit-redis';
 import { auditRouter } from './routes/audit.js';
+import { gdprRouter } from './routes/gdpr.js';
 import { healthCheck, livenessProbe, readinessProbe } from './routes/health.js';
 import { logger, requestLogger } from './utils/logger.js';
 import { 
@@ -93,6 +94,7 @@ app.get('/health/ready', readinessProbe);
 
 // API Routes (with rate limiting)
 app.use('/api/audit', limiter, auditRouter);
+app.use('/api/gdpr', gdprRouter);
 
 // 404 handler
 app.use((req, res) => {
