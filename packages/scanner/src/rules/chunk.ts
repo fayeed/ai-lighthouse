@@ -27,7 +27,7 @@ export class ChunkRule extends BaseRule {
       selections.push(main.text().trim());
     }
 
-    const totalTokens = selections.reduce((acc, text) => estimateTokenCount(text), 0);
+    const totalTokens = selections.reduce((acc, text) => acc + estimateTokenCount(text), 0);
     const maxWindow = ctx.options?.maxChunkTokens || 1200;
 
     if (totalTokens > maxWindow) {

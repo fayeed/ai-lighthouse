@@ -63,23 +63,8 @@ const fetched = await fetchHtml(url, options.timeoutMs!, options.userAgent);
     return $('body').text().replace(/\s+/g, ' ').trim();
   })();
 
-  const tokenEstimate = estimateTokenCount(mainText);
-  if (tokenEstimate > (options.maxChunkTokens || 1200)) {
-    issues.push({
-      id: 'CHUNK-001',
-      title: 'Chunk exceeds recommended token/window size',
-      severity: SEVERITY.CRITICAL,
-      category: CATEGORY.CHUNK,
-      description: `Main content appears to be long (${tokenEstimate} tokens) and may exceed model context windows. Consider splitting into smaller sections or paginating content.`,
-      remediation: 'Break content into smaller semantic sections using headings or create separate pages for distinct topics.',
-      impactScore: 40,
-      location: { url },
-      evidence: [`tokens:${tokenEstimate}`],
-      tags: ['chunking','embeddings'],
-      confidence: 0.9,
-      timestamp: new Date().toISOString()
-    } as Issue);
-  }
+  // Note: Chunk size validation is now handled by the ChunkRule in rules/chunk.ts
+  // to avoid duplication and ensure consistency
 
   const categoryMap: Record<string, number[]> = {};
   for (const it of issues) {
