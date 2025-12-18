@@ -247,16 +247,18 @@ CRITICAL RULES:
       'You are an expert at analyzing web content and understanding product messaging. Be precise and only report what you can verify from the content. CRITICAL: Return ONLY the JSON object with no other text, explanations, or formatting before or after. No markdown, no comments, no additional text.',
       prompt,
       {
-        maxTokens: 1000,
+        maxTokens: 3000,
         temperature: 0.2 // Low temperature for consistent interpretation
       }
     );
     
-    // Log raw response for debugging
-    if (response.content.length > 500) {
-      console.log('[Mirror Test] LLM response (truncated):', response.content.substring(0, 200) + '...');
-    } else {
-      console.log('[Mirror Test] LLM response:', response.content);
+    // Log finish reason to detect truncation
+    if (response.finishReason === 'length') {
+      console.warn('[Mirror Test] ⚠️  LLM response truncated due to token limit!', {
+        finishReason: response.finishReason,
+        contentLength: response.content.length,
+        usage: response.usage
+      });
     }
     
     const interpretation = safeJSONParse(response.content, 'LLM interpretation');

@@ -181,7 +181,7 @@ Respond in JSON:
 
   const response = await runner.callWithSystem(system, user, {
     temperature: 0.3,
-    maxTokens: 500
+    maxTokens: 800
   });
 
   try {

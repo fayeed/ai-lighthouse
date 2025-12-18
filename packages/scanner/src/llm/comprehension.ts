@@ -250,7 +250,7 @@ Respond in JSON: {"summary": "...", "keyPoints": ["point1", "point2", ...]}`
 
   const response = await runner.callWithSystem(prompt.system, prompt.user, {
     temperature: 0.3,
-    maxTokens: 500
+    maxTokens: 800
   });
 
   const data = parseLLMJSON<{ summary: string; keyPoints: string[] }>(response.content);

@@ -138,7 +138,7 @@ Only include facts that can be verified in the content. Avoid opinions or interp
 
   const response = await runner.callWithSystem(system, user, {
     temperature: 0.1, // Very low for factual extraction
-    maxTokens: 1000
+    maxTokens: 1500
   });
 
   // Parse response
