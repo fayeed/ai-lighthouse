@@ -3,7 +3,9 @@
 import { useState } from 'react';
 import { ModelConfig } from '../components/ModelSelector';
 import OverviewTab from '../components/tabs/OverviewTab';
-import AnalysisTab from '../components/tabs/AnalysisTab';
+import AIUnderstandingTab from '../components/tabs/AIUnderstandingTab';
+import HallucinationTab from '../components/tabs/HallucinationTab';
+import MessageAlignmentTab from '../components/tabs/MessageAlignmentTab';
 import IssuesTab from '../components/tabs/IssuesTab';
 import TechnicalTab from '../components/tabs/TechnicalTab';
 import ShareButton from '../components/ShareButton';
@@ -424,17 +426,24 @@ export default function Home() {
               {/* Tabs Navigation */}
               <div className="border-b border-gray-200 dark:border-gray-700 mb-6">
                 <nav className="-mb-px flex space-x-8">
-                  {['overview', 'analysis', 'issues', 'technical'].map((tab) => (
+                  {[
+                    { key: 'overview', label: 'Overview' },
+                    { key: 'ai-understanding', label: 'AI Understanding' },
+                    { key: 'hallucination', label: 'Hallucination Risk' },
+                    { key: 'alignment', label: 'Message Alignment' },
+                    { key: 'issues', label: 'Issues' },
+                    { key: 'technical', label: 'Technical' },
+                  ].map((tab) => (
                     <button
-                      key={tab}
-                      onClick={() => setActiveTab(tab)}
+                      key={tab.key}
+                      onClick={() => setActiveTab(tab.key)}
                       className={`${
-                        activeTab === tab
+                        activeTab === tab.key
                           ? 'border-blue-500 text-blue-600 dark:text-blue-400'
                           : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
-                      } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm capitalize transition-colors duration-200`}
+                      } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200`}
                     >
-                      {tab}
+                      {tab.label}
                     </button>
                   ))}
                 </nav>
@@ -445,8 +454,16 @@ export default function Home() {
                 <OverviewTab aiReadiness={reportData.aiReadiness} />
               )}
 
-              {activeTab === 'analysis' && reportData.scanResult && (
-                <AnalysisTab scanResult={reportData.scanResult} />
+              {activeTab === 'ai-understanding' && reportData.scanResult && (
+                <AIUnderstandingTab scanResult={reportData.scanResult} />
+              )}
+
+              {activeTab === 'hallucination' && reportData.scanResult && (
+                <HallucinationTab scanResult={reportData.scanResult} />
+              )}
+
+              {activeTab === 'alignment' && reportData.scanResult && (
+                <MessageAlignmentTab scanResult={reportData.scanResult} />
               )}
 
               {activeTab === 'issues' && reportData.auditReport && (
