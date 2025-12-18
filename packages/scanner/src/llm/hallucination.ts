@@ -2,10 +2,13 @@
  * Hallucination Detection - AI Misunderstanding Reports
  * 
  * Detects potential hallucination triggers by:
- * 1. Extracting facts from content using LLM
- * 2. Cross-checking facts against actual DOM content
- * 3. Detecting contradictions in page text (dates, numbers)
- * 4. Reporting mismatches as hallucination risks
+ * 1. Using LLM to extract factual claims from webpage content
+ * 2. LLM verifies each claim against its own training data knowledge
+ * 3. Unverified claims = high risk (LLM will likely hallucinate or misrepresent)
+ * 4. Contradicting claims = critical risk (LLM will provide incorrect information)
+ * 5. Detecting internal contradictions (inconsistent dates/numbers on same page)
+ * 
+ * Key insight: Claims unknown to LLM are at highest risk for hallucination.
  */
 
 import { CheerioAPI } from 'cheerio';
@@ -17,9 +20,9 @@ import { v4 as uuidv4 } from 'uuid';
 export interface ExtractedFact {
   id: string;
   statement: string;
-  category: 'date' | 'number' | 'name' | 'location' | 'concept' | 'relationship';
+  category: 'date' | 'number' | 'name' | 'location' | 'concept' | 'relationship' | 'vague' | 'missing_detail' | 'unsupported_claim' | 'ambiguous';
   confidence: number; // 0-1
-  sourceContext?: string; // Where LLM found this
+  sourceContext?: string; // Risk description or context
 }
 
 export interface FactVerification {
@@ -93,187 +96,109 @@ function extractTextWithContext($: CheerioAPI): Array<{ text: string; selector: 
 }
 
 /**
- * Extract facts using LLM
+ * Extract claims and verify them using LLM in one step
  */
-async function extractFactsWithLLM(
+async function extractAndVerifyClaims(
   $: CheerioAPI,
   url: string,
   config: LLMConfig
-): Promise<ExtractedFact[]> {
+): Promise<FactVerification[]> {
   const runner = new LLMRunner(config);
   
-  // Get main content
-  const main = $('main').length > 0 ? $('main') : $('body');
-  const content = main.text().replace(/\s+/g, ' ').trim().substring(0, 5000);
+  // Get main content, skip navigation
+  const mainContent = $('main, article, [role="main"]').length > 0 
+    ? $('main, article, [role="main"]')
+    : $('body');
   
-  const system = `You are an expert fact extractor. Extract concrete, verifiable facts from web content.
+  const contentCopy = mainContent.clone();
+  contentCopy.find('nav, header, footer, aside, [role="navigation"], [role="banner"], .nav, .menu, .sidebar').remove();
+  
+  const content = contentCopy.text().replace(/\s+/g, ' ').trim().substring(0, 6000);
+  
+  const system = `You are a fact-checking expert. Your task is to:
+1. Extract 8-12 key factual claims from the content (dates, numbers, statistics, company facts, product details)
+2. For each claim, determine if you already know it from your training data
+
 Focus on:
-- Specific dates, times, years
-- Numbers, quantities, measurements
-- Names of people, organizations, products
-- Locations, addresses
-- Relationships between entities
+- Specific dates, founding years, launch dates
+- Quantitative metrics (percentages, numbers, user counts, performance stats)
+- Product/company names and their key facts
 - Technical specifications
+- Verifiable achievements or milestones
 
-For each fact, categorize it and assess your confidence (0-1).`;
+IGNORE:
+- Navigation menu items
+- Generic UI text
+- Vague marketing claims without specifics
+- Opinions or subjective statements`;
 
-  const user = `Extract 5-10 key verifiable facts from this content:
+  const user = `Extract factual claims from this webpage and verify if you already know them:
 
 URL: ${url}
 Content: ${content}
 
+For each claim, check YOUR TRAINING DATA ONLY (do not just repeat what's on the page):
+- "verified": You independently know this fact is true from your training
+- "unverified": You don't have this information in your training data, or cannot confirm it
+- "contradicts": This conflicts with what you know
+
 Respond in JSON format:
 {
-  "facts": [
+  "claims": [
     {
-      "statement": "Specific fact statement",
-      "category": "date|number|name|location|concept|relationship",
-      "confidence": 0.9,
-      "sourceContext": "Brief context where this was mentioned"
+      "statement": "The specific factual claim extracted",
+      "category": "date|number|name|metric|location",
+      "verification": "verified|unverified|contradicts",
+      "explanation": "What you know (or don't know) about this from your training data",
+      "confidence": 0.8
     }
   ]
 }
 
-Only include facts that can be verified in the content. Avoid opinions or interpretations.`;
+Extract 8-12 of the most important, verifiable claims.`;
 
   const response = await runner.callWithSystem(system, user, {
-    temperature: 0.1, // Very low for factual extraction
-    maxTokens: 1500
+    temperature: 0.1,
+    maxTokens: 2500
   });
 
-  // Parse response
   try {
-    const data = safeJSONParse(response.content, 'LLM fact extraction');
+    const data = safeJSONParse(response.content, 'LLM claim extraction and verification');
     
-    return data.facts.map((f: any) => ({
-      id: uuidv4(),
-      statement: f.statement,
-      category: f.category,
-      confidence: f.confidence || 0.5,
-      sourceContext: f.sourceContext
-    }));
+    return data.claims.map((c: any) => {
+      const fact: ExtractedFact = {
+        id: uuidv4(),
+        statement: c.statement,
+        category: c.category,
+        confidence: c.confidence || 0.7,
+        sourceContext: c.explanation
+      };
+      
+      const isVerified = c.verification === 'verified';
+      const hasContradiction = c.verification === 'contradicts';
+      
+      return {
+        fact,
+        verified: isVerified,
+        evidence: {
+          found: true,
+          textSnippet: c.explanation,
+          similarity: isVerified ? 1.0 : 0.0
+        },
+        contradictions: hasContradiction ? [{
+          conflictingStatement: c.explanation,
+          selector: 'llm-knowledge',
+          textSnippet: c.explanation
+        }] : []
+      };
+    });
   } catch (error) {
-    console.error('Failed to parse LLM fact extraction:', error);
+    console.error('Failed to parse LLM claim extraction:', error);
     return [];
   }
 }
 
-/**
- * Verify facts against DOM content
- */
-function verifyFacts(
-  facts: ExtractedFact[],
-  $: CheerioAPI
-): FactVerification[] {
-  const contentBlocks = extractTextWithContext($);
-  const verifications: FactVerification[] = [];
-  
-  for (const fact of facts) {
-    const verification: FactVerification = {
-      fact,
-      verified: false,
-      evidence: { found: false }
-    };
-    
-    // Search for fact in content
-    const factTokens = fact.statement.toLowerCase().split(/\s+/);
-    let bestMatch = { similarity: 0, block: null as any };
-    
-    for (const block of contentBlocks) {
-      const blockText = block.text.toLowerCase();
-      
-      // Check if fact tokens are in this block
-      const matchedTokens = factTokens.filter(token => 
-        blockText.includes(token) && token.length > 3
-      );
-      const similarity = matchedTokens.length / factTokens.length;
-      
-      if (similarity > bestMatch.similarity) {
-        bestMatch = { similarity, block };
-      }
-    }
-    
-    if (bestMatch.similarity > 0.5) {
-      verification.verified = true;
-      verification.evidence = {
-        found: true,
-        selector: bestMatch.block.selector,
-        textSnippet: bestMatch.block.text.substring(0, 200),
-        similarity: bestMatch.similarity
-      };
-    }
-    
-    // Check for contradictions
-    verification.contradictions = findContradictions(fact, contentBlocks);
-    
-    verifications.push(verification);
-  }
-  
-  return verifications;
-}
 
-/**
- * Find contradictions in content
- */
-function findContradictions(
-  fact: ExtractedFact,
-  contentBlocks: Array<{ text: string; selector: string }>
-): Array<{ conflictingStatement: string; selector: string; textSnippet: string }> {
-  const contradictions: Array<{ conflictingStatement: string; selector: string; textSnippet: string }> = [];
-  
-  // Extract key values from fact
-  if (fact.category === 'date') {
-    const datePattern = /\b(19|20)\d{2}\b|\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s+\d{1,2},?\s+\d{4}\b/gi;
-    const factDates = fact.statement.match(datePattern) || [];
-    
-    if (factDates.length > 0) {
-      for (const block of contentBlocks) {
-        const blockDates = block.text.match(datePattern) || [];
-        
-        // Look for different dates in similar context
-        for (const blockDate of blockDates) {
-          if (!factDates.some(fd => normalizeDate(fd) === normalizeDate(blockDate))) {
-            // Check if contexts are similar (potential contradiction)
-            const contextSimilar = checkContextSimilarity(fact.statement, block.text);
-            if (contextSimilar > 0.3) {
-              contradictions.push({
-                conflictingStatement: block.text,
-                selector: block.selector,
-                textSnippet: block.text.substring(0, 200)
-              });
-            }
-          }
-        }
-      }
-    }
-  }
-  
-  if (fact.category === 'number') {
-    const numberPattern = /\b\d+(?:,\d{3})*(?:\.\d+)?(?:\s*(?:million|billion|thousand|percent|%|dollars?|\$))?\b/gi;
-    const factNumbers = fact.statement.match(numberPattern) || [];
-    
-    if (factNumbers.length > 0) {
-      for (const block of contentBlocks) {
-        const blockNumbers = block.text.match(numberPattern) || [];
-        
-        for (const blockNum of blockNumbers) {
-          if (!factNumbers.some(fn => normalizeNumber(fn) === normalizeNumber(blockNum))) {
-            const contextSimilar = checkContextSimilarity(fact.statement, block.text);
-            if (contextSimilar > 0.3) {
-              contradictions.push({
-                conflictingStatement: block.text,
-                selector: block.selector,
-                textSnippet: block.text.substring(0, 200)
-              });
-            }
-          }
-        }
-      }
-    }
-  }
-  
-  return contradictions;
-}
 
 /**
  * Normalize date for comparison
@@ -447,30 +372,41 @@ export async function detectHallucinations(
   let facts: ExtractedFact[] = [];
   let verifications: FactVerification[] = [];
   
-  // If LLM config provided, do full fact checking
+  // If LLM config provided, extract and verify claims in one step
   if (config) {
     try {
-      // Extract facts with LLM
-      facts = await extractFactsWithLLM($, url, config);
-      
-      // Verify facts against DOM
-      verifications = verifyFacts(facts, $);
+      // LLM extracts claims AND verifies them against its knowledge
+      verifications = await extractAndVerifyClaims($, url, config);
+      facts = verifications.map(v => v.fact);
 
-      // Separate facts by verification status
-      const verifiedFacts = verifications.filter(v => v.verified && (!v.contradictions || v.contradictions.length === 0));
-      const unverifiedFacts = verifications.filter(v => !v.verified);
+      // Separate by verification status
+      const verifiedFacts = verifications.filter(v => v.verified);
+      const unverifiedFacts = verifications.filter(v => !v.verified && (!v.contradictions || v.contradictions.length === 0));
       const contradictedFacts = verifications.filter(v => v.contradictions && v.contradictions.length > 0);
       
-      // Add single consolidated trigger with all facts and verifications
-      if (verifications.length > 0) {
+      // Add trigger for unverified facts
+      if (unverifiedFacts.length > 0) {
         triggers.push({
           type: 'missing_fact',
-          severity: contradictedFacts.length > 0 ? SEVERITY.CRITICAL : unverifiedFacts.length > 0 ? SEVERITY.HIGH : SEVERITY.LOW,
-          description: `Fact extraction complete: ${verifiedFacts.length} verified, ${unverifiedFacts.length} unverified, ${contradictedFacts.length} contradicted`,
-          facts: facts, // All extracted facts
-          verifications: verifications, // All verifications with status
-          evidence: verifications.map(v => v.evidence.textSnippet || v.fact.statement),
-          confidence: verifications.reduce((sum, v) => sum + v.fact.confidence, 0) / verifications.length
+          severity: unverifiedFacts.length > 6 ? SEVERITY.CRITICAL : unverifiedFacts.length > 3 ? SEVERITY.HIGH : SEVERITY.MEDIUM,
+          description: `Found ${unverifiedFacts.length} claim${unverifiedFacts.length === 1 ? '' : 's'} that AI cannot verify from training data. High risk of hallucination when AI systems reference this content.`,
+          facts: unverifiedFacts.map(v => v.fact),
+          verifications: unverifiedFacts,
+          evidence: unverifiedFacts.map(v => `"${v.fact.statement}" - ${v.evidence.textSnippet}`),
+          confidence: unverifiedFacts.reduce((sum, v) => sum + v.fact.confidence, 0) / unverifiedFacts.length
+        });
+      }
+      
+      // Add trigger for contradictions
+      if (contradictedFacts.length > 0) {
+        triggers.push({
+          type: 'contradiction',
+          severity: SEVERITY.CRITICAL,
+          description: `Found ${contradictedFacts.length} claim${contradictedFacts.length === 1 ? '' : 's'} that contradict AI's training data. AI will likely provide incorrect information.`,
+          facts: contradictedFacts.map(v => v.fact),
+          verifications: contradictedFacts,
+          evidence: contradictedFacts.map(v => `"${v.fact.statement}" - CONFLICT: ${v.evidence.textSnippet}`),
+          confidence: contradictedFacts.reduce((sum, v) => sum + v.fact.confidence, 0) / contradictedFacts.length
         });
       }
     } catch (error) {
@@ -485,34 +421,35 @@ export async function detectHallucinations(
   // Calculate summary
   const totalFacts = facts.length;
   const verifiedFacts = verifications.filter(v => v.verified).length;
-  const unverifiedFacts = verifications.filter(v => !v.verified).length;
-  const contradictions = verifications.filter(v => v.contradictions && v.contradictions.length > 0).length;
-  const ambiguities = triggers.filter(t => t.type === 'ambiguity').length;
+  const unverifiedFacts = verifications.filter(v => !v.verified && (!v.contradictions || v.contradictions.length === 0)).length;
+  const contradictions = verifications.filter(v => v.contradictions && v.contradictions.length > 0).length + localTriggers.filter(t => t.type === 'contradiction').length;
+  const ambiguities = 0;
   
   // Calculate hallucination risk score
   let riskScore = 0;
-  riskScore += unverifiedFacts * 10; // Unverified facts
-  riskScore += contradictions * 20; // Contradictions are serious
-  riskScore += ambiguities * 5; // Ambiguities are moderate risk
-  riskScore += localTriggers.length * 8; // Local contradictions
+  riskScore += unverifiedFacts * 7; // Unknown facts
+  riskScore += contradictions * 25; // Contradictions are very serious
+  riskScore += localTriggers.length * 10; // Local contradictions
   riskScore = Math.min(riskScore, 100);
   
   // Generate recommendations
   const recommendations: string[] = [];
   if (unverifiedFacts > 0) {
-    recommendations.push(`Verify ${unverifiedFacts} fact(s) that LLM may misinterpret`);
+    recommendations.push(`${unverifiedFacts} claim${unverifiedFacts === 1 ? '' : 's'} unverifiable by AI - expect potential hallucinations or inaccuracies when AI references your content`);
   }
   if (contradictions > 0) {
-    recommendations.push(`Resolve ${contradictions} contradiction(s) in content to prevent AI confusion`);
+    recommendations.push(`${contradictions} contradiction${contradictions === 1 ? '' : 's'} detected - AI will likely provide conflicting or incorrect information`);
+  }
+  if (verifiedFacts > 0) {
+    recommendations.push(`${verifiedFacts} claim${verifiedFacts === 1 ? '' : 's'} verified by AI knowledge - lower hallucination risk for these facts`);
   }
   if (localTriggers.length > 0) {
-    recommendations.push(`Review ${localTriggers.length} potential inconsistenc${localTriggers.length === 1 ? 'y' : 'ies'} in dates/numbers`);
+    recommendations.push(`Review ${localTriggers.length} internal inconsistenc${localTriggers.length === 1 ? 'y' : 'ies'} in dates/numbers`);
   }
-  if (riskScore > 50) {
-    recommendations.push('High hallucination risk - consider restructuring content for clarity');
-  }
-  if (triggers.length === 0) {
-    recommendations.push('No hallucination triggers detected - content appears consistent');
+  if (riskScore > 60) {
+    recommendations.push('High hallucination risk - AI systems may significantly misrepresent your content');
+  } else if (riskScore < 20) {
+    recommendations.push('Low hallucination risk - content is verifiable and internally consistent');
   }
   
   return {
@@ -563,13 +500,13 @@ export function hallucinationTriggersToIssues(
 function getRemediation(trigger: HallucinationTrigger): string {
   switch (trigger.type) {
     case 'missing_fact':
-      return 'Ensure all important facts are clearly stated in the visible content. Add explicit statements rather than relying on implicit information.';
+      return 'These facts are not in LLM training data. When AI systems reference your content, they may hallucinate details or provide outdated information. Consider adding context that connects to well-known facts, or expect AI-generated summaries to be less accurate.';
     case 'contradiction':
-      return 'Review and resolve contradictory information. Ensure dates, numbers, and facts are consistent throughout the page.';
+      return 'Review and resolve contradictory information. Ensure dates, numbers, and facts are consistent throughout the page to prevent AI confusion.';
     case 'ambiguity':
-      return 'Clarify ambiguous statements. Use explicit language and avoid vague references.';
+      return 'Clarify ambiguous statements with specific details. AI systems may fill in missing information with plausible but incorrect guesses.';
     case 'inconsistency':
-      return 'Standardize information presentation. Ensure consistent formatting and terminology.';
+      return 'Standardize information presentation. Ensure consistent formatting and terminology throughout the page.';
     default:
       return 'Review content for potential AI misunderstanding triggers.';
   }
