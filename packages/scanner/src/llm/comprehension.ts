@@ -1,14 +1,24 @@
 /**
- * LLM Comprehension - Generate AI-readable summaries and insights
+ * LLM Comprehension - AI Content Understanding & SEO Analysis
  * 
- * ARCHITECTURE NOTE:
- * This module provides quick high-level overview in 2 LLM calls.
- * For detailed extraction with confidence scores, locators, and metadata:
- * - Use entities.ts for comprehensive entity extraction
- * - Use faq.ts for comprehensive FAQ generation
+ * PURPOSE: Understand what the page is about from an AI perspective
  * 
- * This keeps comprehension fast and focused on understanding the content,
- * while dedicated modules provide detailed structured data.
+ * This module provides comprehensive content analysis in a single LLM call:
+ * - Content summary and key topics
+ * - Page type identification with tailored insights
+ * - SEO metadata (title, description, keywords)
+ * - Reading level and technical depth
+ * - Entity overview and suggested FAQs
+ * - Sentiment and structure quality
+ * 
+ * ARCHITECTURE:
+ * - Single fast call for overview understanding
+ * - For detailed extraction, use dedicated modules:
+ *   - entities.ts: Comprehensive entity extraction with confidence scores
+ *   - faq.ts: Detailed FAQ generation with sources
+ *   - mirror.ts: Alignment testing (intended vs interpreted messaging)
+ * 
+ * This replaces summary.ts (deprecated) by consolidating content understanding + SEO.
  */
 
 import { CheerioAPI } from 'cheerio';
@@ -44,6 +54,11 @@ export interface LLMComprehension {
   sentiment?: 'positive' | 'neutral' | 'negative';
   technicalDepth?: 'beginner' | 'intermediate' | 'advanced' | 'expert';
   structureQuality?: 'poor' | 'fair' | 'good' | 'excellent';
+  
+  // SEO/Metadata (merged from summary.ts)
+  suggestedTitle?: string;    // SEO-optimized title
+  suggestedMeta?: string;     // Meta description (150-160 chars)
+  keywords?: string[];        // Key terms for indexing (similar to keyTopics but SEO-focused)
 }
 
 /**
@@ -110,15 +125,19 @@ Provide your analysis in the following JSON format:
   ],
   "keyTopics": ["topic1", "topic2", "topic3"],
   "topEntities": [
-    {"name": "Entity Name", "type": "Person|Organization|Product|Concept", "relevance": 0.9},
+    {"name": "Entity Name", "type": "Person|Organization|Product|Concept", "relevance": 0.9}
   ],
   "readingLevel": {"grade": 10, "description": "High school level"},
   "technicalDepth": "beginner|intermediate|advanced|expert",
   "sentiment": "positive|neutral|negative",
-  "structureQuality": "good"
+  "structureQuality": "good",
+  "suggestedTitle": "SEO-optimized title (50-60 characters)",
+  "suggestedMeta": "Meta description (150-160 characters)",
+  "keywords": ["seo-keyword1", "seo-keyword2"]
 }
 
-Focus on entities that are central to understanding the content. Limit to top 5-7 entities.`;
+Focus on entities that are central to understanding the content. Limit to top 5-7 entities.
+For SEO fields: suggestedTitle should be compelling and include primary keyword, suggestedMeta should be action-oriented.`;
 
   return { system, user };
 }
@@ -194,6 +213,9 @@ export async function generateLLMComprehension(
     technicalDepth: 'beginner' | 'intermediate' | 'advanced' | 'expert';
     sentiment: 'positive' | 'neutral' | 'negative';
     structureQuality: 'poor' | 'fair' | 'good' | 'excellent';
+    suggestedTitle?: string;
+    suggestedMeta?: string;
+    keywords?: string[];
   }>(summaryResponse.content);
 
   if (!summaryData) {
@@ -223,7 +245,11 @@ export async function generateLLMComprehension(
     readingLevel: summaryData.readingLevel,
     keyTopics: summaryData.keyTopics,
     sentiment: summaryData.sentiment,
-    technicalDepth: summaryData.technicalDepth
+    technicalDepth: summaryData.technicalDepth,
+    structureQuality: summaryData.structureQuality,
+    suggestedTitle: summaryData.suggestedTitle,
+    suggestedMeta: summaryData.suggestedMeta,
+    keywords: summaryData.keywords
   };
 }
 

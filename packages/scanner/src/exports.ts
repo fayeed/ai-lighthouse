@@ -93,19 +93,6 @@ export type {
   MisunderstandingReport
 } from './llm/hallucination.js';
 
-// AI-readable summaries
-// Note: These are redundant with LLM comprehension (llm.summary, llm.keyTopics, etc.)
-// Kept for backward compatibility but consider using generateLLMComprehension instead
-export {
-  generateAISummaries,
-  generateQuickAISummary,
-  generateLocalAISummary
-} from './llm/summary.js';
-
-export type {
-  AISummary
-} from './llm/summary.js';
-
 // Named entity extraction (dedicated, detailed)
 export {
   extractNamedEntities,
