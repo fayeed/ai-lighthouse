@@ -3,6 +3,14 @@
 import Tooltip from '../../Tooltip';
 import ExampleSection from './ExampleSection';
 
+interface QueryResponse {
+  question: string;
+  answer: string;
+  confidence: number;
+  hallucinated: boolean;
+  vague: boolean;
+}
+
 interface Mismatch {
   field: string;
   severity: string;
@@ -27,6 +35,7 @@ interface LLMInterpretation {
   category?: string;
   valueProposition?: string;
   confidence: number;
+  commonQueries?: QueryResponse[];
 }
 
 interface IntendedMessaging {
@@ -198,6 +207,83 @@ export default function MirrorReportSection({ mirrorReport }: MirrorReportSectio
               </div>
             )}
           </div>
+        </div>
+      )}
+
+      {/* Common Query Test - How AI Answers User Questions */}
+      {mirrorReport.llmInterpretation?.commonQueries && mirrorReport.llmInterpretation.commonQueries.length > 0 && (
+        <div className="mb-6 bg-indigo-50 dark:bg-indigo-900/30 p-4 rounded-lg border border-indigo-200 dark:border-indigo-700">
+          <div className="flex items-center gap-2 mb-3">
+            <h4 className="text-lg font-bold text-gray-900 dark:text-gray-100">💬 AI Query Test</h4>
+            <Tooltip content="How well AI can answer common user questions about your product based on your page content">
+              <span className="text-gray-400 hover:text-gray-600 cursor-help text-xs">ⓘ</span>
+            </Tooltip>
+          </div>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+            These are questions real users might ask AI assistants. See what answers AI generates from your content:
+          </p>
+          
+          <div className="space-y-3">
+            {mirrorReport.llmInterpretation.commonQueries.map((query, idx) => (
+              <div key={idx} className={`bg-white dark:bg-gray-800 p-3 rounded border-l-4 ${
+                query.hallucinated ? 'border-red-500 dark:border-red-600' : 
+                query.vague ? 'border-yellow-500 dark:border-yellow-600' :
+                query.confidence > 0.7 ? 'border-green-500 dark:border-green-600' : 'border-gray-300 dark:border-gray-600'
+              }`}>
+                <div className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                  Q: {query.question}
+                </div>
+                <div className="text-sm text-gray-900 dark:text-gray-100 mb-2">
+                  A: {query.answer}
+                </div>
+                <div className="flex items-center gap-3 text-xs">
+                  <span className={`px-2 py-1 rounded ${
+                    query.confidence > 0.7 ? 'bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-200' :
+                    query.confidence > 0.5 ? 'bg-yellow-100 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-200' :
+                    'bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-200'
+                  }`}>
+                    {query.confidence > 0.7 ? 'High' : query.confidence > 0.5 ? 'Medium' : 'Low'} Confidence ({Math.round(query.confidence * 100)}%)
+                  </span>
+                  {query.hallucinated && (
+                    <span className="px-2 py-1 rounded bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-200">
+                      ⚠️ AI Made Assumptions
+                    </span>
+                  )}
+                  {query.vague && (
+                    <span className="px-2 py-1 rounded bg-yellow-100 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-200">
+                      ⚠️ Vague Answer
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          {/* Query Test Summary */}
+          {(() => {
+            const vagueCount = mirrorReport.llmInterpretation.commonQueries?.filter(q => q.vague).length || 0;
+            const hallucinatedCount = mirrorReport.llmInterpretation.commonQueries?.filter(q => q.hallucinated).length || 0;
+            const avgConfidence = mirrorReport.llmInterpretation.commonQueries 
+              ? Math.round((mirrorReport.llmInterpretation.commonQueries.reduce((sum, q) => sum + q.confidence, 0) / mirrorReport.llmInterpretation.commonQueries.length) * 100)
+              : 0;
+            
+            return (vagueCount > 0 || hallucinatedCount > 0 || avgConfidence < 70) && (
+              <div className="mt-4 p-3 bg-orange-50 dark:bg-orange-900/30 border border-orange-200 dark:border-orange-700 rounded">
+                <div className="text-sm font-semibold text-orange-900 dark:text-orange-200 mb-2">📊 Query Test Summary</div>
+                <ul className="text-sm text-orange-800 dark:text-orange-300 space-y-1">
+                  {avgConfidence < 70 && (
+                    <li>• Average confidence: {avgConfidence}% - AI struggles to answer confidently</li>
+                  )}
+                  {vagueCount > 0 && (
+                    <li>• {vagueCount} question{vagueCount > 1 ? 's' : ''} received vague answers - content may be missing key details</li>
+                  )}
+                  {hallucinatedCount > 0 && (
+                    <li>• {hallucinatedCount} question{hallucinatedCount > 1 ? 's' : ''} led to AI assumptions - critical gaps in your content</li>
+                  )}
+                </ul>
+              </div>
+            );
+          })()}
         </div>
       )}
 
