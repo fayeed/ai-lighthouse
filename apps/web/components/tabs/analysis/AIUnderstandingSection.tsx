@@ -87,7 +87,7 @@ export default function AIUnderstandingSection({ llm, chunks }: AIUnderstandingS
                   {llm.pageTypeInsights.map((insight, idx) => (
                     <li key={idx} className="text-sm text-gray-700 dark:text-gray-300 flex items-start gap-2">
                       <span className="text-purple-600 dark:text-purple-400 mt-0.5">•</span>
-                      <span>{insight}</span>
+                      <span>{typeof insight === 'string' ? insight : JSON.stringify(insight)}</span>
                     </li>
                   ))}
                 </ul>

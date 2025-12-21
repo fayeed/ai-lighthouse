@@ -235,10 +235,19 @@ export async function generateLLMComprehension(
     suggestedFAQ: Array<{ question: string; suggestedAnswer: string; importance: 'high' | 'medium' | 'low' }>;
   }>(questionsResponse.content);
 
+  // Filter pageTypeInsights to ensure they are strings only
+  const validInsights = summaryData.pageTypeInsights?.map(insight => {
+    if (typeof insight === 'string') return insight;
+    if (typeof insight === 'object' && insight !== null && 'insight' in insight) {
+      return (insight as any).insight;
+    }
+    return null;
+  }).filter((insight): insight is string => typeof insight === 'string') || [];
+
   return {
     summary: summaryData.summary,
     pageType: summaryData.pageType,
-    pageTypeInsights: summaryData.pageTypeInsights,
+    pageTypeInsights: validInsights,
     topEntities: summaryData.topEntities || [],
     questions: questionsData?.questions || [],
     suggestedFAQ: questionsData?.suggestedFAQ || [],
