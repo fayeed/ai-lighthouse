@@ -346,7 +346,11 @@ const fetched = await fetchHtml(url, options.timeoutMs!, options.userAgent);
     .filter(issue => issue.impactScore >= minImpact)
     .filter(issue => (issue.confidence ?? 1.0) >= minConf)
     .sort((a, b) => b.impactScore - a.impactScore) // Sort by impact
-    .slice(0, maxCount); // Limit count
+    .slice(0, maxCount) // Limit count
+    .map(issue => ({
+      ...issue,
+      scoreImpact: Math.min(20, Math.round((issue.impactScore * 0.15) * 10) / 10)
+    })); // Add score impact to each issue
 
   // Recalculate scoring with filtered issues
   const filteredScoring = calculateScore(filteredIssues);

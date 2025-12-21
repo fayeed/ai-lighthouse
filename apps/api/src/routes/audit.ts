@@ -1,7 +1,11 @@
 import express from 'express';
 import rateLimit from 'express-rate-limit';
 import { redisClient } from '../index.js';
-import { analyzeUrlWithRules, calculateAIReadiness, exportAuditReport } from '../../../../packages/scanner/src/exports.js';
+import { 
+  analyzeUrlWithRules, 
+  calculateAIReadiness, 
+  exportAuditReport
+} from '../../../../packages/scanner/src/exports.js';
 import { auditRequestSchema, validateRequest } from '../validation/schemas.js';
 import { logger, logAuditStart, logAuditComplete, logAuditError, logRateLimitHit } from '../utils/logger.js';
 import { cacheMiddleware } from '../middleware/cache.js';
@@ -226,7 +230,7 @@ auditRouter.post('/', cacheMiddleware(1800), validateRequest(auditRequestSchema)
     const duration = Date.now() - startTime;
     logAuditComplete(url, duration, true, ip);
     
-    // Return comprehensive data
+    // Return comprehensive data (quickWins with score impact are in aiReadiness)
     return res.json({
       success: true,
       url,

@@ -50,6 +50,8 @@ export interface AuditReport {
     suggested_fix: string;
     impact: string;
     category: string;
+    scoreImpact?: number; // Estimated score improvement if fixed
+    rule_id?: string; // Rule ID for reference
   }>;
   recommendations: Array<{
     issue_id: string;
@@ -248,6 +250,8 @@ function formatIssues(issues: Issue[]): AuditReport['issues'] {
       suggested_fix: issue.remediation,
       impact: mapSeverity(issue.severity),
       category: mapCategory(issue.category),
+      scoreImpact: issue.scoreImpact,
+      rule_id: issue.id,
     }));
 }
 

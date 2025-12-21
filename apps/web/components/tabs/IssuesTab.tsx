@@ -4,9 +4,10 @@ import { useState, useMemo } from 'react';
 
 interface IssuesTabProps {
   issues: any[];
+  currentScore?: number;
 }
 
-export default function IssuesTab({ issues }: IssuesTabProps) {
+export default function IssuesTab({ issues, currentScore }: IssuesTabProps) {
   const [severityFilter, setSeverityFilter] = useState<string[]>([]);
   const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -178,31 +179,48 @@ export default function IssuesTab({ issues }: IssuesTabProps) {
             Issues Found ({filteredIssues.length} of {issues.length})
           </h3>
           <div className="space-y-4">
-            {filteredIssues.map((issue: any, idx: number) => (
-              <div key={idx} className={`border-l-4 p-4 rounded ${getSeverityColor(issue.severity)}`}>
-                <div className="flex items-start justify-between mb-2">
-                  <div className="font-semibold text-gray-900 dark:text-gray-100 flex-1">{issue.message}</div>
-                  <span className={`ml-3 px-2 py-1 text-xs font-semibold rounded-full uppercase ${getSeverityBadgeColor(issue.severity)}`}>
-                    {issue.severity}
-                  </span>
-                </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                  Impact: <span className="font-medium">{issue.impact}</span> · 
-                  Category: <span className="font-medium">{issue.category}</span>
-                  {issue.rule_id && <span> · Rule: <span className="font-mono text-xs">{issue.rule_id}</span></span>}
-                </div>
-                {issue.suggested_fix && (
-                  <div className="text-sm text-green-700 dark:text-green-400 mt-2 bg-white dark:bg-gray-800 p-3 rounded">
-                    <strong>💡 Fix:</strong> {issue.suggested_fix}
+            {filteredIssues.map((issue: any, idx: number) => {
+              const scoreImprovement = issue.scoreImpact || 0;
+              const projectedScore = currentScore && scoreImprovement ? Math.min(100, currentScore + scoreImprovement) : null;
+              
+              return (
+                <div key={idx} className={`border-l-4 p-4 rounded ${getSeverityColor(issue.severity)}`}>
+                  <div className="flex items-start justify-between gap-3 mb-2">
+                    <div className="font-semibold text-gray-900 dark:text-gray-100 flex-1">{issue.message}</div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      {projectedScore && (
+                        <div className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-1 rounded text-xs font-semibold whitespace-nowrap">
+                          +{scoreImprovement} pts
+                        </div>
+                      )}
+                      <span className={`px-2 py-1 text-xs font-semibold rounded-full uppercase ${getSeverityBadgeColor(issue.severity)}`}>
+                        {issue.severity}
+                      </span>
+                    </div>
                   </div>
-                )}
-                {issue.element && (
-                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-2 font-mono bg-gray-100 dark:bg-gray-800 p-2 rounded">
-                    {issue.element}
+                  <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                    Impact: <span className="font-medium">{issue.impact}</span> · 
+                    Category: <span className="font-medium">{issue.category}</span>
+                    {issue.rule_id && <span> · Rule: <span className="font-mono text-xs">{issue.rule_id}</span></span>}
+                    {projectedScore && (
+                      <span className="ml-2 text-gray-500 dark:text-gray-500">
+                        · Score: {currentScore} → <span className="text-green-600 dark:text-green-400 font-medium">{projectedScore}</span>
+                      </span>
+                    )}
                   </div>
-                )}
-              </div>
-            ))}
+                  {issue.suggested_fix && (
+                    <div className="text-sm text-green-700 dark:text-green-400 mt-2 bg-white dark:bg-gray-800 p-3 rounded">
+                      <strong>💡 Fix:</strong> {issue.suggested_fix}
+                    </div>
+                  )}
+                  {issue.element && (
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-2 font-mono bg-gray-100 dark:bg-gray-800 p-2 rounded">
+                      {issue.element}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       ) : (

@@ -39,6 +39,7 @@ export interface Issue {
   description: string;
   remediation: string;
   impactScore: number;
+  scoreImpact?: number; // Estimated score improvement if fixed (0-20)
   location?: IssueLocation;
   evidence?: string[];
   tags?: string[];

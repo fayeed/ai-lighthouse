@@ -3,7 +3,7 @@ import { Issue, SEVERITY, CATEGORY } from './types.js';
 /**
  * Severity weight multipliers for impact scoring
  */
-const SEVERITY_WEIGHTS: Record<SEVERITY, number> = {
+export const SEVERITY_WEIGHTS: Record<SEVERITY, number> = {
   [SEVERITY.INFO]: 0,
   [SEVERITY.LOW]: 1,
   [SEVERITY.MEDIUM]: 2.5,
@@ -15,7 +15,7 @@ const SEVERITY_WEIGHTS: Record<SEVERITY, number> = {
  * Category importance weights (1.0 = baseline)
  * Higher weights mean issues in that category affect the score more
  */
-const CATEGORY_WEIGHTS: Record<CATEGORY, number> = {
+export const CATEGORY_WEIGHTS: Record<CATEGORY, number> = {
   [CATEGORY.AIREAD]: 1.5,      // AI readability is crucial
   [CATEGORY.EXTRACT]: 1.4,     // Data extraction quality
   [CATEGORY.CHUNK]: 1.3,       // Content chunking for embeddings

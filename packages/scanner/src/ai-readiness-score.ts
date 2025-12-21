@@ -34,12 +34,14 @@ export interface AIReadinessScore {
     };
   };
   
-  // Quick wins - high-impact, easy fixes
+  // Quick wins - high-impact, easy fixes with score projections
   quickWins: Array<{
     issue: string;
     impact: number;
     effort: 'low' | 'medium' | 'high';
     fix: string;
+    scoreImpact: number;        // Estimated score improvement (e.g., +8)
+    effortDescription: string;  // Human-readable (e.g., '~5 min')
   }>;
   
   // Priority roadmap
@@ -751,11 +753,16 @@ function identifyQuickWins(issues: Issue[]): AIReadinessScore['quickWins'] {
     const roi = issue.impactScore / effortScore;
     const isQuick = isQuickFix(issue);
     
+    // Calculate estimated score impact (realistic improvement)
+    // Using similar logic to top-fixes but directly in quickWins
+    const scoreImpact = Math.min(20, (issue.impactScore * 0.15));
+    
     return {
       issue,
       effort,
       roi,
       isQuick,
+      scoreImpact,
     };
   });
   
@@ -780,6 +787,8 @@ function identifyQuickWins(issues: Issue[]): AIReadinessScore['quickWins'] {
       impact: item.issue.impactScore,
       effort: item.effort,
       fix: item.issue.remediation,
+      scoreImpact: Math.round(item.scoreImpact * 10) / 10,
+      effortDescription: item.effort === 'low' ? '~5 min' : item.effort === 'medium' ? '~30 min' : 'dev work',
     }));
   
   return quickWins;
@@ -927,7 +936,7 @@ function formatIssue(issue: Issue) {
 }
 
 function isQuickFix(issue: Issue): boolean {
-  const quickFixKeywords = ['missing', 'add', 'include', 'use', 'meta', 'alt', 'title', 'h1'];
+  const quickFixKeywords = ['missing', 'add', 'include', 'use', 'meta', 'alt', 'title', 'h1', 'no ', 'schema'];
   return quickFixKeywords.some(keyword => 
     issue.title.toLowerCase().includes(keyword) || 
     issue.remediation.toLowerCase().includes(keyword)
@@ -941,6 +950,11 @@ function estimateEffort(issue: Issue): 'low' | 'medium' | 'high' {
   // Low effort - simple additions
   if (title.includes('missing meta') || title.includes('missing alt') || title.includes('missing title')) {
     return 'low';
+  }
+  
+  // Medium effort - structured data additions
+  if (title.includes('schema') || title.includes('json-ld') || title.includes('structured data')) {
+    return 'medium';
   }
   
   // High effort - architectural changes
