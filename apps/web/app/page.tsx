@@ -280,13 +280,6 @@ export default function Home() {
                 {showScoringGuide && <ScoringGuide />}
               </div>
 
-              {/* Quick Wins - AI-identified high-impact improvements */}
-              {reportData.aiReadiness?.quickWins && reportData.aiReadiness.quickWins.length > 0 && (
-                <QuickWinsSection
-                  currentScore={reportData.aiReadiness.overall}
-                  quickWins={reportData.aiReadiness.quickWins}
-                />
-              )}
 
               {/* What This Means */}
               {interpretationMessage && (
