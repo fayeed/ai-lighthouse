@@ -1,9 +1,22 @@
 /**
- * LLM Mirror Test
+ * LLM Mirror Test - Alignment & Messaging Validation
  * 
- * Tests how AI interprets a page by asking "What does this page say the product does?"
- * Compares LLM interpretation against intended messaging from H1, meta tags, and structured data.
- * Identifies misunderstandings and messaging gaps that could confuse AI assistants.
+ * PURPOSE: Tests if AI's interpretation MATCHES your intended messaging
+ * 
+ * This is NOT about understanding content (use comprehension.ts for that).
+ * This is about ALIGNMENT: Does the AI "get" what you're trying to communicate?
+ * 
+ * Process:
+ * 1. Extract intended messaging from structured data (meta tags, schema, h1)
+ * 2. Ask LLM to interpret the page without seeing metadata
+ * 3. Compare: intended vs interpreted
+ * 4. Test common user queries to see if AI can answer correctly
+ * 5. Identify misalignments and messaging gaps
+ * 
+ * Use cases:
+ * - Product pages: Does AI understand what you're selling?
+ * - Landing pages: Does AI get your value proposition?
+ * - Documentation: Can AI accurately explain your product to users?
  */
 
 import { CheerioAPI } from 'cheerio';
@@ -23,6 +36,14 @@ export interface IntendedMessaging {
   source: 'h1' | 'meta' | 'schema' | 'hero';
 }
 
+export interface QueryResponse {
+  question: string;
+  answer: string;
+  confidence: number; // 0-1
+  hallucinated: boolean; // Did AI make up details not on the page?
+  vague: boolean; // Was AI unable to give a clear answer?
+}
+
 export interface LLMInterpretation {
   productName?: string;
   purpose?: string;
@@ -33,6 +54,7 @@ export interface LLMInterpretation {
   category?: string;
   valueProposition?: string; // What makes it unique/different
   confidence: number; // 0-1, how confident the LLM is in its interpretation
+  commonQueries?: QueryResponse[]; // How AI would answer common questions
 }
 
 export interface Mismatch {
@@ -96,9 +118,23 @@ function extractIntendedMessaging($: CheerioAPI): IntendedMessaging[] {
   const metaDescription = $('meta[property="og:description"]').attr('content') || 
                           $('meta[name="description"]').attr('content');
   
+  // Extract product name from title if it contains separators
+  let extractedProductName: string | undefined;
+  if (metaTitle) {
+    // Common patterns: "Product | Description" or "Product - Description" or "Product: Description"
+    const titleParts = metaTitle.split(/[|\-:·•]/);
+    if (titleParts.length > 1) {
+      // First part is usually the product name
+      extractedProductName = titleParts[0].trim();
+    } else {
+      // No separator - use the whole title if it's short (likely a product name)
+      extractedProductName = metaTitle.length < 50 ? metaTitle : undefined;
+    }
+  }
+  
   if (metaTitle || metaDescription) {
     messaging.push({
-      productName: metaTitle,
+      productName: extractedProductName,
       description: metaDescription,
       source: 'meta'
     });
@@ -300,6 +336,100 @@ CRITICAL RULES:
 }
 
 /**
+ * Test how AI would answer common user queries
+ * This simulates real-world AI assistant interactions
+ */
+async function testCommonQueries(
+  $: CheerioAPI,
+  productName: string | undefined,
+  llmConfig: LLMConfig
+): Promise<QueryResponse[]> {
+  const runner = new LLMRunner(llmConfig);
+  
+  // Get clean content
+  const clone = $.load($.html());
+  clone('script, style, noscript, svg, iframe, nav, footer, aside').remove();
+  
+  const content = (clone('main, article, [role="main"]').length > 0 
+    ? clone('main, article, [role="main"]').text()
+    : clone('body').text()
+  ).replace(/\s+/g, ' ').trim().slice(0, 3000);
+  
+  const productRef = productName || 'this product';
+  
+  const queries = [
+    `What does ${productRef} do?`,
+    `Who should use ${productRef}?`,
+    `How much does ${productRef} cost?`,
+    `What are the main features of ${productRef}?`,
+    `How is ${productRef} different from competitors?`
+  ];
+  
+  const system = `You are an AI assistant answering user questions based on webpage content.
+
+CRITICAL RULES:
+- Answer ONLY from the provided content
+- If information is not in the content, say "The page doesn't specify" - DO NOT make up details
+- If information is vague, acknowledge the vagueness
+- Be concise (1-2 sentences max per answer)
+- Mark your answer with confidence: "certain", "likely", or "unclear"`;
+
+  const user = `Based on this webpage content, answer these questions:
+
+Content:
+"""
+${content}
+"""
+
+Questions:
+${queries.map((q, i) => `${i + 1}. ${q}`).join('\n')}
+
+Respond in JSON format:
+{
+  "answers": [
+    {
+      "question": "Question text",
+      "answer": "Your answer or 'The page doesn't specify'",
+      "confidence": "certain|likely|unclear",
+      "made_assumptions": false
+    }
+  ]
+}`;
+
+  try {
+    const response = await runner.callWithSystem(system, user, {
+      maxTokens: 1500,
+      temperature: 0.2
+    });
+    
+    const data = safeJSONParse(response.content, 'Query test');
+    
+    return data.answers.map((a: any) => {
+      const confidenceMap: { [key: string]: number } = {
+        'certain': 0.9,
+        'likely': 0.6,
+        'unclear': 0.3
+      };
+      
+      const isVague = a.answer.toLowerCase().includes("doesn't specify") || 
+                      a.answer.toLowerCase().includes("unclear") ||
+                      a.answer.toLowerCase().includes("not mentioned");
+      
+      return {
+        question: a.question,
+        answer: a.answer,
+        confidence: confidenceMap[a.confidence] || 0.5,
+        hallucinated: a.made_assumptions === true,
+        vague: isVague
+      };
+    });
+  } catch (err) {
+    console.error('Query test failed:', err);
+    return [];
+  }
+}
+
+/**
  * Compare intended messaging with LLM interpretation
  */
 function findMismatches(
@@ -337,15 +467,22 @@ function findMismatches(
     const intended_lower = consolidated.productName.toLowerCase();
     const interpreted_lower = interpreted.productName.toLowerCase();
     
-    // Check if names are significantly different (not just minor variations)
-    if (!intended_lower.includes(interpreted_lower.split(/\s+/)[0]) &&
-        !interpreted_lower.includes(intended_lower.split(/\s+/)[0])) {
+    // Be lenient - check if either contains the other (handle "GitHub" vs "GitHub Inc")
+    const interpretedWords = interpreted_lower.split(/\s+/);
+    const intendedWords = intended_lower.split(/\s+/);
+    
+    // Check for any significant word overlap
+    const hasOverlap = interpretedWords.some(w => w.length > 2 && intended_lower.includes(w)) ||
+                       intendedWords.some(w => w.length > 2 && interpreted_lower.includes(w));
+    
+    // Only flag as mismatch if there's NO overlap at all
+    if (!hasOverlap) {
       mismatches.push({
         field: 'productName',
         intended: consolidated.productName,
         interpreted: interpreted.productName,
         severity: 'critical',
-        description: `AI interprets the product name as "${interpreted.productName}" but page metadata says "${consolidated.productName}"`,
+        description: `AI interprets the product name as "${interpreted.productName}" but page metadata suggests "${consolidated.productName}"`,
         recommendation: 'Ensure H1, title tag, and meta tags consistently use the same product name. Add Schema.org Product markup with clear name.',
         confidence: 0.9
       });
@@ -360,6 +497,9 @@ function findMismatches(
       recommendation: 'Make the product name more prominent in H1, hero section, and opening paragraphs. Add Schema.org markup.',
       confidence: 0.85
     });
+  } else if (!consolidated.productName && interpreted.productName) {
+    // AI found a product name but metadata doesn't have it - this is actually GOOD
+    // Don't flag as mismatch
   }
   
   // 2. Purpose/description mismatch (using smarter semantic comparison)
@@ -558,6 +698,20 @@ function calculateScores(
     clarityScore = Math.min(100, clarityScore * 1.1);
   }
   
+  // Factor in query test results if available
+  if (interpreted.commonQueries && interpreted.commonQueries.length > 0) {
+    const avgQueryConfidence = interpreted.commonQueries.reduce((sum, q) => sum + q.confidence, 0) / interpreted.commonQueries.length;
+    const vagueCount = interpreted.commonQueries.filter(q => q.vague).length;
+    
+    // Penalize if many queries get vague answers
+    if (vagueCount > 2) {
+      clarityScore *= 0.9;
+    }
+    
+    // Adjust based on query answer quality
+    clarityScore = (clarityScore + avgQueryConfidence * 100) / 2;
+  }
+  
   clarityScore = Math.max(0, Math.min(100, clarityScore));
   
   return { alignmentScore, clarityScore };
@@ -625,11 +779,13 @@ function generateRecommendations(
  * 
  * @param $ - Cheerio instance
  * @param llmConfig - LLM configuration
+ * @param includeQueryTest - Whether to include common query testing (default: true)
  * @returns Mirror test report with intended vs interpreted messaging
  */
 export async function runMirrorTest(
   $: CheerioAPI,
-  llmConfig: LLMConfig
+  llmConfig: LLMConfig,
+  includeQueryTest: boolean = true
 ): Promise<MirrorReport> {
   // 1. Extract intended messaging from structured sources
   const intendedMessaging = extractIntendedMessaging($);
@@ -641,16 +797,35 @@ export async function runMirrorTest(
   // 2. Get LLM interpretation
   const llmInterpretation = await getLLMInterpretation($, llmConfig);
   
-  // 3. Find mismatches
+  // 3. Test common queries (simulate real AI assistant interactions)
+  if (includeQueryTest) {
+    const queryResponses = await testCommonQueries($, llmInterpretation.productName, llmConfig);
+    llmInterpretation.commonQueries = queryResponses;
+  }
+  
+  // 4. Find mismatches
   const mismatches = findMismatches(intendedMessaging, llmInterpretation);
   
-  // 4. Calculate scores
+  // 5. Calculate scores
   const scores = calculateScores(mismatches, llmInterpretation);
   
-  // 5. Generate recommendations
+  // 6. Generate recommendations
   const recommendations = generateRecommendations(mismatches, llmInterpretation, scores);
   
-  // 6. Build summary
+  // 7. Add query-specific recommendations
+  if (llmInterpretation.commonQueries) {
+    const vagueQueries = llmInterpretation.commonQueries.filter(q => q.vague);
+    if (vagueQueries.length > 0) {
+      recommendations.push(`AI cannot answer ${vagueQueries.length} common question${vagueQueries.length === 1 ? '' : 's'} clearly. Add explicit content to address: ${vagueQueries.map(q => q.question).join(', ')}`);
+    }
+    
+    const hallucinatedQueries = llmInterpretation.commonQueries.filter(q => q.hallucinated);
+    if (hallucinatedQueries.length > 0) {
+      recommendations.push(`WARNING: AI made assumptions when answering ${hallucinatedQueries.length} question${hallucinatedQueries.length === 1 ? '' : 's'}. This indicates gaps in your content that AI will fill with invented details.`);
+    }
+  }
+  
+  // 8. Build summary
   const summary = {
     totalMismatches: mismatches.length,
     critical: mismatches.filter(m => m.severity === 'critical').length,
