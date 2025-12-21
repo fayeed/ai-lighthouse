@@ -14,7 +14,7 @@ export default function AnalysisTab({ scanResult }: AnalysisTabProps) {
   return (
     <div className="space-y-8">
       {/* LLM Summary */}
-      {scanResult?.llm && <AIUnderstandingSection llm={scanResult.llm} />}
+      {scanResult?.llm && <AIUnderstandingSection llm={scanResult.llm} chunks={scanResult.chunking?.chunks} />}
 
       {/* Hallucination Report */}
       {scanResult?.hallucinationReport && (

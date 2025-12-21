@@ -1,5 +1,7 @@
 'use client';
 
+import { useState } from 'react';
+
 interface Entity {
   name: string;
   type: string;
@@ -16,6 +18,13 @@ interface ReadingLevel {
   description: string;
 }
 
+interface ContentChunk {
+  id: string;
+  heading?: string;
+  text: string;
+  tokenCount: number;
+}
+
 interface LLMData {
   pageType?: string;
   pageTypeInsights?: string[];
@@ -30,9 +39,29 @@ interface LLMData {
 
 interface AIUnderstandingSectionProps {
   llm: LLMData;
+  chunks?: ContentChunk[];
 }
 
-export default function AIUnderstandingSection({ llm }: AIUnderstandingSectionProps) {
+export default function AIUnderstandingSection({ llm, chunks }: AIUnderstandingSectionProps) {
+  const [showChunks, setShowChunks] = useState(false);
+  const [showSignals, setShowSignals] = useState(false);
+  const [showConflicts, setShowConflicts] = useState(false);
+
+  // Extract key signals from data
+  const keySignals = [];
+  if (llm.pageType) keySignals.push(`Page Type: ${llm.pageType}`);
+  if (llm.keyTopics?.length) keySignals.push(`Topics: ${llm.keyTopics.slice(0, 3).join(', ')}`);
+  if (llm.topEntities?.length) keySignals.push(`Key Entities: ${llm.topEntities.slice(0, 3).map(e => e.name).join(', ')}`);
+  
+  // Detect conflicting signals (simplified for now)
+  const conflicts = [];
+  if (llm.sentiment === 'negative' && llm.pageType?.toLowerCase().includes('product')) {
+    conflicts.push('Negative sentiment detected on a product page');
+  }
+  if (llm.technicalDepth === 'expert' && llm.readingLevel && parseInt(llm.readingLevel.description) < 10) {
+    conflicts.push('Expert technical depth but low reading level');
+  }
+
   return (
     <div className="bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-200 dark:border-blue-700 rounded-lg p-6">
       <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">📝 AI Understanding</h3>
@@ -144,6 +173,123 @@ export default function AIUnderstandingSection({ llm }: AIUnderstandingSectionPr
                 </div>
               ))}
             </div>
+          </div>
+        )}
+      </div>
+
+      {/* Explainability Sections */}
+      <div className="mt-6 space-y-3 border-t border-blue-200 dark:border-blue-700 pt-4">
+        <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">💡 Why AI Thinks This:</p>
+        
+        {/* Chunks Section */}
+        {chunks && chunks.length > 0 && (
+          <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+            <button
+              onClick={() => setShowChunks(!showChunks)}
+              className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-between text-left transition-colors"
+            >
+              <span className="flex items-center gap-2 font-medium text-gray-900 dark:text-gray-100">
+                <span>🧩</span>
+                <span>Chunks used by AI to infer this</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400">({chunks.length} chunks)</span>
+              </span>
+              <span className="text-gray-500">{showChunks ? '▼' : '▶'}</span>
+            </button>
+            {showChunks && (
+              <div className="p-4 bg-white dark:bg-gray-900 space-y-3 max-h-96 overflow-y-auto">
+                {chunks.slice(0, 5).map((chunk, idx) => (
+                  <div key={idx} className="border-l-2 border-blue-400 dark:border-blue-600 pl-3 py-2">
+                    {chunk.heading && (
+                      <div className="font-semibold text-sm text-gray-900 dark:text-gray-100 mb-1">
+                        {chunk.heading}
+                      </div>
+                    )}
+                    <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-3">
+                      {chunk.text.substring(0, 200)}...
+                    </p>
+                    <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      {chunk.tokenCount} tokens
+                    </span>
+                  </div>
+                ))}
+                {chunks.length > 5 && (
+                  <p className="text-xs text-gray-500 dark:text-gray-400 italic text-center pt-2">
+                    + {chunks.length - 5} more chunks
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Key Signals Section */}
+        <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+          <button
+            onClick={() => setShowSignals(!showSignals)}
+            className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-between text-left transition-colors"
+          >
+            <span className="flex items-center gap-2 font-medium text-gray-900 dark:text-gray-100">
+              <span>🔑</span>
+              <span>Key signals (headings, meta, repeated phrases)</span>
+            </span>
+            <span className="text-gray-500">{showSignals ? '▼' : '▶'}</span>
+          </button>
+          {showSignals && (
+            <div className="p-4 bg-white dark:bg-gray-900">
+              <ul className="space-y-2">
+                {keySignals.map((signal, idx) => (
+                  <li key={idx} className="flex items-start gap-2 text-sm">
+                    <span className="text-green-600 dark:text-green-400 mt-0.5">✓</span>
+                    <span className="text-gray-700 dark:text-gray-300">{signal}</span>
+                  </li>
+                ))}
+                {llm.readingLevel && (
+                  <li className="flex items-start gap-2 text-sm">
+                    <span className="text-green-600 dark:text-green-400 mt-0.5">✓</span>
+                    <span className="text-gray-700 dark:text-gray-300">
+                      Reading Level: {llm.readingLevel.description}
+                    </span>
+                  </li>
+                )}
+                {llm.sentiment && (
+                  <li className="flex items-start gap-2 text-sm">
+                    <span className="text-green-600 dark:text-green-400 mt-0.5">✓</span>
+                    <span className="text-gray-700 dark:text-gray-300">
+                      Sentiment: {llm.sentiment}
+                    </span>
+                  </li>
+                )}
+              </ul>
+            </div>
+          )}
+        </div>
+
+        {/* Conflicting Signals Section */}
+        {conflicts.length > 0 && (
+          <div className="border border-yellow-200 dark:border-yellow-700 rounded-lg overflow-hidden">
+            <button
+              onClick={() => setShowConflicts(!showConflicts)}
+              className="w-full px-4 py-3 bg-yellow-50 dark:bg-yellow-900/20 hover:bg-yellow-100 dark:hover:bg-yellow-900/30 flex items-center justify-between text-left transition-colors"
+            >
+              <span className="flex items-center gap-2 font-medium text-gray-900 dark:text-gray-100">
+                <span>⚠️</span>
+                <span>Conflicting signals</span>
+                <span className="text-xs text-yellow-700 dark:text-yellow-400">({conflicts.length})</span>
+              </span>
+              <span className="text-gray-500">{showConflicts ? '▼' : '▶'}</span>
+            </button>
+            {showConflicts && (
+              <div className="p-4 bg-white dark:bg-gray-900">
+                <ul className="space-y-2">
+                  {conflicts.map((conflict, idx) => (
+                    <li key={idx} className="flex items-start gap-2 text-sm">
+                      <span className="text-yellow-600 dark:text-yellow-400 mt-0.5">⚠</span>
+                      <span className="text-gray-700 dark:text-gray-300">{conflict}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         )}
       </div>
