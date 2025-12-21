@@ -12,8 +12,8 @@ export default function HeroSection() {
         <img src="/icon.png" alt="AI Lighthouse" className="w-12 h-12" />
         AI Lighthouse
       </h1>
-      <p className="text-xl text-gray-700 dark:text-gray-300 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-        Analyze your website AI readiness
+      <p className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-2 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+        See how AI understands your site — and fix what it gets wrong.
       </p>
     </header>
   );
