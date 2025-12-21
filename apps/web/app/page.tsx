@@ -248,7 +248,7 @@ export default function Home() {
             </div>
           </div>
           <p className="text-lg text-gray-600 dark:text-gray-300">
-            Analyze your website's AI readiness
+            See how AI understands your site — and fix what it gets wrong.
           </p>
         </div>
 
