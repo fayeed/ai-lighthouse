@@ -63,6 +63,23 @@ export default function Home() {
     }
   };
 
+  const getWeakDimensions = (data: any): string[] => {
+    if (!data.aiReadiness?.dimensions) return [];
+    
+    const dimensionNames: Record<string, string> = {
+      contentQuality: 'content clarity',
+      extractability: 'extractability',
+      comprehensibility: 'structure',
+      discoverability: 'discoverability',
+      trustworthiness: 'trust'
+    };
+    
+    return Object.entries(data.aiReadiness.dimensions)
+      .filter(([_, dim]: [string, any]) => dim.score < 70)
+      .map(([name, _]) => dimensionNames[name] || name)
+      .slice(0, 2);
+  };
+
   const generateInterpretationMessage = (data: any): string => {
     if (!data.aiReadiness) return '';
 
@@ -269,7 +286,7 @@ export default function Home() {
         {reportData && viewMode === 'simple' && (
           <div className="max-w-6xl mx-auto">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 md:p-8 animate-fade-in-up">
-              {/* Score - Primary Focus */}
+              {/* 1. How bad is it? */}
               <div className="text-center mb-6">
                 <ScoreDisplay
                   score={Math.round(reportData.aiReadiness.overall)}
@@ -280,49 +297,25 @@ export default function Home() {
                 {showScoringGuide && <ScoringGuide />}
               </div>
 
-
-              {/* What This Means */}
-              {interpretationMessage && (
-                <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                  <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">What This Means</h3>
-                  <p className="text-sm text-gray-700 dark:text-gray-300">{interpretationMessage}</p>
-                </div>
-              )}
-
-              {/* Key Metrics */}
-              {reportData.aiReadiness && reportData.aiReadiness.dimensions && (
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">Key Metrics</h3>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                      <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Extractability</p>
-                      <p className="text-xl font-bold text-gray-900 dark:text-gray-100">
-                        {Math.round(reportData.aiReadiness.dimensions.extractability?.score || 0)}/100
-                      </p>
-                    </div>
-                    <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                      <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Content Quality</p>
-                      <p className="text-xl font-bold text-gray-900 dark:text-gray-100">
-                        {Math.round(reportData.aiReadiness.dimensions.contentQuality?.score || 0)}/100
-                      </p>
-                    </div>
-                    <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                      <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Discoverability</p>
-                      <p className="text-xl font-bold text-gray-900 dark:text-gray-100">
-                        {Math.round(reportData.aiReadiness.dimensions.discoverability?.score || 0)}/100
-                      </p>
-                    </div>
-                    <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                      <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Comprehensibility</p>
-                      <p className="text-xl font-bold text-gray-900 dark:text-gray-100">
-                        {Math.round(reportData.aiReadiness.dimensions.comprehensibility?.score || 0)}/100
-                      </p>
-                    </div>
+              {/* 2. What's broken? */}
+              {(() => {
+                const weakDimensions = getWeakDimensions(reportData);
+                return weakDimensions.length > 0 && (
+                  <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-lg">
+                    <h3 className="text-base font-bold text-gray-900 dark:text-gray-100 mb-2 flex items-center gap-2">
+                      <span className="text-xl">⚠️</span> What's Broken
+                    </h3>
+                    <p className="text-base text-gray-800 dark:text-gray-200">
+                      {weakDimensions.length === 1 
+                        ? `Your ${weakDimensions[0]} needs work.`
+                        : `Your ${weakDimensions.join(' and ')} need work.`
+                      } {interpretationMessage}
+                    </p>
                   </div>
-                </div>
-              )}
+                );
+              })()}
 
-              {/* Quick Wins */}
+              {/* 3. What do I do first? */}
               {reportData.aiReadiness?.quickWins && reportData.aiReadiness.quickWins.length > 0 && (
                 <QuickWinsSection 
                   currentScore={reportData.aiReadiness.overall}
@@ -330,8 +323,22 @@ export default function Home() {
                 />
               )}
 
+              {/* 4. Where next? */}
+              <div className="mb-6">
+                <button
+                  onClick={() => setViewMode('complex')}
+                  className="w-full py-4 px-6 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 dark:from-blue-500 dark:to-blue-600 dark:hover:from-blue-600 dark:hover:to-blue-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-3 text-lg"
+                >
+                  <span>See Detailed Analysis & All Issues</span>
+                  <span className="text-2xl">→</span>
+                </button>
+                <p className="text-xs text-center text-gray-500 dark:text-gray-400 mt-2">
+                  View comprehensive reports, technical details, and advanced insights
+                </p>
+              </div>
+
               {/* Share Button */}
-              <div className="flex justify-center pt-4">
+              <div className="flex justify-center pt-2">
                 <ShareButton 
                   score={Math.round(reportData.aiReadiness.overall)} 
                   grade={reportData.aiReadiness.grade}
