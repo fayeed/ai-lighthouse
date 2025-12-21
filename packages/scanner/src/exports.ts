@@ -27,18 +27,6 @@ export {
   CATEGORY_WEIGHTS
 } from './scoring.js';
 
-// Top Fixes - Action plan with impact estimates
-export {
-  getTopFixes,
-  calculateProjectedScore,
-  formatTopFixesMessage
-} from './top-fixes.js';
-
-export type {
-  TopFix,
-  EffortLevel
-} from './top-fixes.js';
-
 
 // Chunking utilities
 export {
