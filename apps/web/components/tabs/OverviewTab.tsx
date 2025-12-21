@@ -1,4 +1,5 @@
 import Tooltip from '../Tooltip';
+import QuickWinsSection from '../QuickWinsSection';
 
 interface OverviewTabProps {
   aiReadiness: any;
@@ -154,20 +155,10 @@ export default function OverviewTab({ aiReadiness }: OverviewTabProps) {
 
       {/* Quick Wins */}
       {aiReadiness.quickWins && aiReadiness.quickWins.length > 0 && (
-        <div className="mb-8">
-          <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">⚡ Quick Wins</h3>
-          <div className="space-y-4">
-            {aiReadiness.quickWins.slice(0, 5).map((win: any, idx: number) => (
-              <div key={idx} className="bg-yellow-50 dark:bg-yellow-900/30 border-l-4 border-yellow-500 p-4 rounded">
-                <div className="font-semibold text-gray-900 dark:text-gray-100">{win.issue}</div>
-                <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                  Impact: {win.impact} · Effort: {win.effort}
-                </div>
-                <div className="text-sm text-green-700 dark:text-green-400 mt-2">→ {win.fix}</div>
-              </div>
-            ))}
-          </div>
-        </div>
+        <QuickWinsSection
+          currentScore={aiReadiness.overall}
+          quickWins={aiReadiness.quickWins}
+        />
       )}
     </div>
   );

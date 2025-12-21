@@ -17,6 +17,7 @@ import WarningModal from '../components/WarningModal';
 import InterpretationBanner from '../components/InterpretationBanner';
 import PrivacyNotice from '../components/PrivacyNotice';
 import ThemeToggle from '../components/ThemeToggle';
+import QuickWinsSection from '../components/QuickWinsSection';
 import { trackEvent } from '../components/Analytics';
 import 'react-tooltip/dist/react-tooltip.css';
 
@@ -279,6 +280,14 @@ export default function Home() {
                 {showScoringGuide && <ScoringGuide />}
               </div>
 
+              {/* Quick Wins - AI-identified high-impact improvements */}
+              {reportData.aiReadiness?.quickWins && reportData.aiReadiness.quickWins.length > 0 && (
+                <QuickWinsSection
+                  currentScore={reportData.aiReadiness.overall}
+                  quickWins={reportData.aiReadiness.quickWins}
+                />
+              )}
+
               {/* What This Means */}
               {interpretationMessage && (
                 <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
@@ -320,63 +329,12 @@ export default function Home() {
                 </div>
               )}
 
-              {/* Priority Actions */}
-              {reportData.auditReport?.issues && reportData.auditReport.issues.length > 0 && (
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">Priority Actions</h3>
-                  <div className="space-y-3">
-                    {reportData.auditReport.issues
-                      .filter((issue: any) => issue.severity === 'critical' || issue.severity === 'high')
-                      .slice(0, 5)
-                      .map((issue: any, idx: number) => (
-                        <div key={idx} className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border-l-4 border-red-500">
-                          <div className="flex items-start gap-3 mb-2">
-                            <span className="text-lg">
-                              {issue.severity === 'critical' ? '🔴' : '🟠'}
-                            </span>
-                            <div className="flex-1">
-                              <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">{issue.message}</p>
-                              <p className="text-xs text-gray-600 dark:text-gray-400 uppercase font-semibold">
-                                {issue.category} • {issue.severity}
-                              </p>
-                            </div>
-                          </div>
-                          {issue.recommendation && (
-                            <div className="ml-8 mt-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-md">
-                              <p className="text-xs font-medium text-blue-900 dark:text-blue-300">
-                                💡 Action: {issue.recommendation}
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                  </div>
-                </div>
-              )}
-
               {/* Quick Wins */}
-              {reportData.auditReport?.issues && (
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">Quick Wins</h3>
-                  <div className="space-y-2">
-                    {reportData.auditReport.issues
-                      .filter((issue: any) => issue.severity === 'medium' || issue.severity === 'low')
-                      .slice(0, 3)
-                      .map((issue: any, idx: number) => (
-                        <div key={idx} className="flex items-start gap-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
-                          <span className="text-lg">✅</span>
-                          <div className="flex-1">
-                            <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{issue.message}</p>
-                            {issue.recommendation && (
-                              <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                                {issue.recommendation}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                  </div>
-                </div>
+              {reportData.aiReadiness?.quickWins && reportData.aiReadiness.quickWins.length > 0 && (
+                <QuickWinsSection 
+                  currentScore={reportData.aiReadiness.overall}
+                  quickWins={reportData.aiReadiness.quickWins}
+                />
               )}
 
               {/* Share Button */}
@@ -467,7 +425,10 @@ export default function Home() {
               )}
 
               {activeTab === 'issues' && reportData.auditReport && (
-                <IssuesTab issues={reportData.auditReport.issues || []} />
+                <IssuesTab 
+                  issues={reportData.auditReport.issues || []} 
+                  currentScore={reportData.aiReadiness?.overall}
+                />
               )}
 
               {activeTab === 'technical' && reportData.scanResult && (
