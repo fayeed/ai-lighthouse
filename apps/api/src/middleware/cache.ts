@@ -102,7 +102,7 @@ async function generateContentFingerprint(url: string): Promise<string> {
       contentLength: html.length,
     });
     
-    return '16';
+    return hash;
   } catch (error: any) {
     logger.warn('Failed to generate content fingerprint', {
       url,
