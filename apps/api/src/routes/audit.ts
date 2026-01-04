@@ -35,6 +35,29 @@ async function getAuditJob(jobId: string) {
   }
 }
 
+// Increment scan counter
+async function incrementScanCounter() {
+  try {
+    const now = new Date();
+    const weekKey = `stats:scans:week:${now.getFullYear()}-W${getWeekNumber(now)}`;
+    const totalKey = 'stats:scans:total';
+    
+    await redisClient.incr(weekKey);
+    await redisClient.expire(weekKey, 60 * 60 * 24 * 14); // Keep for 2 weeks
+    await redisClient.incr(totalKey);
+  } catch (error) {
+    console.error('Redis error incrementing counter:', error);
+  }
+}
+
+function getWeekNumber(date: Date): number {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+}
+
 // LLM-specific rate limiter middleware using Redis
 const llmRateLimiter = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
   const { enableLLM, llmProvider } = req.body;
@@ -196,6 +219,7 @@ auditRouter.post('/stream', validateRequest(auditRequestSchema), llmRateLimiter,
 
     const duration = Date.now() - startTime;
     logAuditComplete(url, duration, true, ip);
+    incrementScanCounter(); // Track successful scan
 
     sendResult({
       success: true,
@@ -370,6 +394,7 @@ auditRouter.post('/', cacheMiddleware(1800), validateRequest(auditRequestSchema)
 
     const duration = Date.now() - startTime;
     logAuditComplete(url, duration, true, ip);
+    incrementScanCounter(); // Track successful scan
     
     // Return comprehensive data (quickWins with score impact are in aiReadiness)
     return res.json({
@@ -418,6 +443,37 @@ auditRouter.post('/', cacheMiddleware(1800), validateRequest(auditRequestSchema)
     return res.status(apiError.statusCode).json({
       ...apiError.toJSON(),
       ...(process.env.NODE_ENV === 'development' && { stack: error.stack })
+    });
+  }
+});
+
+// Stats endpoint - get scan counts (must be before /:jobId to avoid being matched as a job ID)
+auditRouter.get('/stats', async (req, res) => {
+  try {
+    const now = new Date();
+    const weekKey = `stats:scans:week:${now.getFullYear()}-W${getWeekNumber(now)}`;
+    const totalKey = 'stats:scans:total';
+    
+    const [weekCount, totalCount] = await Promise.all([
+      redisClient.get(weekKey),
+      redisClient.get(totalKey)
+    ]);
+    
+    res.json({
+      success: true,
+      stats: {
+        thisWeek: parseInt(weekCount?.toString() || '0', 10),
+        total: parseInt(totalCount?.toString() || '0', 10)
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching stats:', error);
+    res.json({
+      success: true,
+      stats: {
+        thisWeek: 0,
+        total: 0
+      }
     });
   }
 });

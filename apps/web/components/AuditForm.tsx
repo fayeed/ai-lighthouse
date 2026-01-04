@@ -36,6 +36,24 @@ export default function AuditForm({
 }: AuditFormProps) {
   const [isExpanded, setIsExpanded] = useState(!hasResults);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [scanStats, setScanStats] = useState<{ thisWeek: number; total: number } | null>(null);
+
+  // Fetch scan stats on mount
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002'}/api/audit/stats`);
+        const data = await res.json();
+        console.log('Fetched scan stats:', data);
+        if (data.success) {
+          setScanStats(data.stats);
+        }
+      } catch (error) {
+        // Silently fail - stats are not critical
+      }
+    };
+    fetchStats();
+  }, []);
 
   // Auto-collapse when results are first loaded
   useEffect(() => {
@@ -144,9 +162,16 @@ export default function AuditForm({
                 <p className="text-red-600 text-sm mt-1">⚠️ {error}</p>
               )}
               {!hasResults && !loading && (
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
-                  ✨ Free • No signup • Results in ~30 seconds
-                </p>
+                <div className="mt-2 text-center">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Free • No signup • Results in ~30 seconds
+                  </p>
+                  {scanStats && scanStats.thisWeek > 0 && (
+                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                      <span className="font-medium">{scanStats.thisWeek.toLocaleString()}</span> sites analyzed this week
+                    </p>
+                  )}
+                </div>
               )}
               {!hasResults && onExampleSelect && (
                 <ExampleSites onSelect={onExampleSelect} disabled={loading} />
