@@ -64,6 +64,9 @@ export interface ScanOptions {
   minConfidence?: number; // Minimum confidence to include (default: 0.7)
   maxIssues?: number; // Maximum issues to return (default: 20)
   
+  // Progress callback for real-time updates
+  onProgress?: (step: string, progress: number) => void;
+  
   llmConfig?: {
     provider: 'openai' | 'anthropic' | 'ollama' | 'local';
     apiKey?: string;

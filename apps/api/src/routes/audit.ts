@@ -86,6 +86,146 @@ const llmRateLimiter = async (req: express.Request, res: express.Response, next:
   }
 };
 
+// POST /api/audit/stream - Stream audit progress via SSE
+auditRouter.post('/stream', validateRequest(auditRequestSchema), llmRateLimiter, async (req, res) => {
+  const startTime = Date.now();
+  const ip = req.ip || 'unknown';
+  
+  // Set up SSE headers
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('X-Accel-Buffering', 'no'); // Disable nginx buffering
+  res.flushHeaders();
+
+  const sendProgress = (step: string, progress: number, message?: string) => {
+    res.write(`data: ${JSON.stringify({ type: 'progress', step, progress, message })}\n\n`);
+  };
+
+  const sendResult = (data: any) => {
+    res.write(`data: ${JSON.stringify({ type: 'complete', data })}\n\n`);
+    res.end();
+  };
+
+  const sendError = (error: string) => {
+    res.write(`data: ${JSON.stringify({ type: 'error', error })}\n\n`);
+    res.end();
+  };
+
+  try {
+    const validatedData = (req as any).validatedData;
+    const { 
+      url, 
+      enableLLM = false,
+      llmProvider = 'openrouter',
+      llmModel = 'meta-llama/llama-3.3-70b-instruct:free',
+      llmApiKey,
+      llmBaseUrl,
+      minImpactScore = 5,
+      maxChunkTokens = 1200,
+    } = validatedData;
+
+    logAuditStart(url, enableLLM, ip);
+    sendProgress('starting', 0, 'Starting analysis...');
+
+    // Configure scan options with progress callback
+    const scanOptions: any = {
+      maxChunkTokens,
+      enableChunking: true,
+      enableExtractability: true,
+      enableHallucinationDetection: enableLLM,
+      enableLLM,
+      minImpactScore,
+      minConfidence: 0.7,
+      onProgress: (step: string, progress: number) => {
+        const messages: Record<string, string> = {
+          fetch: 'Fetching website...',
+          parse: 'Parsing HTML structure...',
+          rules: 'Running audit rules...',
+          extract: 'Analyzing extractability...',
+          llm: 'AI analyzing content...',
+          processing: 'Processing results...',
+          scoring: 'Calculating score...',
+        };
+        sendProgress(step, progress, messages[step] || step);
+      }
+    };
+
+    if (enableLLM) {
+      scanOptions.llmConfig = {
+        provider: llmProvider,
+        model: llmModel,
+      };
+
+      if (llmProvider === 'ollama') {
+        scanOptions.llmConfig.baseUrl = llmBaseUrl || 'http://localhost:11434';
+      } else if (llmApiKey) {
+        scanOptions.llmConfig.apiKey = llmApiKey;
+      } else if (llmProvider === 'openrouter') {
+        const defaultKey = process.env.OPENROUTER_API_KEY;
+        if (defaultKey) {
+          scanOptions.llmConfig.apiKey = defaultKey;
+        } else {
+          sendError('OpenRouter API key not configured');
+          return;
+        }
+      } else {
+        sendError(`API key required for ${llmProvider}`);
+        return;
+      }
+    }
+
+    let llmWarning = (req as any).llmRateLimitWarning || null;
+
+    const result = await analyzeUrlWithRules(url, scanOptions);
+
+    if (result.llmLimitExceeded && !llmWarning) {
+      llmWarning = {
+        type: 'llm_rate_limit',
+        message: 'LLM provider rate limit exceeded. AI-enhanced features were disabled for this scan.',
+        details: 'Rate limit exceeded during scan execution'
+      };
+    }
+
+    sendProgress('finalizing', 98, 'Generating report...');
+
+    const aiReadiness = calculateAIReadiness(result);
+    const auditReportJson = exportAuditReport(result);
+    const auditReport = JSON.parse(auditReportJson);
+
+    const duration = Date.now() - startTime;
+    logAuditComplete(url, duration, true, ip);
+
+    sendResult({
+      success: true,
+      url,
+      timestamp: new Date().toISOString(),
+      warning: llmWarning,
+      scanDuration: {
+        actual: Math.round(duration / 1000),
+        message: `Scan completed in ${formatDuration(Math.round(duration / 1000))}`
+      },
+      data: {
+        auditReport,
+        aiReadiness,
+        scanResult: {
+          llm: result.llm,
+          chunking: result.chunking,
+          extractability: result.extractability,
+          hallucinationReport: result.hallucinationReport,
+          mirrorReport: result.mirrorReport,
+          scoring: result.scoring,
+        }
+      }
+    });
+
+  } catch (error: any) {
+    const validatedData = (req as any).validatedData;
+    logAuditError(validatedData?.url || 'unknown', error, ip);
+    sendError(error.message || 'Audit failed');
+  }
+});
+
 // POST /api/audit - Start a new audit
 auditRouter.post('/', cacheMiddleware(1800), validateRequest(auditRequestSchema), llmRateLimiter, async (req, res) => {
   const startTime = Date.now();

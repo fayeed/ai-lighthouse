@@ -20,6 +20,7 @@ import ThemeToggle from '../components/ThemeToggle';
 import QuickWinsSection from '../components/QuickWinsSection';
 import SamplePreview from '../components/SamplePreview';
 import ExampleSites from '../components/ExampleSites';
+import LoadingProgress from '../components/LoadingProgress';
 import FAQ from '../components/FAQ';
 import { trackEvent } from '../components/Analytics';
 import 'react-tooltip/dist/react-tooltip.css';
@@ -27,6 +28,9 @@ import 'react-tooltip/dist/react-tooltip.css';
 export default function Home() {
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
+  const [loadingStep, setLoadingStep] = useState('starting');
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [loadingMessage, setLoadingMessage] = useState('');
   const [error, setError] = useState('');
   const [reportData, setReportData] = useState<any>(null);
   const [interpretationMessage, setInterpretationMessage] = useState<string>('');
@@ -156,6 +160,9 @@ export default function Home() {
     }
 
     setLoading(true);
+    setLoadingStep('starting');
+    setLoadingProgress(0);
+    setLoadingMessage('Starting analysis...');
     setReportData(null);
 
     // Track the analyze event
@@ -184,7 +191,8 @@ export default function Home() {
         }
       }
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002'}/api/audit`, {
+      // Use SSE streaming endpoint for real-time progress
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002'}/api/audit/stream`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -192,32 +200,64 @@ export default function Home() {
         body: JSON.stringify(requestBody),
       });
 
-      const data = await response.json();
-
       if (!response.ok) {
-        // Handle actionable errors from API
-        if (data.action) {
-          throw new Error(`${data.message}\n\n💡 ${data.action}`);
-        }
-        throw new Error(data.message || data.error || 'Audit failed');
+        throw new Error('Failed to start audit');
       }
 
-      if (data.warning) {
-        setWarningMessage({
-          message: data.warning.message,
-          details: data.warning.details
-        });
-        setShowWarningModal(true);
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+
+      if (!reader) {
+        throw new Error('Stream not available');
       }
 
-      const interpretation = generateInterpretationMessage(data.data);
-      setInterpretationMessage(interpretation);
-      setReportData(data.data);
-      const finalScore = Math.round(data.data.aiReadiness.overall);
-      setScore(finalScore);
+      let buffer = '';
       
-      // Track successful completion
-      trackEvent.analyzeComplete(validatedUrl, finalScore, enableLLM);
+      while (true) {
+        const { done, value } = await reader.read();
+        
+        if (done) break;
+        
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n\n');
+        buffer = lines.pop() || '';
+        
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const event = JSON.parse(line.slice(6));
+              
+              if (event.type === 'progress') {
+                setLoadingStep(event.step);
+                setLoadingProgress(event.progress);
+                setLoadingMessage(event.message || '');
+              } else if (event.type === 'complete') {
+                const data = event.data;
+                
+                if (data.warning) {
+                  setWarningMessage({
+                    message: data.warning.message,
+                    details: data.warning.details
+                  });
+                  setShowWarningModal(true);
+                }
+
+                const interpretation = generateInterpretationMessage(data.data);
+                setInterpretationMessage(interpretation);
+                setReportData(data.data);
+                const finalScore = Math.round(data.data.aiReadiness.overall);
+                setScore(finalScore);
+                
+                trackEvent.analyzeComplete(validatedUrl, finalScore, enableLLM);
+              } else if (event.type === 'error') {
+                throw new Error(event.error);
+              }
+            } catch (parseError) {
+              console.error('Failed to parse SSE event:', parseError);
+            }
+          }
+        }
+      }
     } catch (err: any) {
       const errorMessage = err.message || 'An error occurred during the audit';
       setError(errorMessage);
@@ -310,6 +350,16 @@ export default function Home() {
               }, 50);
             }}
             disabled={loading}
+          />
+        )}
+
+        {/* Show loading progress */}
+        {loading && (
+          <LoadingProgress 
+            currentStep={loadingStep} 
+            progress={loadingProgress} 
+            message={loadingMessage}
+            enableLLM={enableLLM} 
           />
         )}
 

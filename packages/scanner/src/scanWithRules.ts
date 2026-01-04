@@ -15,11 +15,13 @@ import "./rules/index.js";
 
 export async function analyzeUrlWithRules(url: string, opts?: ScanOptions): Promise<ScanResult> {
   const options: ScanOptions = { timeoutMs: 15000, maxChunkTokens: 1200, ...opts };
+  const reportProgress = options.onProgress || (() => {});
   let html: string | undefined;
   const issues = [];
   let llmLimitExceeded = false;
 
-const fetched = await fetchHtml(url, options.timeoutMs!, options.userAgent);
+  reportProgress('fetch', 5);
+  const fetched = await fetchHtml(url, options.timeoutMs!, options.userAgent);
   if (fetched.status >= 400) {
     issues.push({
       id: 'MISC-002',
@@ -38,6 +40,7 @@ const fetched = await fetchHtml(url, options.timeoutMs!, options.userAgent);
   }
   html = fetched.text;
 
+  reportProgress('parse', 10);
   const $ = parseHtml(html || '');
 
   const ctx = { 
@@ -47,6 +50,8 @@ const fetched = await fetchHtml(url, options.timeoutMs!, options.userAgent);
     options,
     response: fetched.response
   };
+  
+  reportProgress('rules', 15);
   const rulesIssues = await runRegisteredRules(ctx);
   if (rulesIssues && rulesIssues.length) issues.push(...rulesIssues);
 
@@ -83,35 +88,40 @@ const fetched = await fetchHtml(url, options.timeoutMs!, options.userAgent);
   // New comprehensive scoring system
   const scoring = calculateScore(issues);
 
-  // Detailed chunking analysis (if enabled)
-  let chunking;
-  if (options.enableChunking !== false) { // Enabled by default
-    chunking = chunkContent($, {
-      maxTokensPerChunk: options.maxChunkTokens || 500,
-      includeHtml: false,
-      strategy: options.chunkingStrategy || 'auto'
-    });
-  }
-
-  // Extractability mapping (if enabled)
-  let extractability;
-  if (options.enableExtractability !== false) { // Enabled by default
-    const map = buildExtractabilityMap($, {
-      maxNodes: 500,
-      includeHidden: true,
-      minTextLength: 5
-    });
+  reportProgress('extract', 25);
+  
+  // Run chunking and extractability in parallel (non-LLM operations)
+  const [chunking, extractability] = await Promise.all([
+    // Detailed chunking analysis (if enabled)
+    options.enableChunking !== false
+      ? Promise.resolve(chunkContent($, {
+          maxTokensPerChunk: options.maxChunkTokens || 500,
+          includeHtml: false,
+          strategy: options.chunkingStrategy || 'auto'
+        }))
+      : Promise.resolve(undefined),
     
-    const contentTypes = analyzeContentTypeExtractability($);
-    
-    extractability = {
-      score: map.score,
-      summary: map.summary,
-      contentTypes,
-      issues: map.issues,
-      recommendations: map.recommendations
-    };
-  }
+    // Extractability mapping (if enabled)
+    options.enableExtractability !== false
+      ? Promise.resolve((() => {
+          const map = buildExtractabilityMap($, {
+            maxNodes: 500,
+            includeHidden: true,
+            minTextLength: 5
+          });
+          
+          const contentTypes = analyzeContentTypeExtractability($);
+          
+          return {
+            score: map.score,
+            summary: map.summary,
+            contentTypes,
+            issues: map.issues,
+            recommendations: map.recommendations
+          };
+        })())
+      : Promise.resolve(undefined)
+  ]);
 
   // LLM comprehension analysis (if enabled)
   let llm;
@@ -122,6 +132,7 @@ const fetched = await fetchHtml(url, options.timeoutMs!, options.userAgent);
 
   if (options.enableLLM && options.llmConfig) {
     try {
+      reportProgress('llm', 35);
       console.log('[LLM] Starting parallel LLM operations');
       const llmStartTime = Date.now();
 
@@ -197,6 +208,8 @@ const fetched = await fetchHtml(url, options.timeoutMs!, options.userAgent);
       const llmDuration = Date.now() - llmStartTime;
       console.log(`[LLM] All parallel operations completed in ${llmDuration}ms`);
 
+      reportProgress('processing', 85);
+      
       // Process comprehension result
       if (comprehensionResult) {
         llm = {
@@ -335,8 +348,13 @@ const fetched = await fetchHtml(url, options.timeoutMs!, options.userAgent);
     } catch (error) {
       console.error('Hallucination detection failed:', error);
     }
+  } else {
+    // Non-LLM scan - report progress faster
+    reportProgress('processing', 85);
   }
 
+  reportProgress('scoring', 95);
+  
   // Filter issues based on quality thresholds (reduce noise)
   const minImpact = options.minImpactScore ?? 8;
   const minConf = options.minConfidence ?? 0.7;
