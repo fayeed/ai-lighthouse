@@ -18,6 +18,7 @@ import InterpretationBanner from '../components/InterpretationBanner';
 import PrivacyNotice from '../components/PrivacyNotice';
 import ThemeToggle from '../components/ThemeToggle';
 import QuickWinsSection from '../components/QuickWinsSection';
+import SamplePreview from '../components/SamplePreview';
 import { trackEvent } from '../components/Analytics';
 import 'react-tooltip/dist/react-tooltip.css';
 
@@ -230,43 +231,55 @@ export default function Home() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 transition-colors duration-300">
       <div className="container mx-auto px-4 py-8">
         {/* Header with View Toggle */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-6">
           <div className="flex justify-between items-start mb-4">
             <div className="flex-1"></div>
             <div className="flex-1 text-center">
-              <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-3">
+              <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-2">
                 🚨 AI Lighthouse
               </h1>
             </div>
             <div className="flex-1 flex justify-end gap-3">
               <ThemeToggle />
-              <div className="inline-flex items-center bg-white dark:bg-gray-800 rounded-lg shadow-sm p-1">
-                <button
-                  onClick={() => setViewMode('simple')}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
-                    viewMode === 'simple'
-                      ? 'bg-blue-600 text-white'
-                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
-                  }`}
-                >
-                  Simple
-                </button>
-                <button
-                  onClick={() => setViewMode('complex')}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
-                    viewMode === 'complex'
-                      ? 'bg-blue-600 text-white'
-                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
-                  }`}
-                >
-                  Detailed
-                </button>
-              </div>
+              {reportData && (
+                <div className="inline-flex items-center bg-white dark:bg-gray-800 rounded-lg shadow-sm p-1">
+                  <button
+                    onClick={() => setViewMode('simple')}
+                    className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
+                      viewMode === 'simple'
+                        ? 'bg-blue-600 text-white'
+                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                    }`}
+                  >
+                    Simple
+                  </button>
+                  <button
+                    onClick={() => setViewMode('complex')}
+                    className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
+                      viewMode === 'complex'
+                        ? 'bg-blue-600 text-white'
+                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                    }`}
+                  >
+                    Detailed
+                  </button>
+                </div>
+              )}
             </div>
           </div>
-          <p className="text-lg text-gray-600 dark:text-gray-300">
-            See how AI understands your site — and fix what it gets wrong.
-          </p>
+          
+          {/* Value proposition - only show before results */}
+          {!reportData && (
+            <p className="text-lg text-gray-600 dark:text-gray-300 max-w-xl mx-auto">
+              Analyze how AI systems like ChatGPT, Perplexity, and search engines understand your website.
+            </p>
+          )}
+          
+          {reportData && (
+            <p className="text-lg text-gray-600 dark:text-gray-300">
+              Results for <strong className="text-blue-600 dark:text-blue-400">{url}</strong>
+            </p>
+          )}
         </div>
 
         <AuditForm
@@ -282,6 +295,11 @@ export default function Home() {
           onSubmit={handleSubmit}
           hasResults={!!reportData}
         />
+
+        {/* Show sample preview when no results */}
+        {!reportData && !loading && (
+          <SamplePreview />
+        )}
 
         {reportData && viewMode === 'simple' && (
           <div className="max-w-6xl mx-auto">

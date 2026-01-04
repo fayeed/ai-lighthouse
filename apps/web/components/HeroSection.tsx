@@ -2,7 +2,7 @@ import ThemeToggle from './ThemeToggle';
 
 export default function HeroSection() {
   return (
-    <header className="text-center mb-12 relative">
+    <header className="text-center mb-8 relative">
       {/* Theme Toggle in top right */}
       <div className="absolute top-0 right-0">
         <ThemeToggle />
@@ -12,8 +12,9 @@ export default function HeroSection() {
         <img src="/icon.png" alt="AI Lighthouse" className="w-12 h-12" />
         AI Lighthouse
       </h1>
-      <p className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-2 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-        See how AI understands your site — and fix what it gets wrong.
+      
+      <p className="text-lg text-gray-600 dark:text-gray-300 max-w-xl mx-auto animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+        Analyze how AI systems understand your website.
       </p>
     </header>
   );
