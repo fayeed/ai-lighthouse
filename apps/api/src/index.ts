@@ -60,7 +60,7 @@ const limiter = rateLimit({
   }
 });
 
-export { redisClient, config };
+export { redisClient };
 
 // Middleware - ORDER MATTERS!
 app.use(cors({

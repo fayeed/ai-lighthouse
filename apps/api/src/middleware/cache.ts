@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-import { redisClient, config } from '../index.js';
+import { redisClient } from '../index.js';
+import { config } from '../config/index.js';
 import { logger } from '../utils/logger.js';
 import crypto from 'crypto';
 

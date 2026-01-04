@@ -1,6 +1,7 @@
 import express from 'express';
 import rateLimit from 'express-rate-limit';
-import { redisClient, config } from '../index.js';
+import { redisClient } from '../index.js';
+import { config } from '../config/index.js';
 import { 
   analyzeUrlWithRules, 
   calculateAIReadiness, 
