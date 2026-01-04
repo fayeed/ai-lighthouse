@@ -20,7 +20,6 @@ import PrivacyNotice from '../components/PrivacyNotice';
 import ThemeToggle from '../components/ThemeToggle';
 import QuickWinsSection from '../components/QuickWinsSection';
 import SamplePreview from '../components/SamplePreview';
-import ExampleSites from '../components/ExampleSites';
 import LoadingProgress from '../components/LoadingProgress';
 import RecentScans, { saveRecentScan } from '../components/RecentScans';
 import FAQ from '../components/FAQ';
@@ -414,6 +413,15 @@ function HomeContent() {
           setModelConfig={setModelConfig}
           onSubmit={handleSubmit}
           hasResults={!!reportData}
+          onExampleSelect={(exampleUrl) => {
+            setUrl(exampleUrl);
+            setViewMode('complex'); 
+            setEnableLLM(true);
+            setTimeout(() => {
+              const form = document.querySelector('form');
+              if (form) form.requestSubmit();
+            }, 50);
+          }}
         />
 
         {/* Recent scans from localStorage */}
@@ -430,21 +438,6 @@ function HomeContent() {
           />
         )}
 
-        {!reportData && (
-          <ExampleSites 
-            onSelect={(exampleUrl) => {
-              setUrl(exampleUrl);
-              setViewMode('complex'); 
-              setEnableLLM(true);
-              setTimeout(() => {
-                const form = document.querySelector('form');
-                if (form) form.requestSubmit();
-              }, 50);
-            }}
-            disabled={loading}
-          />
-        )}
-
         {/* Show loading progress */}
         {loading && (
           <LoadingProgress 
@@ -455,10 +448,6 @@ function HomeContent() {
           />
         )}
 
-        {/* Show sample preview when no results */}
-        {!reportData && !loading && (
-          <SamplePreview />
-        )}
 
         {reportData && viewMode === 'simple' && (
           <div className="max-w-6xl mx-auto">

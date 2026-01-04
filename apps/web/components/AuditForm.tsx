@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import ModelSelector, { ModelConfig } from './ModelSelector';
 import ScanEstimate from './ScanEstimate';
+import ExampleSites from './ExampleSites';
 
 interface AuditFormProps {
   url: string;
@@ -16,6 +17,7 @@ interface AuditFormProps {
   setModelConfig: (config: ModelConfig) => void;
   onSubmit: (e: React.FormEvent) => void;
   hasResults?: boolean;
+  onExampleSelect?: (url: string) => void;
 }
 
 export default function AuditForm({
@@ -29,7 +31,8 @@ export default function AuditForm({
   modelConfig,
   setModelConfig,
   onSubmit,
-  hasResults = false
+  hasResults = false,
+  onExampleSelect
 }: AuditFormProps) {
   const [isExpanded, setIsExpanded] = useState(!hasResults);
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -145,14 +148,17 @@ export default function AuditForm({
                   ✨ Free • No signup • Results in ~30 seconds
                 </p>
               )}
+              {!hasResults && onExampleSelect && (
+                <ExampleSites onSelect={onExampleSelect} disabled={loading} />
+              )}
             </div>
 
             {/* Collapsible Advanced Options */}
-            <div className="border-t border-gray-200 dark:border-gray-700 pt-3 mt-3">
+            <div className="pt-2">
               <button
                 type="button"
                 onClick={() => setShowAdvanced(!showAdvanced)}
-                className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 flex items-center gap-1 mx-auto"
+                className="text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400 flex items-center gap-1 mx-auto"
               >
                 {showAdvanced ? '▼' : '▶'} Advanced options
               </button>
