@@ -19,6 +19,7 @@ import PrivacyNotice from '../components/PrivacyNotice';
 import ThemeToggle from '../components/ThemeToggle';
 import QuickWinsSection from '../components/QuickWinsSection';
 import SamplePreview from '../components/SamplePreview';
+import ExampleSites from '../components/ExampleSites';
 import FAQ from '../components/FAQ';
 import { trackEvent } from '../components/Analytics';
 import 'react-tooltip/dist/react-tooltip.css';
@@ -296,6 +297,21 @@ export default function Home() {
           onSubmit={handleSubmit}
           hasResults={!!reportData}
         />
+
+        {!reportData && (
+          <ExampleSites 
+            onSelect={(exampleUrl) => {
+              setUrl(exampleUrl);
+              setViewMode('complex'); 
+              setEnableLLM(true);
+              setTimeout(() => {
+                const form = document.querySelector('form');
+                if (form) form.requestSubmit();
+              }, 50);
+            }}
+            disabled={loading}
+          />
+        )}
 
         {/* Show sample preview when no results */}
         {!reportData && !loading && (
