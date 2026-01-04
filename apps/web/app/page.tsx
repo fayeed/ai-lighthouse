@@ -22,6 +22,7 @@ import QuickWinsSection from '../components/QuickWinsSection';
 import SamplePreview from '../components/SamplePreview';
 import ExampleSites from '../components/ExampleSites';
 import LoadingProgress from '../components/LoadingProgress';
+import RecentScans, { saveRecentScan } from '../components/RecentScans';
 import FAQ from '../components/FAQ';
 import { trackEvent } from '../components/Analytics';
 import 'react-tooltip/dist/react-tooltip.css';
@@ -286,6 +287,9 @@ function HomeContent() {
                 const finalScore = Math.round(data.data.aiReadiness.overall);
                 setScore(finalScore);
                 
+                // Save to recent scans
+                saveRecentScan(validatedUrl, finalScore, data.data.aiReadiness.grade);
+                
                 // Update URL for deep linking
                 updateUrlWithResult(validatedUrl, enableLLM);
                 
@@ -378,6 +382,20 @@ function HomeContent() {
           onSubmit={handleSubmit}
           hasResults={!!reportData}
         />
+
+        {/* Recent scans from localStorage */}
+        {!reportData && !loading && (
+          <RecentScans 
+            onSelect={(recentUrl) => {
+              setUrl(recentUrl);
+              setTimeout(() => {
+                const form = document.querySelector('form');
+                if (form) form.requestSubmit();
+              }, 50);
+            }}
+            currentUrl={url}
+          />
+        )}
 
         {!reportData && (
           <ExampleSites 

@@ -122,7 +122,7 @@ export default function AuditForm({
                 <button
                   type="submit"
                   disabled={loading}
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                  className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-3 px-8 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap shadow-md hover:shadow-lg"
                 >
                   {loading ? (
                     <span className="flex items-center">
@@ -133,12 +133,17 @@ export default function AuditForm({
                       Analyzing...
                     </span>
                   ) : (
-                    hasResults ? 'Reanalyze' : 'Analyze'
+                    hasResults ? '🔄 Reanalyze' : '🚀 Get Free Report'
                   )}
                 </button>
               </div>
               {error && error.toLowerCase().includes('url') && (
                 <p className="text-red-600 text-sm mt-1">⚠️ {error}</p>
+              )}
+              {!hasResults && !loading && (
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
+                  ✨ Free • No signup • Results in ~30 seconds
+                </p>
               )}
             </div>
 
