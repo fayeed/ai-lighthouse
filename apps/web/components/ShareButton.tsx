@@ -6,18 +6,36 @@ interface ShareButtonProps {
   score: number;
   grade: string;
   url: string;
+  enableLLM?: boolean;
 }
 
-export default function ShareButton({ score, grade, url }: ShareButtonProps) {
+export default function ShareButton({ score, grade, url, enableLLM }: ShareButtonProps) {
   const [copied, setCopied] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
 
-  const shareText = `I just analyzed ${url} with AI Lighthouse and got a ${score}/100 (Grade ${grade}) AI Readiness Score! 🚀`;
-  const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
+  // Extract domain for cleaner sharing
+  const getDomain = (urlString: string): string => {
+    try {
+      return new URL(urlString.startsWith('http') ? urlString : `https://${urlString}`).hostname;
+    } catch {
+      return urlString;
+    }
+  };
+
+  const domain = getDomain(url);
+  const shareText = `I just analyzed ${domain} with AI Lighthouse and got a ${score}/100 (Grade ${grade}) AI Readiness Score! 🚀`;
+  
+  // Generate shareable URL with deep link (include ai param if LLM was used)
+  const baseUrl = typeof window !== 'undefined' 
+    ? `${window.location.origin}${window.location.pathname}`
+    : '';
+  const params = new URLSearchParams({ url: domain });
+  if (enableLLM) params.set('ai', 'true');
+  const shareUrl = `${baseUrl}?${params.toString()}`;
 
   const handleCopyLink = async () => {
     try {
-      await navigator.clipboard.writeText(`${shareText}\n\nCheck your website: ${shareUrl}`);
+      await navigator.clipboard.writeText(`${shareText}\n\nAnalyze any website: ${shareUrl}`);
       setCopied(true);
       setTimeout(() => {
         setCopied(false);

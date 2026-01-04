@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { ModelConfig } from '../components/ModelSelector';
 import OverviewTab from '../components/tabs/OverviewTab';
 import AIUnderstandingTab from '../components/tabs/AIUnderstandingTab';
@@ -26,6 +27,10 @@ import { trackEvent } from '../components/Analytics';
 import 'react-tooltip/dist/react-tooltip.css';
 
 export default function Home() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const hasTriggeredFromUrl = useRef(false);
+  
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [loadingStep, setLoadingStep] = useState('starting');
@@ -45,6 +50,39 @@ export default function Home() {
     provider: 'openrouter',
     model: 'meta-llama/llama-3.3-70b-instruct:free',
   });
+
+  // Auto-trigger analysis from URL parameter
+  useEffect(() => {
+    const urlParam = searchParams.get('url');
+    const aiParam = searchParams.get('ai');
+    if (urlParam && !hasTriggeredFromUrl.current && !loading && !reportData) {
+      hasTriggeredFromUrl.current = true;
+      setUrl(urlParam);
+      if (aiParam === 'true') {
+        setEnableLLM(true);
+      }
+      // Trigger form submission after URL is set
+      setTimeout(() => {
+        const form = document.querySelector('form');
+        if (form) form.requestSubmit();
+      }, 100);
+    }
+  }, [searchParams, loading, reportData]);
+
+  // Update URL when analysis completes
+  const updateUrlWithResult = (analyzedUrl: string, usedLLM: boolean) => {
+    // Extract domain from URL for cleaner sharing
+    try {
+      const domain = new URL(analyzedUrl).hostname;
+      const params = new URLSearchParams({ url: domain });
+      if (usedLLM) params.set('ai', 'true');
+      router.replace(`?${params.toString()}`, { scroll: false });
+    } catch {
+      const params = new URLSearchParams({ url: analyzedUrl });
+      if (usedLLM) params.set('ai', 'true');
+      router.replace(`?${params.toString()}`, { scroll: false });
+    }
+  };
 
   const validateUrl = (urlString: string): string | null => {
     if (!urlString.trim()) {
@@ -248,6 +286,9 @@ export default function Home() {
                 const finalScore = Math.round(data.data.aiReadiness.overall);
                 setScore(finalScore);
                 
+                // Update URL for deep linking
+                updateUrlWithResult(validatedUrl, enableLLM);
+                
                 trackEvent.analyzeComplete(validatedUrl, finalScore, enableLLM);
               } else if (event.type === 'error') {
                 throw new Error(event.error);
@@ -428,6 +469,7 @@ export default function Home() {
                   score={Math.round(reportData.aiReadiness.overall)} 
                   grade={reportData.aiReadiness.grade}
                   url={url}
+                  enableLLM={enableLLM}
                 />
               </div>
             </div>
@@ -444,6 +486,7 @@ export default function Home() {
                   score={Math.round(reportData.aiReadiness.overall)} 
                   grade={reportData.aiReadiness.grade}
                   url={url}
+                  enableLLM={enableLLM}
                 />
               </div>
               
