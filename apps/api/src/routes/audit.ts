@@ -1,6 +1,6 @@
 import express from 'express';
 import rateLimit from 'express-rate-limit';
-import { redisClient } from '../index.js';
+import { redisClient, config } from '../index.js';
 import { 
   analyzeUrlWithRules, 
   calculateAIReadiness, 
@@ -46,8 +46,8 @@ const llmRateLimiter = async (req: express.Request, res: express.Response, next:
   const ip = req.ip || req.socket.remoteAddress || 'unknown';
   const key = `rl:llm:${ip}`;
   const now = Date.now();
-  const windowMs = 60 * 60 * 1000; 
-  const maxLLMRequests = 5; // 5 LLM requests per hour
+  const windowMs = config.rateLimit.llmWindowMs;
+  const maxLLMRequests = config.rateLimit.llmMaxRequests;
 
   try {
     const data = await redisClient.get(key);

@@ -16,9 +16,10 @@ import {
   validateContentType,
   requestSizeLimit
 } from './middleware/security.js';
+import config from './config/index.js';
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = config.port;
 
 // Trust proxy - required when behind reverse proxy (Render, Heroku, etc.)
 // This allows express-rate-limit to correctly identify users by IP
@@ -26,7 +27,7 @@ app.set('trust proxy', 1);
 
 // Redis client setup
 const redisClient = createClient({
-  url: process.env.REDIS_URL || 'redis://localhost:6379'
+  url: config.redisUrl
 });
 
 redisClient.on('error', (err) => logger.error('Redis Client Error', { error: err.message }));
@@ -35,8 +36,8 @@ redisClient.on('connect', () => logger.info('Connected to Redis'));
 await redisClient.connect();
 
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 10, 
+  windowMs: config.rateLimit.windowMs,
+  max: config.rateLimit.maxRequests, 
   message: 'Too many requests from this IP, please try again later.',
   standardHeaders: true,
   legacyHeaders: false, 
@@ -53,17 +54,17 @@ const limiter = rateLimit({
     
     res.status(429).json({
       error: 'Rate limit exceeded',
-      message: 'Too many requests. Please try again in 15 minutes.',
-      retryAfter: 900 // 15 minutes 
+      message: `Too many requests. Please try again in ${Math.ceil(config.rateLimit.windowMs / 60000)} minutes.`,
+      retryAfter: Math.ceil(config.rateLimit.windowMs / 1000)
     });
   }
 });
 
-export { redisClient };
+export { redisClient, config };
 
 // Middleware - ORDER MATTERS!
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || '*',
+  origin: config.corsOrigin,
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Accept'],
   maxAge: 86400 // 24 hours
@@ -77,7 +78,7 @@ app.use(validateContentType);
 app.use(express.json({ limit: '1mb' }));
 
 // Timeout handling (after body parsing)
-app.use(requestTimeout(180000)); // 3 minutes timeout (LLM requests can be slow)
+app.use(requestTimeout(config.requestTimeout)); // 3 minutes timeout (LLM requests can be slow)
 
 // Request logging
 app.use(requestLogger);
@@ -138,7 +139,9 @@ process.on('SIGINT', async () => {
 app.listen(PORT, () => {
   logger.info('AI Lighthouse API started', {
     port: PORT,
-    environment: process.env.NODE_ENV || 'development',
+    environment: config.nodeEnv,
+    cacheEnabled: config.cache.enabled,
+    rateLimitMax: config.rateLimit.maxRequests,
     endpoints: {
       health: `http://localhost:${PORT}/health`,
       audit: `http://localhost:${PORT}/api/audit`
