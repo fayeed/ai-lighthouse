@@ -92,3 +92,19 @@ body {
 .animate-pulse-subtle {
   animation: pulse-subtle 2s ease-in-out infinite;
 }
+
+/* Hide scrollbar for horizontal scroll on tabs */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Improve touch targets on mobile */
+@media (max-width: 640px) {
+  button, a {
+    min-height: 44px;
+  }
+}

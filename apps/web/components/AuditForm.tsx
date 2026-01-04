@@ -49,9 +49,9 @@ export default function AuditForm({
   };
 
   return (
-    <div className="max-w-2xl mx-auto mb-8">
+    <div className="max-w-2xl mx-auto mb-4 sm:mb-8">
       <div className={`transition-all duration-300 ease-in-out ${
-        !isExpanded && hasResults ? 'mb-0' : 'mb-4'
+        !isExpanded && hasResults ? 'mb-0' : 'mb-2 sm:mb-4'
       }`}>
         {/* Minimized state */}
         {hasResults && !isExpanded && (
@@ -59,10 +59,10 @@ export default function AuditForm({
             onClick={handleToggle}
             className="w-full bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 hover:shadow-lg transition-all duration-200 flex items-center justify-between group"
           >
-            <div className="flex items-center gap-3">
-              <span className="text-2xl">🔍</span>
-              <div className="text-left">
-                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+              <span className="text-2xl flex-shrink-0">🔍</span>
+              <div className="text-left min-w-0">
+                <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
                   Analyzing: <span className="text-blue-600 dark:text-blue-400">{url}</span>
                 </p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">Click to reanalyze</p>
@@ -95,13 +95,13 @@ export default function AuditForm({
               </button>
             </div>
           )}
-          <form onSubmit={onSubmit} className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+          <form onSubmit={onSubmit} className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6">
             {/* Simplified URL Input with prominent CTA */}
-            <div className="mb-4">
-              <label htmlFor="url" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <div className="mb-3 sm:mb-4">
+              <label htmlFor="url" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 sm:mb-2">
                 Enter your website URL
               </label>
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <input
                   type="text"
                   id="url"
@@ -115,14 +115,14 @@ export default function AuditForm({
                   placeholder="yoursite.com"
                   required
                   autoFocus
-                  className={`flex-1 px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100 dark:bg-gray-700 dark:border-gray-600 transition-all text-lg ${
+                  className={`flex-1 px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100 dark:bg-gray-700 dark:border-gray-600 transition-all text-base sm:text-lg ${
                     error && error.toLowerCase().includes('url') ? 'border-red-500' : 'border-gray-300'
                   }`}
                 />
                 <button
                   type="submit"
                   disabled={loading}
-                  className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-3 px-8 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap shadow-md hover:shadow-lg"
+                  className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-3 px-6 sm:px-8 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap shadow-md hover:shadow-lg text-base"
                 >
                   {loading ? (
                     <span className="flex items-center">

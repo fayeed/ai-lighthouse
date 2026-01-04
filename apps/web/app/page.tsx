@@ -316,17 +316,22 @@ function HomeContent() {
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 transition-colors duration-300">
-      <div className="container mx-auto px-4 py-8 flex-1">
+      <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-8 flex-1">
         {/* Header with View Toggle */}
-        <div className="text-center mb-6">
-          <div className="flex justify-between items-start mb-4">
-            <div className="flex-1"></div>
-            <div className="flex-1 text-center">
-              <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-2">
+        <div className="text-center mb-4 sm:mb-6 relative">
+          {/* Theme toggle - absolute on mobile, in flow on desktop */}
+          <div className="absolute right-0 top-0 sm:hidden">
+            <ThemeToggle />
+          </div>
+          
+          <div className="flex justify-between items-center mb-2 sm:mb-4">
+            <div className="hidden sm:block flex-1"></div>
+            <div className="flex-1 text-center pt-1 sm:pt-0">
+              <h1 className="text-xl sm:text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-1 sm:mb-2">
                 🚨 AI Lighthouse
               </h1>
             </div>
-            <div className="flex-1 flex justify-end gap-3">
+            <div className="hidden sm:flex flex-1 justify-end gap-3">
               <ThemeToggle />
               {reportData && (
                 <div className="inline-flex items-center bg-white dark:bg-gray-800 rounded-lg shadow-sm p-1">
@@ -355,16 +360,44 @@ function HomeContent() {
             </div>
           </div>
           
+          {/* Mobile view toggle - only show on mobile when there are results */}
+          {reportData && (
+            <div className="sm:hidden flex justify-center mb-2">
+              <div className="inline-flex items-center bg-white dark:bg-gray-800 rounded-lg shadow-sm p-1">
+                <button
+                  onClick={() => setViewMode('simple')}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
+                    viewMode === 'simple'
+                      ? 'bg-blue-600 text-white'
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                  }`}
+                >
+                  Simple
+                </button>
+                <button
+                  onClick={() => setViewMode('complex')}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
+                    viewMode === 'complex'
+                      ? 'bg-blue-600 text-white'
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                  }`}
+                >
+                  Detailed
+                </button>
+              </div>
+            </div>
+          )}
+          
           {/* Value proposition - only show before results */}
           {!reportData && (
-            <p className="text-lg text-gray-600 dark:text-gray-300 max-w-xl mx-auto">
+            <p className="text-sm sm:text-lg text-gray-600 dark:text-gray-300 max-w-xl mx-auto">
               Analyze how AI systems like ChatGPT, Perplexity, and search engines understand your website.
             </p>
           )}
           
           {reportData && (
-            <p className="text-lg text-gray-600 dark:text-gray-300">
-              Results for <strong className="text-blue-600 dark:text-blue-400">{url}</strong>
+            <p className="text-sm sm:text-lg text-gray-600 dark:text-gray-300 mt-2">
+              Results for <strong className="text-blue-600 dark:text-blue-400 break-all">{url}</strong>
             </p>
           )}
         </div>
@@ -429,9 +462,9 @@ function HomeContent() {
 
         {reportData && viewMode === 'simple' && (
           <div className="max-w-6xl mx-auto">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 md:p-8 animate-fade-in-up">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6 md:p-8 animate-fade-in-up">
               {/* 1. How bad is it? */}
-              <div className="text-center mb-6">
+              <div className="text-center mb-4 sm:mb-6">
                 <ScoreDisplay
                   score={Math.round(reportData.aiReadiness.overall)}
                   grade={reportData.aiReadiness.grade}
@@ -445,11 +478,11 @@ function HomeContent() {
               {(() => {
                 const weakDimensions = getWeakDimensions(reportData);
                 return weakDimensions.length > 0 && (
-                  <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-lg">
-                    <h3 className="text-base font-bold text-gray-900 dark:text-gray-100 mb-2 flex items-center gap-2">
-                      <span className="text-xl">⚠️</span> What's Broken
+                  <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-lg">
+                    <h3 className="text-sm sm:text-base font-bold text-gray-900 dark:text-gray-100 mb-1 sm:mb-2 flex items-center gap-2">
+                      <span className="text-lg sm:text-xl">⚠️</span> What's Broken
                     </h3>
-                    <p className="text-base text-gray-800 dark:text-gray-200">
+                    <p className="text-sm sm:text-base text-gray-800 dark:text-gray-200">
                       {weakDimensions.length === 1 
                         ? `Your ${weakDimensions[0]} needs work.`
                         : `Your ${weakDimensions.join(' and ')} need work.`
@@ -468,15 +501,15 @@ function HomeContent() {
               )}
 
               {/* 4. Where next? */}
-              <div className="mb-6">
+              <div className="mb-4 sm:mb-6">
                 <button
                   onClick={() => setViewMode('complex')}
-                  className="w-full py-4 px-6 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 dark:from-blue-500 dark:to-blue-600 dark:hover:from-blue-600 dark:hover:to-blue-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-3 text-lg"
+                  className="w-full py-3 sm:py-4 px-4 sm:px-6 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 dark:from-blue-500 dark:to-blue-600 dark:hover:from-blue-600 dark:hover:to-blue-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2 sm:gap-3 text-base sm:text-lg"
                 >
-                  <span>See Detailed Analysis & All Issues</span>
-                  <span className="text-2xl">→</span>
+                  <span>See Detailed Analysis</span>
+                  <span className="text-xl sm:text-2xl">→</span>
                 </button>
-                <p className="text-xs text-center text-gray-500 dark:text-gray-400 mt-2">
+                <p className="text-xs text-center text-gray-500 dark:text-gray-400 mt-1.5 sm:mt-2">
                   View comprehensive reports, technical details, and advanced insights
                 </p>
               </div>
@@ -496,10 +529,10 @@ function HomeContent() {
 
         {reportData && viewMode === 'complex' && (
           <div className="max-w-6xl mx-auto">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 animate-fade-in-up">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-8 animate-fade-in-up">
               {/* Header with Share Button */}
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Audit Report</h2>
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+                <h2 className="text-xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Audit Report</h2>
                 <ShareButton 
                   score={Math.round(reportData.aiReadiness.overall)} 
                   grade={reportData.aiReadiness.grade}
@@ -528,8 +561,8 @@ function HomeContent() {
               )}
 
               {/* Tabs Navigation */}
-              <div className="border-b border-gray-200 dark:border-gray-700 mb-6">
-                <nav className="-mb-px flex space-x-8">
+              <div className="border-b border-gray-200 dark:border-gray-700 mb-4 sm:mb-6 -mx-3 sm:-mx-4 px-3 sm:px-4 md:mx-0 md:px-0">
+                <nav className="-mb-px flex space-x-1 sm:space-x-8 overflow-x-auto scrollbar-hide pb-px">
                   {[
                     { key: 'overview', label: 'Overview' },
                     { key: 'ai-understanding', label: 'AI Understanding' },
@@ -543,9 +576,9 @@ function HomeContent() {
                       onClick={() => setActiveTab(tab.key)}
                       className={`${
                         activeTab === tab.key
-                          ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                          ? 'border-blue-500 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
                           : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
-                      } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200`}
+                      } whitespace-nowrap py-2.5 px-2 sm:px-1 sm:py-4 border-b-2 font-medium text-xs sm:text-sm transition-colors duration-200 rounded-t-lg sm:rounded-none`}
                     >
                       {tab.label}
                     </button>
@@ -606,40 +639,41 @@ function HomeContent() {
       <PrivacyNotice />
 
       {/* Footer */}
-      <footer className="text-center py-8 text-sm text-gray-500 dark:text-gray-400 border-t border-gray-200 dark:border-gray-800 mt-auto bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm">
-        <div className="flex flex-wrap justify-center items-center gap-3 mb-3">
-        <a 
-          href="https://github.com/fayeed/ai-lighthouse" 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 hover:text-gray-700 dark:hover:text-gray-300"
-        >
-          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-            <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.17 6.839 9.49.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.604-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.831.092-.646.35-1.086.636-1.336-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.167 22 16.418 22 12c0-5.523-4.477-10-10-10z"/>
-          </svg>
-          Star on GitHub
-        </a>
-        <span className="text-gray-300 dark:text-gray-600">•</span>
-        <a 
-          href="https://fayeed.dev" 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="hover:text-gray-700 dark:hover:text-gray-300"
-        >
-          By Fayeed
-        </a>
-        <span className="text-gray-300 dark:text-gray-600">•</span>
-        <a 
-          href="https://github.com/fayeed/ai-lighthouse/issues" 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="hover:text-gray-700 dark:hover:text-gray-300"
-        >
-          Report an issue
-        </a>
-      </div>
-      <p>Made with ❤️ in India</p>
-    </footer>
+      <footer className="text-center py-6 sm:py-8 text-sm text-gray-500 dark:text-gray-400 border-t border-gray-200 dark:border-gray-800 mt-auto bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm px-4">
+        <div className="flex flex-wrap justify-center items-center gap-2 sm:gap-3 mb-3">
+          <a 
+            href="https://github.com/fayeed/ai-lighthouse" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 hover:text-gray-700 dark:hover:text-gray-300 py-1"
+          >
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+              <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.17 6.839 9.49.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.604-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.831.092-.646.35-1.086.636-1.336-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.167 22 16.418 22 12c0-5.523-4.477-10-10-10z"/>
+            </svg>
+            <span className="hidden xs:inline">Star on GitHub</span>
+            <span className="xs:hidden">GitHub</span>
+          </a>
+          <span className="text-gray-300 dark:text-gray-600">•</span>
+          <a 
+            href="https://fayeed.dev" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="hover:text-gray-700 dark:hover:text-gray-300 py-1"
+          >
+            By Fayeed
+          </a>
+          <span className="text-gray-300 dark:text-gray-600">•</span>
+          <a 
+            href="https://github.com/fayeed/ai-lighthouse/issues" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="hover:text-gray-700 dark:hover:text-gray-300 py-1"
+          >
+            Report issue
+          </a>
+        </div>
+        <p>Made with ❤️ in India</p>
+      </footer>
   </div>
   );
 }
