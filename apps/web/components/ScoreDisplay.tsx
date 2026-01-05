@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Tooltip from './Tooltip';
 
 interface ScoreDisplayProps {
@@ -45,6 +46,31 @@ function getStatisticalContext(score: number): string {
   return 'Below average';
 }
 
+function AnimatedScore({ value }: { value: number }) {
+  const [displayValue, setDisplayValue] = useState(0);
+  
+  useEffect(() => {
+    const duration = 1500;
+    const steps = 60;
+    const stepValue = value / steps;
+    let current = 0;
+    
+    const timer = setInterval(() => {
+      current += stepValue;
+      if (current >= value) {
+        setDisplayValue(value);
+        clearInterval(timer);
+      } else {
+        setDisplayValue(Math.round(current));
+      }
+    }, duration / steps);
+    
+    return () => clearInterval(timer);
+  }, [value]);
+  
+  return <span className="tabular-nums">{displayValue}</span>;
+}
+
 export default function ScoreDisplay({
   score,
   grade,
@@ -67,10 +93,33 @@ Example impact:
           <span className="text-white/80 hover:text-white text-lg mt-0.5">ⓘ</span>
         </Tooltip>
       </div>
-      <div className="text-4xl sm:text-6xl font-bold mb-1 sm:mb-2 animate-pulse-subtle">
-        {score}/100
+      <div className="text-4xl sm:text-6xl font-bold mb-1 sm:mb-2">
+        <AnimatedScore value={score} />/100
       </div>
-      <div className="text-base sm:text-xl mb-1 sm:mb-2">Grade: {grade}</div>
+      <div className="text-base sm:text-xl mb-1 sm:mb-2 flex items-center gap-2">
+        <span>Grade:</span>
+        <span className={`px-2 py-0.5 rounded text-sm font-bold ${
+          score >= 90 ? 'bg-green-500/30' :
+          score >= 75 ? 'bg-blue-500/30' :
+          score >= 60 ? 'bg-yellow-500/30' :
+          'bg-red-500/30'
+        }`}>
+          {grade}
+        </span>
+      </div>
+      
+      {/* Score visualization bar */}
+      <div className="w-full bg-white/20 rounded-full h-2 mb-3 overflow-hidden">
+        <div 
+          className={`h-2 rounded-full transition-all duration-1000 ease-out ${
+            score >= 90 ? 'bg-green-400' :
+            score >= 75 ? 'bg-blue-400' :
+            score >= 60 ? 'bg-yellow-400' :
+            'bg-red-400'
+          }`}
+          style={{ width: `${score}%` }}
+        />
+      </div>
       
       {/* Threshold Guidance */}
       <div className="bg-white/10 rounded-lg p-2 sm:p-3 mb-2 sm:mb-3 backdrop-blur-sm">
