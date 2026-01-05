@@ -35,7 +35,6 @@ export default function AuditForm({
   onExampleSelect
 }: AuditFormProps) {
   const [isExpanded, setIsExpanded] = useState(!hasResults);
-  const [showAdvanced, setShowAdvanced] = useState(false);
   const [scanStats, setScanStats] = useState<{ thisWeek: number; total: number } | null>(null);
 
   // Fetch scan stats on mount
@@ -178,45 +177,40 @@ export default function AuditForm({
               )}
             </div>
 
-            {/* Collapsible Advanced Options */}
-            <div className="pt-2">
-              <button
-                type="button"
-                onClick={() => setShowAdvanced(!showAdvanced)}
-                className="text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400 flex items-center gap-1 mx-auto"
-              >
-                {showAdvanced ? '▼' : '▶'} Advanced options
-              </button>
+            {/* AI Analysis Toggle */}
+            <div className="pt-3 border-t border-gray-100 dark:border-gray-700">
+              <label className="flex items-center justify-between cursor-pointer group">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-gray-100 transition-colors">
+                    🤖 AI-powered analysis
+                  </span>
+                  <span className="text-xs text-gray-400 dark:text-gray-500">(deeper insights)</span>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={enableLLM}
+                  onClick={() => setEnableLLM(!enableLLM)}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 ${
+                    enableLLM ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform duration-200 ${
+                      enableLLM ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </label>
               
-              {showAdvanced && (
-                <div className="mt-4 space-y-4 animate-fade-in-up">
-                  <div>
-                    <label className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        checked={enableLLM}
-                        onChange={(e) => setEnableLLM(e.target.checked)}
-                        className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 dark:bg-gray-700"
-                      />
-                      <span className="text-sm text-gray-700 dark:text-gray-300">
-                        Enable AI-powered analysis (LLM)
-                      </span>
-                    </label>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 ml-6">
-                      Provides deeper insights using language models (slower)
-                    </p>
-                  </div>
-
-                  {enableLLM && (
-                    <div>
-                      <ModelSelector value={modelConfig} onChange={setModelConfig} />
-                      <ScanEstimate 
-                        enableLLM={enableLLM} 
-                        provider={modelConfig.provider}
-                        model={modelConfig.model}
-                      />
-                    </div>
-                  )}
+              {enableLLM && (
+                <div className="mt-3 space-y-3 animate-fade-in-up">
+                  <ModelSelector value={modelConfig} onChange={setModelConfig} />
+                  <ScanEstimate 
+                    enableLLM={enableLLM} 
+                    provider={modelConfig.provider}
+                    model={modelConfig.model}
+                  />
                 </div>
               )}
             </div>
