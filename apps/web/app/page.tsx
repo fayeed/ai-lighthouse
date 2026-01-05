@@ -550,7 +550,7 @@ function HomeContent() {
               )}
 
               {/* Tabs Navigation */}
-              <div className="border-b border-gray-200 dark:border-gray-700 mb-4 sm:mb-6 -mx-3 sm:-mx-4 px-3 sm:px-4 md:mx-0 md:px-0">
+              <div className="sticky top-0 z-10 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 mb-4 sm:mb-6 -mx-3 sm:-mx-4 px-3 sm:px-4 md:-mx-8 md:px-8 -mt-4 pt-4">
                 <nav className="-mb-px flex space-x-1 sm:space-x-8 overflow-x-auto scrollbar-hide pb-px">
                   {[
                     { key: 'overview', label: 'Overview' },
