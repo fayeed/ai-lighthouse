@@ -16,6 +16,7 @@ interface AuditFormProps {
   modelConfig: ModelConfig;
   setModelConfig: (config: ModelConfig) => void;
   onSubmit: (e: React.FormEvent) => void;
+  onCancel?: () => void;
   hasResults?: boolean;
   onExampleSelect?: (url: string) => void;
 }
@@ -31,6 +32,7 @@ export default function AuditForm({
   modelConfig,
   setModelConfig,
   onSubmit,
+  onCancel,
   hasResults = false,
   onExampleSelect
 }: AuditFormProps) {
@@ -139,23 +141,36 @@ export default function AuditForm({
                     error && error.toLowerCase().includes('url') ? 'border-red-500' : 'border-gray-300'
                   }`}
                 />
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-3 px-6 sm:px-8 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap shadow-md hover:shadow-lg text-base"
-                >
-                  {loading ? (
+                {loading ? (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onCancel?.();
+                    }}
+                    className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold py-3 px-6 sm:px-8 rounded-lg transition-all whitespace-nowrap shadow-md hover:shadow-lg text-base group"
+                  >
                     <span className="flex items-center">
-                      <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white group-hover:hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                       </svg>
-                      Analyzing...
+                      <svg className="hidden group-hover:block -ml-1 mr-2 h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                      <span className="group-hover:hidden">Analyzing...</span>
+                      <span className="hidden group-hover:inline">Cancel</span>
                     </span>
-                  ) : (
-                    hasResults ? '🔄 Reanalyze' : '🚀 Get Free Report'
-                  )}
-                </button>
+                  </button>
+                ) : (
+                  <button
+                    type="submit"
+                    className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-3 px-6 sm:px-8 rounded-lg transition-all whitespace-nowrap shadow-md hover:shadow-lg text-base"
+                  >
+                    {hasResults ? '🔄 Reanalyze' : '🚀 Get Free Report'}
+                  </button>
+                )}
               </div>
               {error && error.toLowerCase().includes('url') && (
                 <p className="text-red-600 text-sm mt-1">⚠️ {error}</p>
@@ -164,6 +179,12 @@ export default function AuditForm({
                 <div className="mt-2 text-center">
                   <p className="text-xs text-gray-500 dark:text-gray-400">
                     Free • No signup • Results in ~30 seconds
+                  </p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1 hidden sm:block">
+                    <kbd className="px-1.5 py-0.5 text-[10px] bg-gray-100 dark:bg-gray-700 rounded border border-gray-200 dark:border-gray-600">⌘</kbd>
+                    <span className="mx-0.5">+</span>
+                    <kbd className="px-1.5 py-0.5 text-[10px] bg-gray-100 dark:bg-gray-700 rounded border border-gray-200 dark:border-gray-600">Enter</kbd>
+                    <span className="ml-1">to analyze</span>
                   </p>
                   {scanStats && scanStats.thisWeek > 0 && (
                     <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
