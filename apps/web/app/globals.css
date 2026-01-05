@@ -93,6 +93,67 @@ body {
   animation: pulse-subtle 2s ease-in-out infinite;
 }
 
+/* Shimmer animation for loading progress */
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Bounce animation for elements */
+@keyframes bounce-subtle {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+.animate-bounce-subtle {
+  animation: bounce-subtle 1s ease-in-out infinite;
+}
+
+/* Fade transition for FAQ answers */
+@keyframes expandDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 500px;
+    padding-top: 0;
+    padding-bottom: 1rem;
+  }
+}
+
+.animate-expand-down {
+  animation: expandDown 0.3s ease-out forwards;
+}
+
+/* Copy success animation */
+@keyframes copySuccess {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.animate-copy-success {
+  animation: copySuccess 0.3s ease-out;
+}
+
 /* Hide scrollbar for horizontal scroll on tabs */
 .scrollbar-hide {
   -ms-overflow-style: none;
