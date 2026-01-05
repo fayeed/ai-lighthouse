@@ -30,6 +30,7 @@ function HomeContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const hasTriggeredFromUrl = useRef(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
   
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
@@ -68,6 +69,41 @@ function HomeContent() {
       }, 100);
     }
   }, [searchParams, loading, reportData]);
+
+  // Cancel analysis function
+  const cancelAnalysis = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+      setLoading(false);
+      setLoadingProgress(0);
+      setLoadingMessage('');
+      setError('Analysis cancelled');
+    }
+  };
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Cmd/Ctrl + Enter to submit
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && !loading) {
+        const form = document.querySelector('form');
+        if (form) form.requestSubmit();
+      }
+      // Escape to cancel analysis or reset/clear results
+      if (e.key === 'Escape') {
+        if (loading) {
+          cancelAnalysis();
+        } else if (reportData) {
+          setReportData(null);
+          setUrl('');
+          router.replace('/', { scroll: false });
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [loading, reportData, router]);
 
   // Update URL when analysis completes
   const updateUrlWithResult = (analyzedUrl: string, usedLLM: boolean) => {
@@ -229,6 +265,9 @@ function HomeContent() {
         }
       }
 
+      // Create abort controller for cancellation
+      abortControllerRef.current = new AbortController();
+
       // Use SSE streaming endpoint for real-time progress
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002'}/api/audit/stream`, {
         method: 'POST',
@@ -236,6 +275,7 @@ function HomeContent() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(requestBody),
+        signal: abortControllerRef.current.signal,
       });
 
       if (!response.ok) {
@@ -303,6 +343,10 @@ function HomeContent() {
         }
       }
     } catch (err: any) {
+      // Don't show error for user-initiated cancellation
+      if (err.name === 'AbortError') {
+        return;
+      }
       const errorMessage = err.message || 'An error occurred during the audit';
       setError(errorMessage);
       
@@ -310,6 +354,7 @@ function HomeContent() {
       trackEvent.analyzeError(validatedUrl, errorMessage, enableLLM);
     } finally {
       setLoading(false);
+      abortControllerRef.current = null;
     }
   };
 
@@ -412,6 +457,7 @@ function HomeContent() {
           modelConfig={modelConfig}
           setModelConfig={setModelConfig}
           onSubmit={handleSubmit}
+          onCancel={cancelAnalysis}
           hasResults={!!reportData}
           onExampleSelect={(exampleUrl) => {
             setUrl(exampleUrl);
