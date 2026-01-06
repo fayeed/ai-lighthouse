@@ -6,8 +6,6 @@ import Tooltip from './Tooltip';
 interface ScoreDisplayProps {
   score: number;
   grade: string;
-  showScoringGuide: boolean;
-  setShowScoringGuide: (show: boolean) => void;
 }
 
 function getScoreThreshold(score: number): {
@@ -74,73 +72,82 @@ function AnimatedScore({ value }: { value: number }) {
 export default function ScoreDisplay({
   score,
   grade,
-  showScoringGuide,
-  setShowScoringGuide
 }: ScoreDisplayProps) {
   const threshold = getScoreThreshold(score);
   const context = getStatisticalContext(score);
 
   return (
-    <div className="bg-gradient-to-r from-purple-500 to-indigo-600 dark:from-purple-700 dark:to-indigo-800 text-white rounded-lg p-3 sm:p-6 mb-4 sm:mb-8 animate-scale-in shadow-xl hover:shadow-2xl transition-shadow duration-300">
-      <div className="flex items-start gap-2 mb-1 sm:mb-2">
-        <h3 className="text-lg sm:text-2xl font-bold">AI Readiness Score</h3>
+    <div className="bg-zinc-900 border border-zinc-800 text-white rounded-2xl p-4 sm:p-8 mb-6 sm:mb-10">
+      <div className="flex items-start gap-2 mb-3 sm:mb-4">
+        <h3 className="text-xl sm:text-2xl font-bold">AI Readiness Score</h3>
         <Tooltip content="Overall score indicating how well your website is optimized for AI systems like chatbots, search engines, and voice assistants. Higher scores mean better AI comprehension and visibility.
 
 Example impact:
 • 90+ score: ChatGPT accurately answers questions about your products
 • 60-90 score: Some details may be missed or misunderstood
 • Below 60: AI may struggle to extract key information or hallucinate facts">
-          <span className="text-white/80 hover:text-white text-lg mt-0.5">ⓘ</span>
+          <span className="text-gray-400 hover:text-white text-lg mt-1 cursor-help">ⓘ</span>
         </Tooltip>
       </div>
-      <div className="text-4xl sm:text-6xl font-bold mb-1 sm:mb-2">
+      <div className="text-5xl sm:text-7xl font-bold mb-3 sm:mb-4">
         <AnimatedScore value={score} />/100
       </div>
-      <div className="text-base sm:text-xl mb-1 sm:mb-2 flex items-center gap-2">
-        <span>Grade:</span>
-        <span className={`px-2 py-0.5 rounded text-sm font-bold ${
-          score >= 90 ? 'bg-green-500/30' :
-          score >= 75 ? 'bg-blue-500/30' :
-          score >= 60 ? 'bg-yellow-500/30' :
-          'bg-red-500/30'
+      <div className="text-base sm:text-lg mb-4 sm:mb-5 flex items-center gap-3">
+        <span className="text-gray-400">Grade:</span>
+        <span className={`px-3 py-1 rounded-lg text-sm sm:text-base font-bold border ${
+          score >= 90 ? 'bg-green-500/10 text-green-400 border-green-500/20' :
+          score >= 75 ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
+          score >= 60 ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' :
+          'bg-red-500/10 text-red-400 border-red-500/20'
         }`}>
           {grade}
         </span>
       </div>
-      
+
       {/* Score visualization bar */}
-      <div className="w-full bg-white/20 rounded-full h-2 mb-3 overflow-hidden">
-        <div 
+      <div className="w-full bg-zinc-800 rounded-full h-2 mb-4 sm:mb-5 overflow-hidden">
+        <div
           className={`h-2 rounded-full transition-all duration-1000 ease-out ${
-            score >= 90 ? 'bg-green-400' :
-            score >= 75 ? 'bg-blue-400' :
-            score >= 60 ? 'bg-yellow-400' :
-            'bg-red-400'
+            score >= 90 ? 'bg-green-500' :
+            score >= 75 ? 'bg-blue-500' :
+            score >= 60 ? 'bg-yellow-500' :
+            'bg-red-500'
           }`}
           style={{ width: `${score}%` }}
         />
       </div>
-      
+
       {/* Threshold Guidance */}
-      <div className="bg-white/10 rounded-lg p-2 sm:p-3 mb-2 sm:mb-3 backdrop-blur-sm">
-        <div className="text-sm font-semibold mb-0.5 sm:mb-1">{threshold.category}</div>
-        <div className="text-xs text-white/80">{threshold.description} • {context}</div>
+      <div className="bg-zinc-800/50 border border-zinc-700 rounded-xl p-3 sm:p-4 mb-3 sm:mb-4">
+        <div className="text-sm sm:text-base font-semibold mb-1 text-white">{threshold.category}</div>
+        <div className="text-xs sm:text-sm text-gray-400">{threshold.description} • {context}</div>
       </div>
 
       {/* Quick Interpretation */}
-      <div className="text-xs sm:text-sm text-white/90 mb-2 sm:mb-3">
-        {score >= 90 && "✓ AI systems will accurately understand and cite your content"}
-        {score >= 75 && score < 90 && "⚡ Good foundation - a few improvements will optimize AI comprehension"}
-        {score < 75 && "⚠ AI may struggle to extract accurate information - review issues below"}
+      <div className="text-xs sm:text-sm text-gray-300 mb-3 sm:mb-4 flex items-start gap-2">
+        <span className="text-base flex-shrink-0">
+          {score >= 90 && "✓"}
+          {score >= 75 && score < 90 && "⚡"}
+          {score < 75 && "⚠️"}
+        </span>
+        <span>
+          {score >= 90 && "AI systems will accurately understand and cite your content"}
+          {score >= 75 && score < 90 && "Good foundation - a few improvements will optimize AI comprehension"}
+          {score < 75 && "AI may struggle to extract accurate information - review issues below"}
+        </span>
       </div>
-      
-      {/* Scoring Guide Button */}
-      <button
-        onClick={() => setShowScoringGuide(!showScoringGuide)}
-        className="text-sm text-white/90 hover:text-white underline flex items-center gap-1"
-      >
-        {showScoringGuide ? '▼' : '▶'} How is this calculated?
-      </button>
+
+      {/* Scoring Guide Link */}
+      <div className="mt-3 sm:mt-4 text-center">
+        <a
+          href="/scoring-guide"
+          className="text-teal-400 hover:text-teal-300 text-xs sm:text-sm font-medium transition-colors"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          What do these scores mean? →
+        </a>
+      </div>
     </div>
   );
 }
