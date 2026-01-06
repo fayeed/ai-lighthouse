@@ -44,38 +44,38 @@ export default function ExtractabilitySection({ extractability }: Extractability
   ];
 
   return (
-    <div className="bg-yellow-50 dark:bg-yellow-900/30 border-2 border-yellow-200 dark:border-yellow-700 rounded-lg p-6">
+    <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-6">
       <div className="flex items-center gap-2 mb-4">
-        <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100">🔄 Extractability</h3>
+        <h3 className="text-2xl font-bold text-white">🔄 Extractability</h3>
         <Tooltip content="How easily AI systems can extract and process your content. Considers HTML structure, rendering method, and content accessibility.">
-          <span className="text-gray-500 hover:text-gray-700 cursor-help">ⓘ</span>
+          <span className="text-gray-400 hover:text-gray-300 cursor-help">ⓘ</span>
         </Tooltip>
       </div>
 
       <ExampleSection title="See Example" examples={extractabilityExamples} />
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-        <div className="bg-white dark:bg-gray-800 p-3 rounded">
-          <div className="text-sm text-gray-600 dark:text-gray-400">Overall Score</div>
-          <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
+        <div className="bg-zinc-800 p-3 rounded">
+          <div className="text-sm text-gray-400">Overall Score</div>
+          <div className="text-2xl font-bold text-teal-400">
             {extractability.score.extractabilityScore}/100
           </div>
         </div>
-        <div className="bg-white dark:bg-gray-800 p-3 rounded">
-          <div className="text-sm text-gray-600 dark:text-gray-400">Server-Rendered</div>
-          <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
+        <div className="bg-zinc-800 p-3 rounded">
+          <div className="text-sm text-gray-400">Server-Rendered</div>
+          <div className="text-2xl font-bold text-teal-400">
             {extractability.score.serverRenderedPercent}%
           </div>
         </div>
-        <div className="bg-white dark:bg-gray-800 p-3 rounded">
-          <div className="text-sm text-gray-600 dark:text-gray-400">Text Extractable</div>
-          <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
+        <div className="bg-zinc-800 p-3 rounded">
+          <div className="text-sm text-gray-400">Text Extractable</div>
+          <div className="text-2xl font-bold text-teal-400">
             {extractability.contentTypes.text.percentage}%
           </div>
         </div>
-        <div className="bg-white dark:bg-gray-800 p-3 rounded">
-          <div className="text-sm text-gray-600 dark:text-gray-400">Images Extractable</div>
-          <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
+        <div className="bg-zinc-800 p-3 rounded">
+          <div className="text-sm text-gray-400">Images Extractable</div>
+          <div className="text-2xl font-bold text-teal-400">
             {extractability.contentTypes.images.percentage}%
           </div>
         </div>
@@ -84,20 +84,20 @@ export default function ExtractabilitySection({ extractability }: Extractability
       {/* Content Type Details */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
         {Object.entries(extractability.contentTypes).map(([type, data]) => (
-          <div key={type} className="bg-white dark:bg-gray-800 p-4 rounded border border-gray-200 dark:border-gray-700">
-            <h4 className="font-semibold text-gray-900 dark:text-gray-100 capitalize mb-2">{type}</h4>
+          <div key={type} className="bg-zinc-800 p-4 rounded border border-gray-200 dark:border-gray-700">
+            <h4 className="font-semibold text-white capitalize mb-2">{type}</h4>
             <div className="space-y-1 text-sm">
               <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Total:</span>
-                <span className="font-medium text-gray-900 dark:text-gray-100">{data.total}</span>
+                <span className="text-gray-400">Total:</span>
+                <span className="font-medium text-white">{data.total}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Extractable:</span>
+                <span className="text-gray-400">Extractable:</span>
                 <span className="font-medium text-green-600 dark:text-green-400">{data.extractable}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Percentage:</span>
-                <span className="font-medium text-gray-900 dark:text-gray-100">{data.percentage}%</span>
+                <span className="text-gray-400">Percentage:</span>
+                <span className="font-medium text-white">{data.percentage}%</span>
               </div>
             </div>
           </div>

@@ -11,9 +11,9 @@ export default function CategoryScores({ categoryScores }: CategoryScoresProps) 
   return (
     <div>
       <div className="flex items-center gap-2 mb-3">
-        <h4 className="font-semibold text-gray-700 dark:text-gray-300">Category Breakdown</h4>
+        <h4 className="font-semibold text-gray-300">Category Breakdown</h4>
         <Tooltip content="Individual scores for each AI readiness category:\n\n• Content Quality: Text clarity, structure, readability\n• Technical: HTML structure, semantic markup\n• Crawlability: robots.txt, sitemaps, canonical URLs\n• Knowledge Graph: Schema.org data, JSON-LD\n• Accessibility: ARIA labels, alt text, keyboard navigation">
-          <span className="text-gray-400 hover:text-gray-600 cursor-help text-sm">ⓘ</span>
+          <span className="text-gray-400 hover:text-gray-300 cursor-help text-sm">ⓘ</span>
         </Tooltip>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -27,10 +27,10 @@ export default function CategoryScores({ categoryScores }: CategoryScoresProps) 
           };
           
           return (
-            <div key={category} className="bg-white dark:bg-gray-800 p-3 rounded border border-gray-200 dark:border-gray-700">
+            <div key={category} className="bg-zinc-800 p-3 rounded-lg border border-zinc-700">
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-1">
-                  <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                  <span className="text-sm font-medium text-white">
                     {categoryInfo.name}
                   </span>
                   <Tooltip content={
@@ -39,7 +39,7 @@ export default function CategoryScores({ categoryScores }: CategoryScoresProps) 
                       <div>{categoryInfo.description}</div>
                     </div>
                   }>
-                    <span className="text-gray-400 hover:text-gray-600 cursor-help text-xs">ⓘ</span>
+                    <span className="text-gray-400 hover:text-gray-300 cursor-help text-xs">ⓘ</span>
                   </Tooltip>
                 </div>
                 <div className="flex items-center gap-2">

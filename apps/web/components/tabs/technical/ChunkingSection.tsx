@@ -33,11 +33,11 @@ export default function ChunkingSection({ chunking }: ChunkingSectionProps) {
   };
 
   return (
-    <div className="bg-green-50 dark:bg-green-900/20 border-2 border-green-200 dark:border-green-700 rounded-lg p-6">
-      <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">📄 Content Chunking</h3>
+    <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-6">
+      <h3 className="text-2xl font-bold text-white mb-4">📄 Content Chunking</h3>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white dark:bg-gray-800 p-3 rounded">
-          <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400 mb-1">
+        <div className="bg-zinc-800 p-3 rounded">
+          <div className="flex items-center gap-1 text-sm text-gray-400 mb-1">
             <span>Strategy</span>
             <Tooltip content={
               chunking.chunkingStrategy === 'heading-based' 
@@ -47,25 +47,25 @@ export default function ChunkingSection({ chunking }: ChunkingSectionProps) {
               <span className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 cursor-help">ⓘ</span>
             </Tooltip>
           </div>
-          <div className="font-semibold text-gray-900 dark:text-gray-100">
+          <div className="font-semibold text-white">
             {chunking.chunkingStrategy}
           </div>
         </div>
-        <div className="bg-white dark:bg-gray-800 p-3 rounded">
-          <div className="text-sm text-gray-600 dark:text-gray-400">Total Chunks</div>
-          <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+        <div className="bg-zinc-800 p-3 rounded">
+          <div className="text-sm text-gray-400">Total Chunks</div>
+          <div className="text-2xl font-bold text-teal-400">
             {chunking.totalChunks}
           </div>
         </div>
-        <div className="bg-white dark:bg-gray-800 p-3 rounded">
-          <div className="text-sm text-gray-600 dark:text-gray-400">Avg Tokens/Chunk</div>
-          <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+        <div className="bg-zinc-800 p-3 rounded">
+          <div className="text-sm text-gray-400">Avg Tokens/Chunk</div>
+          <div className="text-2xl font-bold text-teal-400">
             {chunking.averageTokensPerChunk}
           </div>
         </div>
-        <div className="bg-white dark:bg-gray-800 p-3 rounded">
-          <div className="text-sm text-gray-600 dark:text-gray-400">Avg Noise</div>
-          <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+        <div className="bg-zinc-800 p-3 rounded">
+          <div className="text-sm text-gray-400">Avg Noise</div>
+          <div className="text-2xl font-bold text-teal-400">
             {(chunking.averageNoiseRatio * 100).toFixed(1)}%
           </div>
         </div>
