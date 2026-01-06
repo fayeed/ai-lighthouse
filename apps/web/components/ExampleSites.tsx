@@ -13,8 +13,8 @@ const examples = [
 
 export default function ExampleSites({ onSelect, disabled }: ExampleSitesProps) {
   return (
-    <div className="text-center mt-3">
-      <p className="text-xs text-gray-400 dark:text-gray-500 mb-2">
+    <div className="text-center mt-6">
+      <p className="text-sm text-gray-500 mb-3">
         Or try an example:
       </p>
       <div className="flex flex-wrap justify-center gap-2">
@@ -23,7 +23,7 @@ export default function ExampleSites({ onSelect, disabled }: ExampleSitesProps) 
             key={example.url}
             onClick={() => onSelect(example.url)}
             disabled={disabled}
-            className="px-3 py-1.5 text-sm bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 text-sm bg-zinc-900 hover:bg-zinc-800 text-gray-300 border border-zinc-800 hover:border-zinc-700 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {example.name}
           </button>

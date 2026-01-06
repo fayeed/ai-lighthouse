@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import * as Tabs from '@radix-ui/react-tabs';
 import { ModelConfig } from '../components/ModelSelector';
 import OverviewTab from '../components/tabs/OverviewTab';
 import AIUnderstandingTab from '../components/tabs/AIUnderstandingTab';
@@ -17,7 +18,6 @@ import ScoringGuide from '../components/ScoringGuide';
 import WarningModal from '../components/WarningModal';
 import InterpretationBanner from '../components/InterpretationBanner';
 import PrivacyNotice from '../components/PrivacyNotice';
-import ThemeToggle from '../components/ThemeToggle';
 import QuickWinsSection from '../components/QuickWinsSection';
 import SamplePreview from '../components/SamplePreview';
 import LoadingProgress from '../components/LoadingProgress';
@@ -359,90 +359,55 @@ function HomeContent() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 transition-colors duration-300">
+    <div className="min-h-screen flex flex-col bg-black text-white transition-colors duration-300">
       <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-8 flex-1">
         {/* Header with View Toggle */}
-        <div className="text-center mb-4 sm:mb-6 relative">
-          {/* Theme toggle - absolute on mobile, in flow on desktop */}
-          <div className="absolute right-0 top-0 sm:hidden">
-            <ThemeToggle />
-          </div>
-          
-          <div className="flex justify-between items-center mb-2 sm:mb-4">
-            <div className="hidden sm:block flex-1"></div>
-            <div className="flex-1 text-center pt-1 sm:pt-0">
-              <h1 className="text-xl sm:text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-1 sm:mb-2">
-                🚨 AI Lighthouse
-              </h1>
+        <div className="text-center mb-12 sm:mb-20 relative">
+          {/* Main Hero */}
+          {!reportData && (
+            <div className="max-w-3xl mx-auto pt-12 sm:pt-20 pb-8">
+              <div className="inline-flex items-center gap-2 mb-6">
+                <span className="text-4xl sm:text-5xl">🚨</span>
+                <h1 className="text-4xl sm:text-6xl font-bold text-white tracking-tight">
+                  AI Lighthouse
+                </h1>
+              </div>
+              <p className="text-lg sm:text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed">
+                Analyze how AI systems like ChatGPT, Perplexity, and search engines understand your website
+              </p>
             </div>
-            <div className="hidden sm:flex flex-1 justify-end gap-3">
-              <ThemeToggle />
-              {reportData && (
-                <div className="inline-flex items-center bg-white dark:bg-gray-800 rounded-lg shadow-sm p-1">
-                  <button
-                    onClick={() => setViewMode('simple')}
-                    className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
-                      viewMode === 'simple'
-                        ? 'bg-blue-600 text-white'
-                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
-                    }`}
+          )}
+
+          {/* Compact header when results shown */}
+          {reportData && (
+            <div className="flex justify-between items-start mb-8">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-2xl">🚨</span>
+                  <h1 className="text-2xl sm:text-3xl font-bold text-white">
+                    AI Lighthouse
+                  </h1>
+                </div>
+              </div>
+
+              {/* View mode toggle */}
+              <Tabs.Root value={viewMode} onValueChange={(value) => setViewMode(value as 'simple' | 'complex')}>
+                <Tabs.List className="inline-flex items-center bg-zinc-900/50 border border-zinc-800 rounded-lg p-1">
+                  <Tabs.Trigger
+                    value="simple"
+                    className="px-4 py-2 text-xs font-medium rounded-md transition-all text-gray-400 hover:text-white data-[state=active]:bg-zinc-800 data-[state=active]:text-white"
                   >
                     Simple
-                  </button>
-                  <button
-                    onClick={() => setViewMode('complex')}
-                    className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
-                      viewMode === 'complex'
-                        ? 'bg-blue-600 text-white'
-                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
-                    }`}
+                  </Tabs.Trigger>
+                  <Tabs.Trigger
+                    value="complex"
+                    className="px-4 py-2 text-xs font-medium rounded-md transition-all text-gray-400 hover:text-white data-[state=active]:bg-zinc-800 data-[state=active]:text-white"
                   >
                     Detailed
-                  </button>
-                </div>
-              )}
+                  </Tabs.Trigger>
+                </Tabs.List>
+              </Tabs.Root>
             </div>
-          </div>
-          
-          {/* Mobile view toggle - only show on mobile when there are results */}
-          {reportData && (
-            <div className="sm:hidden flex justify-center mb-2">
-              <div className="inline-flex items-center bg-white dark:bg-gray-800 rounded-lg shadow-sm p-1">
-                <button
-                  onClick={() => setViewMode('simple')}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
-                    viewMode === 'simple'
-                      ? 'bg-blue-600 text-white'
-                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
-                  }`}
-                >
-                  Simple
-                </button>
-                <button
-                  onClick={() => setViewMode('complex')}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
-                    viewMode === 'complex'
-                      ? 'bg-blue-600 text-white'
-                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
-                  }`}
-                >
-                  Detailed
-                </button>
-              </div>
-            </div>
-          )}
-          
-          {/* Value proposition - only show before results */}
-          {!reportData && (
-            <p className="text-sm sm:text-lg text-gray-600 dark:text-gray-300 max-w-xl mx-auto">
-              Analyze how AI systems like ChatGPT, Perplexity, and search engines understand your website.
-            </p>
-          )}
-          
-          {reportData && (
-            <p className="text-sm sm:text-lg text-gray-600 dark:text-gray-300 mt-2">
-              Results for <strong className="text-blue-600 dark:text-blue-400 break-all">{url}</strong>
-            </p>
           )}
         </div>
 
@@ -496,29 +461,26 @@ function HomeContent() {
 
 
         {reportData && viewMode === 'simple' && (
-          <div className="max-w-6xl mx-auto">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6 md:p-8 animate-fade-in-up">
+          <div className="max-w-4xl mx-auto px-4">
+            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl p-6 sm:p-8 md:p-12 animate-fade-in-up">
               {/* 1. How bad is it? */}
-              <div className="text-center mb-4 sm:mb-6">
+              <div className="text-center mb-6 sm:mb-8">
                 <ScoreDisplay
                   score={Math.round(reportData.aiReadiness.overall)}
                   grade={reportData.aiReadiness.grade}
-                  showScoringGuide={showScoringGuide}
-                  setShowScoringGuide={setShowScoringGuide}
                 />
-                {showScoringGuide && <ScoringGuide />}
               </div>
 
               {/* 2. What's broken? */}
               {(() => {
                 const weakDimensions = getWeakDimensions(reportData);
                 return weakDimensions.length > 0 && (
-                  <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-lg">
-                    <h3 className="text-sm sm:text-base font-bold text-gray-900 dark:text-gray-100 mb-1 sm:mb-2 flex items-center gap-2">
+                  <div className="mb-6 sm:mb-8 p-4 sm:p-5 bg-red-500/5 border border-red-500/20 rounded-xl">
+                    <h3 className="text-sm sm:text-base font-bold text-white mb-2 flex items-center gap-2">
                       <span className="text-lg sm:text-xl">⚠️</span> What's Broken
                     </h3>
-                    <p className="text-sm sm:text-base text-gray-800 dark:text-gray-200">
-                      {weakDimensions.length === 1 
+                    <p className="text-sm sm:text-base text-gray-300">
+                      {weakDimensions.length === 1
                         ? `Your ${weakDimensions[0]} needs work.`
                         : `Your ${weakDimensions.join(' and ')} need work.`
                       } {interpretationMessage}
@@ -536,15 +498,15 @@ function HomeContent() {
               )}
 
               {/* 4. Where next? */}
-              <div className="mb-4 sm:mb-6">
+              <div className="mb-6">
                 <button
                   onClick={() => setViewMode('complex')}
-                  className="w-full py-3 sm:py-4 px-4 sm:px-6 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 dark:from-blue-500 dark:to-blue-600 dark:hover:from-blue-600 dark:hover:to-blue-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2 sm:gap-3 text-base sm:text-lg"
+                  className="w-full py-4 px-6 bg-white hover:bg-gray-100 text-black font-medium rounded-xl transition-all duration-200 flex items-center justify-center gap-3 text-base"
                 >
-                  <span>See Detailed Analysis</span>
-                  <span className="text-xl sm:text-2xl">→</span>
+                  <span>View Detailed Analysis</span>
+                  <span className="text-lg">→</span>
                 </button>
-                <p className="text-xs text-center text-gray-500 dark:text-gray-400 mt-1.5 sm:mt-2">
+                <p className="text-sm text-center text-gray-600 mt-3">
                   View comprehensive reports, technical details, and advanced insights
                 </p>
               </div>
@@ -563,25 +525,23 @@ function HomeContent() {
         )}
 
         {reportData && viewMode === 'complex' && (
-          <div className="max-w-6xl mx-auto">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-8 animate-fade-in-up">
+          <div className="max-w-5xl mx-auto px-4">
+            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl p-6 sm:p-8 md:p-12 animate-fade-in-up">
               {/* Header with Share Button */}
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
-                <h2 className="text-xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Audit Report</h2>
-                <ShareButton 
-                  score={Math.round(reportData.aiReadiness.overall)} 
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
+                <h2 className="text-xl sm:text-3xl font-bold text-white">Audit Report</h2>
+                <ShareButton
+                  score={Math.round(reportData.aiReadiness.overall)}
                   grade={reportData.aiReadiness.grade}
                   url={url}
                   enableLLM={enableLLM}
                 />
               </div>
-              
+
               {/* AI Readiness Banner */}
               <ScoreDisplay
                 score={Math.round(reportData.aiReadiness.overall)}
                 grade={reportData.aiReadiness.grade}
-                showScoringGuide={showScoringGuide}
-                setShowScoringGuide={setShowScoringGuide}
               />
 
               {/* Scoring Guide Section */}
@@ -596,61 +556,83 @@ function HomeContent() {
               )}
 
               {/* Tabs Navigation */}
-              <div className="sticky top-0 z-10 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 mb-4 sm:mb-6 -mx-3 sm:-mx-4 px-3 sm:px-4 md:-mx-8 md:px-8 -mt-4 pt-4">
-                <nav className="-mb-px flex space-x-1 sm:space-x-8 overflow-x-auto scrollbar-hide pb-px">
-                  {[
-                    { key: 'overview', label: 'Overview' },
-                    { key: 'ai-understanding', label: 'AI Understanding' },
-                    { key: 'hallucination', label: 'Hallucination Risk' },
-                    { key: 'alignment', label: 'Message Alignment' },
-                    { key: 'issues', label: 'Issues' },
-                    { key: 'technical', label: 'Technical' },
-                  ].map((tab) => (
-                    <button
-                      key={tab.key}
-                      onClick={() => setActiveTab(tab.key)}
-                      className={`${
-                        activeTab === tab.key
-                          ? 'border-blue-500 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
-                          : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
-                      } whitespace-nowrap py-2.5 px-2 sm:px-1 sm:py-4 border-b-2 font-medium text-xs sm:text-sm transition-colors duration-200 rounded-t-lg sm:rounded-none`}
+              <Tabs.Root value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <div className="sticky top-0 z-10 bg-zinc-900/95 backdrop-blur-md border-b border-zinc-800 mb-8 -mx-6 sm:-mx-8 md:-mx-12 px-6 sm:px-8 md:px-12 pt-4">
+                  <Tabs.List className="-mb-px flex space-x-6 sm:space-x-8 overflow-x-auto scrollbar-hide">
+                    <Tabs.Trigger
+                      value="overview"
+                      className="whitespace-nowrap pb-4 border-b-2 font-medium text-sm transition-colors duration-200 border-transparent text-gray-500 hover:text-white data-[state=active]:border-white data-[state=active]:text-white"
                     >
-                      {tab.label}
-                    </button>
-                  ))}
-                </nav>
-              </div>
+                      Overview
+                    </Tabs.Trigger>
+                    <Tabs.Trigger
+                      value="ai-understanding"
+                      className="whitespace-nowrap pb-4 border-b-2 font-medium text-sm transition-colors duration-200 border-transparent text-gray-500 hover:text-white data-[state=active]:border-white data-[state=active]:text-white"
+                    >
+                      AI Understanding
+                    </Tabs.Trigger>
+                    <Tabs.Trigger
+                      value="hallucination"
+                      className="whitespace-nowrap pb-4 border-b-2 font-medium text-sm transition-colors duration-200 border-transparent text-gray-500 hover:text-white data-[state=active]:border-white data-[state=active]:text-white"
+                    >
+                      Hallucination Risk
+                    </Tabs.Trigger>
+                    <Tabs.Trigger
+                      value="alignment"
+                      className="whitespace-nowrap pb-4 border-b-2 font-medium text-sm transition-colors duration-200 border-transparent text-gray-500 hover:text-white data-[state=active]:border-white data-[state=active]:text-white"
+                    >
+                      Message Alignment
+                    </Tabs.Trigger>
+                    <Tabs.Trigger
+                      value="issues"
+                      className="whitespace-nowrap pb-4 border-b-2 font-medium text-sm transition-colors duration-200 border-transparent text-gray-500 hover:text-white data-[state=active]:border-white data-[state=active]:text-white"
+                    >
+                      Issues
+                    </Tabs.Trigger>
+                    <Tabs.Trigger
+                      value="technical"
+                      className="whitespace-nowrap pb-4 border-b-2 font-medium text-sm transition-colors duration-200 border-transparent text-gray-500 hover:text-white data-[state=active]:border-white data-[state=active]:text-white"
+                    >
+                      Technical
+                    </Tabs.Trigger>
+                  </Tabs.List>
+                </div>
 
-              {/* Tab Content */}
-              {activeTab === 'overview' && reportData.aiReadiness && (
-                <OverviewTab aiReadiness={reportData.aiReadiness} />
-              )}
+                {/* Tab Content */}
+                <Tabs.Content value="overview">
+                  {reportData.aiReadiness && <OverviewTab aiReadiness={reportData.aiReadiness} />}
+                </Tabs.Content>
 
-              {activeTab === 'ai-understanding' && reportData.scanResult && (
-                <AIUnderstandingTab scanResult={reportData.scanResult} />
-              )}
+                <Tabs.Content value="ai-understanding">
+                  {reportData.scanResult && <AIUnderstandingTab scanResult={reportData.scanResult} />}
+                </Tabs.Content>
 
-              {activeTab === 'hallucination' && reportData.scanResult && (
-                <HallucinationTab scanResult={reportData.scanResult} />
-              )}
+                <Tabs.Content value="hallucination">
+                  {reportData.scanResult && <HallucinationTab scanResult={reportData.scanResult} />}
+                </Tabs.Content>
 
-              {activeTab === 'alignment' && reportData.scanResult && (
-                <MessageAlignmentTab scanResult={reportData.scanResult} />
-              )}
+                <Tabs.Content value="alignment">
+                  {reportData.scanResult && <MessageAlignmentTab scanResult={reportData.scanResult} />}
+                </Tabs.Content>
 
-              {activeTab === 'issues' && reportData.auditReport && (
-                <IssuesTab 
-                  issues={reportData.auditReport.issues || []} 
-                  currentScore={reportData.aiReadiness?.overall}
-                />
-              )}
+                <Tabs.Content value="issues">
+                  {reportData.auditReport && (
+                    <IssuesTab
+                      issues={reportData.auditReport.issues || []}
+                      currentScore={reportData.aiReadiness?.overall}
+                    />
+                  )}
+                </Tabs.Content>
 
-              {activeTab === 'technical' && reportData.scanResult && (
-                <TechnicalTab 
-                  scanResult={reportData.scanResult}
-                  auditReport={reportData.auditReport}
-                />
-              )}
+                <Tabs.Content value="technical">
+                  {reportData.scanResult && (
+                    <TechnicalTab
+                      scanResult={reportData.scanResult}
+                      auditReport={reportData.auditReport}
+                    />
+                  )}
+                </Tabs.Content>
+              </Tabs.Root>
             </div>
           </div>
         )}
@@ -674,13 +656,13 @@ function HomeContent() {
       <PrivacyNotice />
 
       {/* Footer */}
-      <footer className="text-center py-6 sm:py-8 text-sm text-gray-500 dark:text-gray-400 border-t border-gray-200 dark:border-gray-800 mt-auto bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm px-4">
+      <footer className="text-center py-6 sm:py-8 text-sm text-gray-500 border-t border-zinc-800 mt-auto bg-black/50 backdrop-blur-sm px-4">
         <div className="flex flex-wrap justify-center items-center gap-2 sm:gap-3 mb-3">
-          <a 
-            href="https://github.com/fayeed/ai-lighthouse" 
-            target="_blank" 
+          <a
+            href="https://github.com/fayeed/ai-lighthouse"
+            target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 hover:text-gray-700 dark:hover:text-gray-300 py-1"
+            className="inline-flex items-center gap-1.5 hover:text-teal-400 py-1 transition-colors"
           >
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
               <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.17 6.839 9.49.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.604-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.831.092-.646.35-1.086.636-1.336-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.167 22 16.418 22 12c0-5.523-4.477-10-10-10z"/>
@@ -688,21 +670,21 @@ function HomeContent() {
             <span className="hidden xs:inline">Star on GitHub</span>
             <span className="xs:hidden">GitHub</span>
           </a>
-          <span className="text-gray-300 dark:text-gray-600">•</span>
-          <a 
-            href="https://fayeed.dev" 
-            target="_blank" 
+          <span className="text-zinc-600">•</span>
+          <a
+            href="https://fayeed.dev"
+            target="_blank"
             rel="noopener noreferrer"
-            className="hover:text-gray-700 dark:hover:text-gray-300 py-1"
+            className="hover:text-teal-400 py-1 transition-colors"
           >
             By Fayeed
           </a>
-          <span className="text-gray-300 dark:text-gray-600">•</span>
-          <a 
-            href="https://github.com/fayeed/ai-lighthouse/issues" 
-            target="_blank" 
+          <span className="text-zinc-600">•</span>
+          <a
+            href="https://github.com/fayeed/ai-lighthouse/issues"
+            target="_blank"
             rel="noopener noreferrer"
-            className="hover:text-gray-700 dark:hover:text-gray-300 py-1"
+            className="hover:text-teal-400 py-1 transition-colors"
           >
             Report issue
           </a>
@@ -716,14 +698,14 @@ function HomeContent() {
 export default function Home() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
+      <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
           <div className="text-5xl mb-6 animate-pulse">🚨</div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">AI Lighthouse</h1>
+          <h1 className="text-2xl font-bold text-white mb-3">AI Lighthouse</h1>
           <div className="flex items-center justify-center gap-2">
-            <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-            <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-            <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+            <div className="w-2 h-2 bg-teal-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+            <div className="w-2 h-2 bg-teal-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+            <div className="w-2 h-2 bg-teal-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
           </div>
         </div>
       </div>
