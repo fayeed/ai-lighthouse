@@ -63,39 +63,39 @@ export default function LoadingProgress({ currentStep, progress, message, enable
   }, []);
 
   return (
-    <div className="max-w-md mx-auto">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 animate-fade-in-up">
+    <div className="max-w-3xl mx-auto">
+      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl p-6 sm:p-8 animate-fade-in-up">
         {/* Progress header */}
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-lg font-semibold text-white flex items-center gap-2">
             <span className="animate-pulse">🔍</span>
             Analyzing...
           </h3>
-          <span className="text-sm text-blue-600 dark:text-blue-400 font-medium tabular-nums">
+          <span className="text-sm text-teal-400 font-medium tabular-nums">
             {progress}%
           </span>
         </div>
 
         {/* Progress bar with shimmer effect */}
-        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 mb-4 overflow-hidden relative">
-          <div 
-            className="bg-gradient-to-r from-blue-500 via-blue-600 to-blue-500 h-3 rounded-full transition-all duration-300 ease-out relative"
+        <div className="w-full bg-zinc-800 rounded-full h-2 mb-6 overflow-hidden relative">
+          <div
+            className="bg-gradient-to-r from-teal-500 via-teal-400 to-teal-500 h-2 rounded-full transition-all duration-300 ease-out relative"
             style={{ width: `${progress}%`, backgroundSize: '200% 100%', animation: 'shimmer 2s linear infinite' }}
           />
         </div>
 
         {/* Current step message */}
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+        <p className="text-sm text-gray-400 mb-4">
           {message || STEP_LABELS[currentStep] || 'Processing...'}
         </p>
 
         {/* Fun fact */}
-        <div className="text-xs text-gray-400 dark:text-gray-500 mb-4 p-2 bg-gray-50 dark:bg-gray-700/50 rounded italic transition-all duration-500">
+        <div className="text-xs text-gray-500 mb-6 p-3 bg-zinc-800/50 rounded-xl italic transition-all duration-500">
           {FUN_FACTS[factIndex]}
         </div>
 
         {/* Steps list */}
-        <div className="space-y-2">
+        <div className="space-y-2.5">
           {steps.map((step, index) => {
             const isActive = step === currentStep;
             const isComplete = currentIndex > index || (currentIndex === index && progress > 90);
@@ -104,22 +104,22 @@ export default function LoadingProgress({ currentStep, progress, message, enable
             return (
               <div
                 key={step}
-                className={`flex items-center gap-3 transition-opacity duration-300 ${
+                className={`flex items-center gap-3 transition-all duration-300 ${
                   isPending ? 'opacity-40' : 'opacity-100'
                 }`}
               >
                 {/* Status indicator */}
-                <div className="flex-shrink-0 w-4 h-4">
+                <div className="flex-shrink-0 w-5 h-5">
                   {isComplete && (
-                    <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    <svg className="w-5 h-5 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                     </svg>
                   )}
                   {isActive && !isComplete && (
-                    <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                    <div className="w-5 h-5 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
                   )}
                   {isPending && (
-                    <div className="w-4 h-4 border-2 border-gray-300 dark:border-gray-600 rounded-full" />
+                    <div className="w-5 h-5 border-2 border-zinc-700 rounded-full" />
                   )}
                 </div>
 
@@ -127,10 +127,10 @@ export default function LoadingProgress({ currentStep, progress, message, enable
                 <span
                   className={`text-sm ${
                     isActive
-                      ? 'text-blue-600 dark:text-blue-400 font-medium'
+                      ? 'text-teal-400 font-medium'
                       : isComplete
-                      ? 'text-gray-600 dark:text-gray-400'
-                      : 'text-gray-400 dark:text-gray-500'
+                      ? 'text-gray-400'
+                      : 'text-gray-600'
                   }`}
                 >
                   {STEP_LABELS[step]}
@@ -141,10 +141,10 @@ export default function LoadingProgress({ currentStep, progress, message, enable
         </div>
 
         {/* Cancel hint */}
-        <div className="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700 text-center">
-          <p className="text-xs text-gray-400 dark:text-gray-500">
+        <div className="mt-6 pt-4 border-t border-zinc-800 text-center">
+          <p className="text-xs text-gray-500">
             Press{' '}
-            <kbd className="px-1.5 py-0.5 text-[10px] bg-gray-100 dark:bg-gray-700 rounded border border-gray-200 dark:border-gray-600">Esc</kbd>
+            <kbd className="px-2 py-1 text-[10px] bg-zinc-800 rounded border border-zinc-700 text-gray-400 font-mono">Esc</kbd>
             {' '}to cancel
           </p>
         </div>
