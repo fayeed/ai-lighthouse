@@ -26,6 +26,7 @@ import { Input } from "@/components/ui/Input";
 import { ModelConfig } from "@/components/ModelSelector";
 import { trackEvent } from "@/components/Analytics";
 import { saveRecentScan } from "@/components/RecentScans";
+import FAQ from "@/components/FAQ";
 
 const LandingPage = () => {
   const [url, setUrl] = useState("");
@@ -497,43 +498,7 @@ const LandingPage = () => {
           </div>
 
           {/* FAQ Section */}
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="max-w-2xl mx-auto pt-32 space-y-12"
-          >
-            <h2 className="text-3xl font-display font-bold tracking-tight text-white">Frequently Asked Questions</h2>
-            <Accordion type="single" collapsible className="space-y-4 text-left">
-              {[
-                { q: "What does AI Lighthouse analyze?", icon: Search },
-                { q: "How is the AI Readiness Score calculated?", icon: BarChart3 },
-                { q: "What's the difference between basic and LLM-powered analysis?", icon: Cpu },
-                { q: "Is my website data stored?", icon: Lock },
-                { q: "Why does AI readiness matter?", icon: Zap },
-                { q: "How long does a scan take?", icon: Clock },
-                { q: "Can I scan any website?", icon: Globe }
-              ].map((item, i) => (
-                <AccordionItem key={i} value={`item-${i}`} className="border-none">
-                  <AccordionTrigger className="flex gap-4 p-6 rounded-2xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] hover:no-underline transition-all group">
-                    <div className="flex items-center gap-4">
-                      <item.icon className="w-4 h-4 text-white/40 group-hover:text-white transition-colors" />
-                      <span className="text-sm font-medium text-white/80 group-hover:text-white transition-colors">{item.q}</span>
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent className="px-6 py-4 text-sm text-white/40 font-light leading-relaxed">
-                    AI Lighthouse provides deep technical analysis of your site's structure, semantics, and content quality to ensure optimal performance with LLM-based crawlers and search agents.
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
-
-            <div className="p-6 rounded-2xl bg-white/[0.01] border border-white/5">
-              <p className="text-xs text-white/40">
-                Still have questions? <a href="#" className="text-white hover:underline underline-offset-4 transition-all">Start a discussion on GitHub</a>
-              </p>
-            </div>
-          </motion.div>
+          <FAQ />
         </div>
       </main>
 
