@@ -62,10 +62,9 @@ export default function AuditForm({
   // Auto-collapse when results are first loaded
   useEffect(() => {
     if (hasResults) {
-      const timer = setTimeout(() => {
-        setIsExpanded(false);
-      }, 300);
-      return () => clearTimeout(timer);
+      setIsExpanded(false);
+    } else {
+      setIsExpanded(true);
     }
   }, [hasResults]);
 
@@ -79,28 +78,46 @@ export default function AuditForm({
         }`}>
         {/* Minimized state */}
         {hasResults && !isExpanded && (
-          <button
+          <motion.button
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
             onClick={handleToggle}
-            className="w-full bg-zinc-900 border border-zinc-800 rounded-lg shadow-md p-4 hover:shadow-lg transition-all duration-200 flex items-center justify-between group"
+            className="w-full bg-zinc-900/50 border border-zinc-800 rounded-xl shadow-lg p-5 hover:bg-zinc-900 hover:border-zinc-700 transition-all duration-200 flex items-center justify-between group"
           >
-            <div className="flex items-center gap-3 min-w-0 flex-1">
-              <span className="text-2xl flex-shrink-0">🔍</span>
-              <div className="text-left min-w-0">
-                <p className="text-sm font-medium text-white truncate">
-                  Analyzing: <span className="text-teal-400">{url}</span>
+            <div className="flex items-center gap-4 min-w-0 flex-1">
+              <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center flex-shrink-0 group-hover:bg-white/10 transition-colors">
+                <span className="text-xl">🔍</span>
+              </div>
+              <div className="text-left min-w-0 flex-1">
+                <p className="text-xs uppercase tracking-widest font-bold text-gray-500 mb-1">
+                  ANALYZING TARGET
                 </p>
-                <p className="text-xs text-gray-400">Click to reanalyze</p>
+                <p className="text-sm font-medium text-white truncate">
+                  {url}
+                </p>
               </div>
             </div>
-            <svg
-              className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors duration-200"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleToggle();
+                }}
+                className="text-xs font-medium text-teal-400 hover:text-teal-300 uppercase tracking-wider px-3 py-1 rounded-md hover:bg-white/5 transition-all"
+              >
+                RE-ANALYZE
+              </button>
+              <svg
+                className="w-5 h-5 text-gray-500 group-hover:text-gray-300 transition-colors duration-200 transform group-hover:translate-y-0.5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+          </motion.button>
         )}
 
         {/* Expanded state */}

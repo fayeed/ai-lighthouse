@@ -57,10 +57,15 @@ export default function ModelSelector({ value, onChange, enableLLM, provider, mo
     onChange({ ...value, baseUrl });
   };
 
+  const [showModelDropdown, setShowModelDropdown] = useState(false);
+
+  const needsApiKey = value.provider !== 'openrouter' && value.provider !== 'ollama';
+  const showBaseUrlInput = value.provider === 'ollama';
+
   return (
               <AnimatePresence>
                 {enableLLM && (
-                  <motion.div 
+                  <motion.div
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: "auto" }}
                     exit={{ opacity: 0, height: 0 }}
@@ -68,39 +73,141 @@ export default function ModelSelector({ value, onChange, enableLLM, provider, mo
                   >
                     <div className="space-y-4">
                       <h4 className="text-xs font-bold text-white/80 uppercase tracking-widest">AI Model Configuration</h4>
+
+                      {/* Provider Selection */}
                       <div className="space-y-2">
                         <p className="text-[10px] uppercase font-bold text-white/20">Provider</p>
                         <div className="flex flex-wrap gap-2">
-                          {["Openrouter", "Openai", "Anthropic", "Gemini", "Ollama"].map((p) => (
-                            <Button key={p} variant="outline" size="sm" className={`rounded-lg border-white/5 text-[10px] font-bold ${p === 'Openrouter' ? 'bg-primary/10 text-primary border-primary/20' : 'bg-white/[0.02] text-white/40'}`}>
-                              {p}
+                          {(["openrouter", "openai", "anthropic", "gemini", "ollama"] as const).map((p) => (
+                            <Button
+                              key={p}
+                              variant="outline"
+                              size="sm"
+                              type="button"
+                              onClick={() => handleProviderChange(p)}
+                              className={`rounded-lg border-white/5 text-[10px] font-bold transition-all ${
+                                value.provider === p
+                                  ? 'bg-white/10 text-white border-white/20'
+                                  : 'bg-white/[0.02] text-white/40 hover:bg-white/5 hover:text-white/60'
+                              }`}
+                            >
+                              {p.charAt(0).toUpperCase() + p.slice(1)}
                             </Button>
                           ))}
                         </div>
                       </div>
+
+                      {/* Model Selection */}
                       <div className="space-y-2">
                         <p className="text-[10px] uppercase font-bold text-white/20">Model</p>
                         <div className="relative">
-                          <Input 
-                            readOnly 
-                            value="meta-llama/llama-3.3-70b-instruct:free" 
-                            className="bg-white/[0.02] border-white/5 text-xs text-white/60 h-10 pr-10"
-                          />
-                          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20" />
+                          <button
+                            type="button"
+                            onClick={() => setShowModelDropdown(!showModelDropdown)}
+                            className="w-full bg-white/[0.02] border border-white/5 text-xs text-white/60 h-10 pr-10 pl-4 rounded-lg text-left hover:bg-white/[0.04] transition-colors"
+                          >
+                            {value.model}
+                          </button>
+                          <ChevronDown className={`absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 transition-transform ${showModelDropdown ? 'rotate-180' : ''}`} />
+
+                          {/* Dropdown */}
+                          <AnimatePresence>
+                            {showModelDropdown && (
+                              <motion.div
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                className="absolute z-10 w-full mt-2 bg-zinc-900 border border-white/10 rounded-lg shadow-xl overflow-hidden"
+                              >
+                                {providerModels[value.provider].map((model) => (
+                                  <button
+                                    key={model}
+                                    type="button"
+                                    onClick={() => {
+                                      handleModelChange(model);
+                                      setShowModelDropdown(false);
+                                    }}
+                                    className={`w-full px-4 py-3 text-xs text-left transition-colors ${
+                                      value.model === model
+                                        ? 'bg-white/10 text-white'
+                                        : 'text-white/60 hover:bg-white/5 hover:text-white'
+                                    }`}
+                                  >
+                                    {model}
+                                  </button>
+                                ))}
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
                         </div>
                       </div>
+
+                      {/* API Key Input */}
+                      {needsApiKey && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="space-y-2"
+                        >
+                          <div className="flex items-center justify-between">
+                            <p className="text-[10px] uppercase font-bold text-white/20">API Key</p>
+                            <button
+                              type="button"
+                              onClick={() => setShowApiKey(!showApiKey)}
+                              className="text-[10px] text-white/40 hover:text-white/60 transition-colors"
+                            >
+                              {showApiKey ? 'Hide' : 'Show'}
+                            </button>
+                          </div>
+                          <Input
+                            type={showApiKey ? "text" : "password"}
+                            value={value.apiKey || ''}
+                            onChange={(e) => handleApiKeyChange(e.target.value)}
+                            placeholder={`Enter ${value.provider} API key`}
+                            className="bg-white/[0.02] border-white/5 text-xs text-white/60 h-10"
+                          />
+                        </motion.div>
+                      )}
+
+                      {/* Base URL Input for Ollama */}
+                      {showBaseUrlInput && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="space-y-2"
+                        >
+                          <p className="text-[10px] uppercase font-bold text-white/20">Base URL</p>
+                          <Input
+                            type="text"
+                            value={value.baseUrl || 'http://localhost:11434'}
+                            onChange={(e) => handleBaseUrlChange(e.target.value)}
+                            placeholder="http://localhost:11434"
+                            className="bg-white/[0.02] border-white/5 text-xs text-white/60 h-10"
+                          />
+                        </motion.div>
+                      )}
+
+                      {/* Info Banner */}
                       <div className="p-4 rounded-xl bg-yellow-500/5 border border-yellow-500/10 flex gap-3">
                         <span className="text-yellow-500">💡</span>
                         <p className="text-[10px] text-yellow-500/80 leading-relaxed font-medium">
-                          <span className="font-bold">Note:</span> Free models available! API key configured on backend.
+                          <span className="font-bold">Note:</span> {
+                            value.provider === 'openrouter'
+                              ? 'Free models available! No API key required.'
+                              : value.provider === 'ollama'
+                              ? 'Make sure Ollama is running locally on the specified URL.'
+                              : 'API key required for this provider.'
+                          }
                         </p>
                       </div>
                     </div>
-                    <ScanEstimate 
+                    <ScanEstimate
                       enableLLM={true}
                       provider={value.provider}
                       model={value.model}
-                    />  
+                    />
                   </motion.div>
                 )}
               </AnimatePresence>
