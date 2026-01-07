@@ -1,27 +1,11 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useRouter, useSearchParams } from "next/navigation";
-import {
-  ArrowRight,
-  Search,
-  Cpu,
-  Github,
-  Layers,
-  Globe,
-  Lock,
-  Clock,
-  ExternalLink,
-  BarChart3,
-  Zap,
-  ChevronDown,
-  MessageSquare,
-  CheckCircle2
-} from "lucide-react";
+import { Cpu, Github, Clock } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Switch } from "@/components/ui/Switch";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/Accordion";
 import { Input } from "@/components/ui/Input";
 import ModelSelector, { ModelConfig } from "@/components/ModelSelector";
 import { trackEvent } from "@/components/Analytics";
