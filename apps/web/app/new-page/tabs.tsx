@@ -261,7 +261,16 @@ export default function AuditReport({ reportData, interpretationMessage, score, 
             <div className="space-y-6">
               <div className="flex items-center gap-2">
                 <h2 className="text-[10px] uppercase tracking-[0.3em] font-bold text-white/40">AI Readiness Score</h2>
-                <Info className="w-3 h-3 text-white/20 cursor-help" />
+                <a
+                  href="/scoring-guide"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group flex items-center gap-1 text-white/20 hover:text-white/60 transition-colors"
+                  title="View Scoring Guide"
+                >
+                  <Info className="w-3 h-3" />
+                  <span className="text-[8px] uppercase tracking-widest font-bold opacity-0 group-hover:opacity-100 transition-opacity">Guide</span>
+                </a>
               </div>
               <div className="space-y-2">
                 <div className="text-8xl font-display font-medium text-white tracking-tighter">
