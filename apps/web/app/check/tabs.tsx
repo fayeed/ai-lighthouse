@@ -161,7 +161,7 @@ const SimpleView = ({
 
       {/* Quick Wins */}
       {quickWins.length > 0 && (
-        <div className="glass p-8 rounded-3xl space-y-6">
+        <div className="glass p-8 rounded-3xl space-y-6 text-left">
           <h3 className="text-sm font-medium text-white flex items-center gap-2">
             <Zap className="w-4 h-4 text-green-400" />
             Quick Wins ({quickWins.length})
@@ -260,7 +260,7 @@ export default function AuditReport({ reportData, interpretationMessage, score, 
           <div className="relative z-10 grid md:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
               <div className="flex items-center gap-2">
-                <h2 className="text-[10px] uppercase tracking-[0.3em] font-bold text-white/40">AI Readiness Score</h2>
+                <h2 className="text-[10px] uppercase tracking-[0.3em] font-bold text-white/40 text-left">AI Readiness Score</h2>
                 <a
                   href="check/scoring-guide"
                   target="_blank"
