@@ -6,3 +6,4 @@ export { RobotsTxtBlocksAllRule } from './robots-txt-blocks-all.js';
 export { RobotsMetaNoindexRule } from './robots-meta-noindex.js';
 export { SlowPageLoadRule } from './slow-page-load.js';
 export { DuplicateH1Rule } from './duplicate-h1.js';
+export { PreRenderingNeededRule } from './pre-rendering.js';
