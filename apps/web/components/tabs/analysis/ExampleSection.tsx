@@ -28,23 +28,23 @@ export default function ExampleSection({ title, examples }: ExampleSectionProps)
           <div className="space-y-3">
             {examples.map((example, idx) => (
               <div key={idx}>
-                <div className={`text-sm font-semibold mb-1 ${
-                  example.type === 'good' 
-                    ? 'text-green-700 dark:text-green-400' 
-                    : 'text-red-700 dark:text-red-400'
+                <div className={`text-sm font-semibold mb-2 ${
+                  example.type === 'good'
+                    ? 'text-green-400'
+                    : 'text-red-400'
                 }`}>
                   {example.type === 'good' ? '✓' : '❌'} {example.label}
                 </div>
-                <div className={`p-3 rounded text-sm ${
-                  example.type === 'good' 
-                    ? 'bg-green-500/5' 
-                    : 'bg-red-500/5'
+                <div className={`p-3 rounded-lg border text-sm ${
+                  example.type === 'good'
+                    ? 'bg-green-500/10 border-green-500/20'
+                    : 'bg-red-500/10 border-red-500/20'
                 }`}>
-                  <p className="text-gray-700 dark:text-gray-300 italic">{example.content}</p>
-                  <p className={`mt-2 text-xs ${
-                    example.type === 'good' 
-                      ? 'text-green-600 dark:text-green-300' 
-                      : 'text-red-600 dark:text-red-300'
+                  <p className="text-gray-200 italic mb-2">{example.content}</p>
+                  <p className={`text-xs ${
+                    example.type === 'good'
+                      ? 'text-green-300'
+                      : 'text-red-300'
                   }`}>
                     {example.type === 'good' ? '✓' : '⚠️'} {example.explanation}
                   </p>

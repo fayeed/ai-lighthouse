@@ -47,19 +47,19 @@ export const getChunkQuality = (chunk: any): ChunkQuality => {
   
   if (issues.length === 0) {
     quality = 'excellent';
-    color = 'text-green-600';
+    color = 'text-green-400';
     emoji = '✓';
   } else if (issues.length === 1) {
     quality = 'good';
-    color = 'text-blue-600';
+    color = 'text-blue-400';
     emoji = '✓';
   } else if (issues.length === 2) {
     quality = 'fair';
-    color = 'text-yellow-600';
+    color = 'text-yellow-400';
     emoji = '⚠';
   } else {
     quality = 'poor';
-    color = 'text-red-600';
+    color = 'text-red-400';
     emoji = '✗';
   }
   
