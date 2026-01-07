@@ -400,12 +400,12 @@ const LandingPage = () => {
           >
             {/* Minimized state when results are present */}
             {reportData && !isFormExpanded && (
-              <motion.button
+              <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3 }}
                 onClick={() => setIsFormExpanded(true)}
-                className="w-full bg-zinc-900/50 border border-zinc-800 rounded-xl shadow-lg p-5 hover:bg-zinc-900 hover:border-zinc-700 transition-all duration-200 flex items-center justify-between group"
+                className="w-full bg-zinc-900/50 border border-zinc-800 rounded-xl shadow-lg p-5 hover:bg-zinc-900 hover:border-zinc-700 transition-all duration-200 flex items-center justify-between group cursor-pointer"
               >
                 <div className="flex items-center gap-4 min-w-0 flex-1">
                   <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center flex-shrink-0 group-hover:bg-white/10 transition-colors">
@@ -439,7 +439,7 @@ const LandingPage = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </div>
-              </motion.button>
+              </motion.div>
             )}
 
             {/* Expanded form */}
