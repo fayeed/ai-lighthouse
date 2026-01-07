@@ -50,7 +50,7 @@ export default function SimpleView({
       </div>
 
       {/* AI Capabilities */}
-      <div className="glass p-6 sm:p-8 rounded-xl sm:rounded-2xl md:rounded-3xl space-y-4 sm:space-y-6">
+      <div className="sm:py-8 rounded-xl sm:rounded-2xl md:rounded-3xl space-y-4 sm:space-y-6">
         <h3 className="text-xs sm:text-sm font-medium text-white flex items-center gap-2">
           <Cpu className="w-4 h-4 flex-shrink-0" />
           <span>AI Agent Capabilities</span>
@@ -74,7 +74,7 @@ export default function SimpleView({
       </div>
 
       {/* Dimension Scores */}
-      <div className="glass p-6 sm:p-8 rounded-xl sm:rounded-2xl md:rounded-3xl space-y-4 sm:space-y-6">
+      <div className="sm:py-8 rounded-xl sm:rounded-2xl md:rounded-3xl space-y-4 sm:space-y-6">
         <h3 className="text-xs sm:text-sm font-medium text-white flex items-center gap-2">
           <BarChart3 className="w-4 h-4 flex-shrink-0" />
           <span>Key Dimensions</span>
@@ -101,7 +101,7 @@ export default function SimpleView({
 
       {/* Quick Wins */}
       {quickWins.length > 0 && (
-        <div className="glass p-6 sm:p-8 rounded-xl sm:rounded-2xl md:rounded-3xl space-y-4 sm:space-y-6 text-left">
+        <div className="sm:py-8 rounded-xl sm:rounded-2xl md:rounded-3xl space-y-4 sm:space-y-6 text-left">
           <h3 className="text-xs sm:text-sm font-medium text-white flex items-center gap-2">
             <Zap className="w-4 h-4 text-green-400 flex-shrink-0" />
             <span>Quick Wins ({quickWins.length})</span>

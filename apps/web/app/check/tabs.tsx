@@ -68,7 +68,7 @@ export default function AuditReport({ reportData, interpretationMessage, score, 
 
   return (
     <div className="min-h-screen text-foreground pb-12 sm:pb-20 selection:bg-white selection:text-black">
-      <main className="container mx-auto px-4 sm:px-6 pt-8 sm:pt-12 md:pt-16 max-w-5xl">
+      <main className="container mx-auto pt-8 sm:pt-12 md:pt-16 max-w-5xl">
         {/* Score Section - Persistent Top */}
         <div className="glass p-6 sm:p-8 md:p-10 rounded-2xl sm:rounded-3xl md:rounded-[3rem] border-white/[0.08] relative overflow-hidden mb-6 sm:mb-8">
           <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 md:gap-12 items-center">
