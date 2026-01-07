@@ -7,15 +7,21 @@
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
 
-    "strict": true,
+    "strict": false,
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
 
     "allowImportingTsExtensions": false,
     "isolatedModules": true,
 
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": false,
+
     "outDir": "dist",
-    "noEmit": true
+    "rootDir": "src",
+    "noEmit": false
   },
-  "include": ["src"]
+  "include": ["src"],
+  "exclude": ["node_modules", "dist", "src/index.ts"]
 }

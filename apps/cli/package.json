@@ -1,14 +1,19 @@
 {
   "name": "@ai-lighthouse/cli",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "AI Lighthouse CLI - Audit websites for AI readiness",
   "type": "module",
   "bin": {
-    "ai-lighthouse": "./bin/cli.js"
+    "ai-lighthouse": "./dist/index.js"
   },
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "scripts": {
     "dev": "tsx src/index.ts",
-    "build": "echo 'Build skipped - using tsx runtime'",
+    "build": "rm -rf dist && node build.js",
+    "prepublishOnly": "pnpm build",
     "check-types": "tsc --noEmit",
     "cli": "node --loader tsx src/index.ts"
   },
@@ -23,6 +28,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "@ai-lighthouse/scanner": "workspace:*",
     "chalk": "^5.3.0",
     "commander": "^12.1.0",
     "html-pdf-node": "^1.0.8",
@@ -38,11 +44,11 @@
     "open": "^10.1.0",
     "ora": "^8.1.1",
     "react": "19.2.0",
-    "react-devtools": "^7.0.1",
-    "scanner": "workspace:*"
+    "react-devtools": "^7.0.1"
   },
   "devDependencies": {
     "@types/node": "^22.10.1",
+    "esbuild": "^0.27.2",
     "tsx": "^4.21.0",
     "typescript": "5.9.2"
   }

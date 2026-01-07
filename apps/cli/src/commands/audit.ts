@@ -1,10 +1,10 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import ora from 'ora';
-import { analyzeUrlWithRules } from 'scanner';
-import { calculateAIReadiness, formatAIReadinessReport } from 'scanner';
-import { exportAuditReport, generateScoringSummary } from 'scanner';
-import type { ScanOptions } from 'scanner';
+import { analyzeUrlWithRules } from '@ai-lighthouse/scanner';
+import { calculateAIReadiness, formatAIReadinessReport } from '@ai-lighthouse/scanner';
+import { exportAuditReport, generateScoringSummary } from '@ai-lighthouse/scanner';
+import type { ScanOptions } from '@ai-lighthouse/scanner';
 import { writeFile, mkdir } from 'fs/promises';
 import { join, resolve } from 'path';
 import { existsSync } from 'fs';

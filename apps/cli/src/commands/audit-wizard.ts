@@ -3,8 +3,8 @@ import { render } from 'ink';
 import React from 'react';
 import { SetupWizard, type AuditConfig } from '../ui/SetupWizard.js';
 import { AuditReportUI } from '../ui/AuditReportUI.js';
-import { analyzeUrlWithRules, calculateAIReadiness } from 'scanner';
-import type { ScanOptions } from 'scanner';
+import { analyzeUrlWithRules, calculateAIReadiness } from '@ai-lighthouse/scanner';
+import type { ScanOptions } from '@ai-lighthouse/scanner';
 
 export function auditWizardCommand(program: Command) {
   program

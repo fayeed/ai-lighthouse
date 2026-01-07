@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 import { Command } from 'commander';
 import { auditCommand } from './commands/audit.js';
 import { crawlCommand } from './commands/crawl.js';

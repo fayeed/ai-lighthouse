@@ -1,7 +1,7 @@
 import { Command } from 'commander';
-import { analyzeUrlWithRules } from 'scanner';
-import { calculateAIReadiness, exportAuditReport } from 'scanner';
-import type { ScanOptions } from 'scanner';
+import { analyzeUrlWithRules } from '@ai-lighthouse/scanner';
+import { calculateAIReadiness, exportAuditReport } from '@ai-lighthouse/scanner';
+import type { ScanOptions } from '@ai-lighthouse/scanner';
 import { render } from 'ink';
 import React from 'react';
 import { AuditReportUI } from '../ui/AuditReportUI.js';
