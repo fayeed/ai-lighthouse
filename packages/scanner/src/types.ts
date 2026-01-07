@@ -32,6 +32,22 @@ export interface IssueLocation {
   line?: number; 
 }
 
+export enum EFFORT_LEVEL {
+  QUICK = 'quick', // < 30 minutes
+  EASY = 'easy', // 30min - 2 hours
+  MODERATE = 'moderate', // 2-8 hours
+  SIGNIFICANT = 'significant', // 1-3 days
+  MAJOR = 'major' // > 3 days
+}
+
+export enum IMPACT_LEVEL {
+  MINIMAL = 'minimal', // 0-10 impact score
+  LOW = 'low', // 11-20 impact score
+  MEDIUM = 'medium', // 21-30 impact score
+  HIGH = 'high', // 31-40 impact score
+  CRITICAL = 'critical' // 41+ impact score
+}
+
 export interface Issue {
   id: string;
   title: string;
@@ -40,6 +56,11 @@ export interface Issue {
   remediation: string;
   impactScore: number;
   scoreImpact?: number; // Estimated score improvement if fixed (0-20)
+
+  // Effort/Impact estimation for prioritization
+  effortLevel?: EFFORT_LEVEL; // How much work to fix
+  impactLevel?: IMPACT_LEVEL; // How much improvement if fixed
+
   location?: IssueLocation;
   evidence?: string[];
   tags?: string[];

@@ -5,3 +5,5 @@ export { ContentDensityLowRule } from './content-density-low.js';
 export { DuplicateContentRule } from './duplicate-content.js';
 export { LowClarityScoreRule } from './low-clarity-score.js';
 export { NoContactInfoRule } from './no-contact-info.js';
+export { MissingPublishDateRule } from './missing-publish-date.js';
+export { InconsistentNumericalFormattingRule } from './inconsistent-numerical-formatting.js';

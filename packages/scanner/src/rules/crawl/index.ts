@@ -7,3 +7,7 @@ export { RobotsMetaNoindexRule } from './robots-meta-noindex.js';
 export { SlowPageLoadRule } from './slow-page-load.js';
 export { DuplicateH1Rule } from './duplicate-h1.js';
 export { PreRenderingNeededRule } from './pre-rendering.js';
+export { MissingSitemapRule } from './missing-sitemap.js';
+export { MissingMobileViewportRule } from './missing-mobile-viewport.js';
+export { RedirectChainRule } from './redirect-chain.js';
+export { MissingAlternativeAccessRule } from './missing-alternative-access.js';

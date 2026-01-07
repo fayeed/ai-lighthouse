@@ -144,11 +144,22 @@ export type {
   ExtractabilityAnalysis
 } from './types.js';
 
-export { SEVERITY, CATEGORY } from './types.js';
+export { SEVERITY, CATEGORY, EFFORT_LEVEL, IMPACT_LEVEL } from './types.js';
 
 // Utilities
-export { 
-  fetchHtml, 
-  parseHtml, 
-  estimateTokenCount 
+export {
+  fetchHtml,
+  parseHtml,
+  estimateTokenCount
 } from './utils.js';
+
+// Effort/Impact Analysis
+export {
+  calculateImpactLevel,
+  estimateEffortLevel,
+  calculatePriorityScore,
+  enrichIssueMetadata,
+  enrichIssuesMetadata,
+  sortByPriority,
+  getQuickWins
+} from './utils/effort-impact.js';
