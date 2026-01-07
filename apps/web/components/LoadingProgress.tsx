@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { Search, MessageSquare, CheckCircle2, Clock } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 interface LoadingProgressProps {
   currentStep: string;
@@ -64,91 +66,87 @@ export default function LoadingProgress({ currentStep, progress, message, enable
 
   return (
     <div className="max-w-3xl mx-auto">
-      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl p-6 sm:p-8 animate-fade-in-up">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="p-8 rounded-[2.5rem] bg-[#0A0A0A] border border-white/5 text-left space-y-8 shadow-2xl"
+      >
         {/* Progress header */}
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-            <span className="animate-pulse">🔍</span>
-            Analyzing...
-          </h3>
-          <span className="text-sm text-teal-400 font-medium tabular-nums">
-            {progress}%
-          </span>
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <Search className="w-5 h-5 text-primary" />
+            <h3 className="text-xl font-medium text-white">Analyzing...</h3>
+          </div>
+          <span className="text-sm font-mono text-primary">{progress}%</span>
         </div>
 
-        {/* Progress bar with shimmer effect */}
-        <div className="w-full bg-zinc-800 rounded-full h-2 mb-6 overflow-hidden relative">
-          <div
-            className="bg-gradient-to-r from-teal-500 via-teal-400 to-teal-500 h-2 rounded-full transition-all duration-300 ease-out relative"
-            style={{ width: `${progress}%`, backgroundSize: '200% 100%', animation: 'shimmer 2s linear infinite' }}
-          />
-        </div>
+        <div className="space-y-6">
+          {/* Progress bar */}
+          <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${progress}%` }}
+              className="h-full bg-primary transition-all duration-300"
+            />
+          </div>
 
-        {/* Current step message */}
-        <p className="text-sm text-gray-400 mb-4">
-          {message || STEP_LABELS[currentStep] || 'Processing...'}
-        </p>
+          {/* Current step message & fun fact */}
+          <div className="space-y-1">
+            <p className="text-[10px] uppercase font-bold text-white/20">
+              {message || STEP_LABELS[currentStep] || 'AI analyzing content...'}
+            </p>
+            <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 flex items-center gap-3">
+              <MessageSquare className="w-4 h-4 text-white/20" />
+              <p className="text-xs text-white/40 italic">
+                {FUN_FACTS[factIndex]}
+              </p>
+            </div>
+          </div>
 
-        {/* Fun fact */}
-        <div className="text-xs text-gray-500 mb-6 p-3 bg-zinc-800/50 rounded-xl italic transition-all duration-500">
-          {FUN_FACTS[factIndex]}
-        </div>
+          {/* Steps list */}
+          <div className="space-y-3">
+            {steps.map((step, index) => {
+              const isActive = step === currentStep;
+              const isComplete = currentIndex > index || (currentIndex === index && progress > 90);
 
-        {/* Steps list */}
-        <div className="space-y-2.5">
-          {steps.map((step, index) => {
-            const isActive = step === currentStep;
-            const isComplete = currentIndex > index || (currentIndex === index && progress > 90);
-            const isPending = currentIndex < index;
-
-            return (
-              <div
-                key={step}
-                className={`flex items-center gap-3 transition-all duration-300 ${
-                  isPending ? 'opacity-40' : 'opacity-100'
-                }`}
-              >
-                {/* Status indicator */}
-                <div className="flex-shrink-0 w-5 h-5">
-                  {isComplete && (
-                    <svg className="w-5 h-5 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                    </svg>
-                  )}
-                  {isActive && !isComplete && (
-                    <div className="w-5 h-5 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
-                  )}
-                  {isPending && (
-                    <div className="w-5 h-5 border-2 border-zinc-700 rounded-full" />
-                  )}
-                </div>
-
-                {/* Step label */}
-                <span
-                  className={`text-sm ${
-                    isActive
-                      ? 'text-teal-400 font-medium'
-                      : isComplete
-                      ? 'text-gray-400'
-                      : 'text-gray-600'
+              return (
+                <div
+                  key={step}
+                  className={`flex items-center gap-3 text-xs transition-colors ${
+                    isComplete ? 'text-green-400' : isActive ? 'text-primary' : 'text-white/20'
                   }`}
                 >
-                  {STEP_LABELS[step]}
-                </span>
-              </div>
-            );
-          })}
+                  {/* Status indicator */}
+                  {isComplete ? (
+                    <CheckCircle2 className="w-4 h-4" />
+                  ) : isActive ? (
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
+                    >
+                      <Clock className="w-4 h-4" />
+                    </motion.div>
+                  ) : (
+                    <div className="w-4 h-4 rounded-full border border-white/10" />
+                  )}
+
+                  {/* Step label */}
+                  <span className={isActive ? "font-bold" : ""}>
+                    {STEP_LABELS[step]}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
         </div>
 
         {/* Cancel hint */}
-        <div className="mt-6 pt-4 border-t border-zinc-800 text-center">
-          <p className="text-xs text-gray-500">
-            Press{' '}
-            <kbd className="px-2 py-1 text-[10px] bg-zinc-800 rounded border border-zinc-700 text-gray-400 font-mono">Esc</kbd>
-            {' '}to cancel
-          </p>
+        <div className="pt-4 border-t border-white/5 text-center">
+          <button className="text-[10px] text-white/20 uppercase font-bold hover:text-white/40 transition-colors">
+            Press <span className="px-1.5 py-0.5 rounded bg-white/5 border border-white/10 text-white/40">ESC</span> to cancel
+          </button>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { Layers, ExternalLink, Download, Trash2 } from 'lucide-react';
 
 interface RecentScan {
   url: string;
@@ -122,39 +124,38 @@ export default function RecentScans({ onSelect, currentUrl }: RecentScansProps) 
   if (scans.length === 0) return null;
 
   return (
-    <div className="max-w-2xl mx-auto mb-10 px-4">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-xs font-semibold text-gray-600 uppercase tracking-widest">Your recent scans</h3>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ delay: 0.3 }}
+      className="space-y-4 text-left max-w-2xl mx-auto mb-10 px-4"
+    >
+      <div className="flex items-center justify-between px-2">
+        <h4 className="text-[10px] uppercase tracking-widest font-bold text-white/20">Your recent scans</h4>
         <div className="relative">
           <button
             onClick={() => setShowExport(!showExport)}
-            className="text-gray-500 hover:text-gray-300 transition-colors p-1"
+            className="text-white/20 hover:text-white transition-colors"
             aria-label="More options"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-            </svg>
+            <Layers className="w-4 h-4" />
           </button>
           {showExport && (
             <>
               <div className="fixed inset-0 z-10" onClick={() => setShowExport(false)} />
-              <div className="absolute right-0 mt-2 w-48 bg-zinc-900 rounded-xl shadow-xl border border-zinc-800 z-20 overflow-hidden">
+              <div className="absolute right-0 mt-2 w-48 bg-[#0A0A0A] rounded-xl shadow-xl border border-white/5 z-20 overflow-hidden">
                 <button
                   onClick={() => { exportHistory(); setShowExport(false); }}
-                  className="w-full px-4 py-3 text-left text-sm text-gray-300 hover:bg-white/5 flex items-center gap-3 transition-colors"
+                  className="w-full px-4 py-3 text-left text-sm text-white/60 hover:bg-white/5 flex items-center gap-3 transition-colors"
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                  </svg>
+                  <Download className="w-4 h-4" />
                   Export as JSON
                 </button>
                 <button
                   onClick={() => { clearHistory(); setShowExport(false); }}
                   className="w-full px-4 py-3 text-left text-sm text-red-400 hover:bg-red-500/10 flex items-center gap-3 transition-colors"
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
+                  <Trash2 className="w-4 h-4" />
                   Clear history
                 </button>
               </div>
@@ -163,28 +164,32 @@ export default function RecentScans({ onSelect, currentUrl }: RecentScansProps) 
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="space-y-2">
         {scans.map((scan) => (
-          <button
+          <div
             key={scan.domain}
-            onClick={() => onSelect(scan.url)}
-            disabled={currentUrl === scan.url}
-            className={`group flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all border ${
+            onClick={() => !currentUrl || currentUrl !== scan.url ? onSelect(scan.url) : undefined}
+            className={`flex items-center justify-between p-4 rounded-xl bg-white/[0.02] border border-white/5 transition-all cursor-pointer group ${
               currentUrl === scan.url
-                ? 'bg-teal-500/10 border-teal-500/30 text-teal-400 cursor-default'
-                : 'bg-zinc-950 border-zinc-900 hover:bg-zinc-900 hover:border-zinc-800 text-gray-400'
+                ? 'opacity-50 cursor-default'
+                : 'hover:bg-white/[0.04]'
             }`}
           >
-            <div className={`w-4 h-4 rounded-sm flex items-center justify-center flex-shrink-0 ${getGradeColor(scan.grade)}`}>
-              <span className="text-[10px] font-bold">{scan.grade}</span>
+            <div className="flex items-center gap-3">
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-bold border ${getGradeColor(scan.grade)}`}>
+                {scan.grade}
+              </div>
+              <span className="text-sm text-white/60 font-medium group-hover:text-white transition-colors">
+                {scan.domain}
+              </span>
+              <span className="text-[10px] text-white/20">
+                {formatTimeAgo(scan.timestamp)}
+              </span>
             </div>
-            <span className="truncate max-w-[120px] text-xs font-medium">{scan.domain}</span>
-            <span className="text-[10px] text-gray-600 hidden sm:inline">
-              {formatTimeAgo(scan.timestamp)}
-            </span>
-          </button>
+            <ExternalLink className="w-4 h-4 text-white/10 group-hover:text-white transition-colors" />
+          </div>
         ))}
       </div>
-    </div>
+    </motion.div>
   );
 }

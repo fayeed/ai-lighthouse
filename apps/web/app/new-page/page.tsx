@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowRight,
   Search,
@@ -23,46 +23,104 @@ import { Button } from "@/components/ui/Button";
 import { Switch } from "@/components/ui/Switch";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/Accordion";
 import { Input } from "@/components/ui/Input";
-import { ModelConfig } from "@/components/ModelSelector";
+import ModelSelector, { ModelConfig } from "@/components/ModelSelector";
 import { trackEvent } from "@/components/Analytics";
-import { saveRecentScan } from "@/components/RecentScans";
+import RecentScans, { saveRecentScan } from "@/components/RecentScans";
 import FAQ from "@/components/FAQ";
+import LoadingProgress from "@/components/LoadingProgress";
 
 const LandingPage = () => {
-  const [url, setUrl] = useState("");
   const router = useRouter();
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [isAiPowered, setIsAiPowered] = useState(true);
-  const [progress, setProgress] = useState(0);
-  const [error, setError] = useState("");
-  const [loadingStep, setLoadingStep] = useState("starting");
-  const [loadingMessage, setLoadingMessage] = useState("");
+  const searchParams = useSearchParams();
+  const hasTriggeredFromUrl = useRef(false);
   const abortControllerRef = useRef<AbortController | null>(null);
+  
+  const [url, setUrl] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [loadingStep, setLoadingStep] = useState('starting');
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [loadingMessage, setLoadingMessage] = useState('');
+  const [error, setError] = useState('');
+  const [reportData, setReportData] = useState<any>(null);
+  const [progress, setProgress] = useState(0);
+  const [interpretationMessage, setInterpretationMessage] = useState<string>('');
+  const [score, setScore] = useState<number>(0);
+  const [enableLLM, setEnableLLM] = useState(false);
+  const [activeTab, setActiveTab] = useState('overview');
+  const [showScoringGuide, setShowScoringGuide] = useState(false);
+  const [showWarningModal, setShowWarningModal] = useState(false);
+  const [warningMessage, setWarningMessage] = useState<{ message: string; details?: string } | null>(null);
+  const [viewMode, setViewMode] = useState<'simple' | 'complex'>('simple');
   const [modelConfig, setModelConfig] = useState<ModelConfig>({
     provider: 'openrouter',
     model: 'meta-llama/llama-3.3-70b-instruct:free',
   });
 
-  // Keyboard shortcuts
+  // Auto-trigger analysis from URL parameter
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Escape to cancel analysis
-      if (e.key === 'Escape' && isAnalyzing) {
-        cancelAnalysis();
+    const urlParam = searchParams.get('url');
+    const aiParam = searchParams.get('ai');
+    if (urlParam && !hasTriggeredFromUrl.current && !loading && !reportData) {
+      hasTriggeredFromUrl.current = true;
+      setUrl(urlParam);
+      if (aiParam === 'true') {
+        setEnableLLM(true);
       }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isAnalyzing]);
+      // Trigger form submission after URL is set
+      setTimeout(() => {
+        const form = document.querySelector('form');
+        if (form) form.requestSubmit();
+      }, 100);
+    }
+  }, [searchParams, loading, reportData]);
 
+  // Cancel analysis function
   const cancelAnalysis = () => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
-      setIsAnalyzing(false);
-      setProgress(0);
+      setLoading(false);
+      setLoadingProgress(0);
       setLoadingMessage('');
       setError('Analysis cancelled');
+    }
+  };
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Cmd/Ctrl + Enter to submit
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && !loading) {
+        const form = document.querySelector('form');
+        if (form) form.requestSubmit();
+      }
+      // Escape to cancel analysis or reset/clear results
+      if (e.key === 'Escape') {
+        if (loading) {
+          cancelAnalysis();
+        } else if (reportData) {
+          setReportData(null);
+          setUrl('');
+          router.replace('/', { scroll: false });
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [loading, reportData, router]);
+
+  // Update URL when analysis completes
+  const updateUrlWithResult = (analyzedUrl: string, usedLLM: boolean) => {
+    // Extract domain from URL for cleaner sharing
+    try {
+      const domain = new URL(analyzedUrl).hostname;
+      const params = new URLSearchParams({ url: `${domain}/new-page` });
+      if (usedLLM) params.set('ai', 'true');
+      router.replace(`?${params.toString()}`, { scroll: false });
+    } catch {
+      const params = new URLSearchParams({ url: analyzedUrl });
+      if (usedLLM) params.set('ai', 'true');
+      router.replace(`?${params.toString()}`, { scroll: false });
     }
   };
 
@@ -90,10 +148,86 @@ const LandingPage = () => {
     }
   };
 
-  const handleAnalyze = async (e: React.FormEvent) => {
+  const getWeakDimensions = (data: any): string[] => {
+    if (!data.aiReadiness?.dimensions) return [];
+    
+    const dimensionNames: Record<string, string> = {
+      contentQuality: 'content clarity',
+      extractability: 'extractability',
+      comprehensibility: 'structure',
+      discoverability: 'discoverability',
+      trustworthiness: 'trust'
+    };
+    
+    return Object.entries(data.aiReadiness.dimensions)
+      .filter(([_, dim]: [string, any]) => dim.score < 70)
+      .map(([name, _]) => dimensionNames[name] || name)
+      .slice(0, 2);
+  };
+
+  const generateInterpretationMessage = (data: any): string => {
+    if (!data.aiReadiness) return '';
+
+    const score = Math.round(data.aiReadiness.overall);
+    const issues = data.auditReport?.issues || [];
+    const criticalIssues = issues.filter((i: any) => i.severity === 'critical').length;
+    const highIssues = issues.filter((i: any) => i.severity === 'high').length;
+    
+    const dimensions = data.aiReadiness.dimensions || {};
+    const weakDimensions = Object.entries(dimensions)
+      .filter(([_, dim]: [string, any]) => dim.score < 70)
+      .map(([name, _]) => name.replace(/([A-Z])/g, ' $1').trim().toLowerCase())
+      .slice(0, 2);
+    
+    const quickWins = data.aiReadiness.quickWins || [];
+    const easyFixes = quickWins.filter((w: any) => w.effort === 'low').slice(0, 2);
+    
+    let statusMessage = '';
+    let detailMessage = '';
+    let actionMessage = '';
+    
+    if (score >= 90) {
+      statusMessage = `Your site is excellent – AI systems can accurately understand and extract information from your content.`;
+      detailMessage = quickWins.length > 0 
+        ? `You have ${quickWins.length} minor optimization${quickWins.length > 1 ? 's' : ''} available to reach perfection.`
+        : `Your content is well-optimized for AI comprehension.`;
+      actionMessage = `Continue maintaining high-quality, well-structured content.`;
+    } else if (score >= 75) {
+      statusMessage = `Your site is good, but has ${criticalIssues + highIssues > 0 ? 'some critical' : 'minor'} ${
+        weakDimensions.length > 0 ? weakDimensions.join(' and ') : 'trustworthiness'
+      } ${weakDimensions.length > 1 || !weakDimensions.length ? 'risks' : 'issues'}.`;
+      detailMessage = easyFixes.length > 0
+        ? `${easyFixes.map((f: any) => f.issue.toLowerCase()).join(' and ')} will significantly raise your score.`
+        : `Addressing ${criticalIssues + highIssues} priority issue${criticalIssues + highIssues !== 1 ? 's' : ''} will improve AI understanding.`;
+      actionMessage = `Focus on ${weakDimensions.length > 0 ? 'improving ' + weakDimensions[0] : 'the high-priority issues below'}.`;
+    } else if (score >= 60) {
+      statusMessage = `Your site has moderate AI readiness with significant ${
+        weakDimensions.length > 0 ? weakDimensions.join(' and ') : 'structural'
+      } issues.`;
+      detailMessage = `AI systems may miss important details or misunderstand key information${
+        criticalIssues > 0 ? `, especially with ${criticalIssues} critical issue${criticalIssues !== 1 ? 's' : ''}` : ''
+      }.`;
+      actionMessage = easyFixes.length > 0
+        ? `Start with ${easyFixes[0].issue.toLowerCase()} for quick improvement.`
+        : `Prioritize fixing critical and high-severity issues.`;
+    } else {
+      statusMessage = `Your site has critical AI readiness issues affecting ${
+        weakDimensions.length > 0 ? weakDimensions.join(', ') : 'multiple dimensions'
+      }.`;
+      detailMessage = `AI systems will struggle to extract accurate information and may hallucinate facts about your business.`;
+      actionMessage = `Immediate action required: ${
+        data.aiReadiness.roadmap?.immediate?.[0]?.replace(/^[🔴🟠🟡🔵]\s*/, '') || 
+        'Address the critical issues listed below'
+      }.`;
+    }
+    
+    return `AI Readiness: ${score}/100 – ${statusMessage} ${detailMessage} ${actionMessage}`;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-
+    
     const validatedUrl = validateUrl(url);
     if (!validatedUrl) {
       return;
@@ -103,30 +237,31 @@ const LandingPage = () => {
       setUrl(validatedUrl);
     }
 
-    setIsAnalyzing(true);
+    setLoading(true);
     setLoadingStep('starting');
-    setProgress(0);
+    setLoadingProgress(0);
     setLoadingMessage('Starting analysis...');
+    setReportData(null);
 
     // Track the analyze event
     trackEvent.analyzeWebsite(
       validatedUrl,
-      isAiPowered,
-      isAiPowered ? modelConfig.provider : undefined,
-      isAiPowered ? modelConfig.model : undefined
+      enableLLM,
+      enableLLM ? modelConfig.provider : undefined,
+      enableLLM ? modelConfig.model : undefined
     );
 
     try {
       const requestBody: any = {
         url: validatedUrl,
-        enableLLM: isAiPowered,
+        enableLLM,
         minImpactScore: 5,
       };
 
-      if (isAiPowered) {
+      if (enableLLM) {
         requestBody.llmProvider = modelConfig.provider;
         requestBody.llmModel = modelConfig.model;
-
+        
         if (modelConfig.provider === 'ollama') {
           requestBody.llmBaseUrl = modelConfig.baseUrl || 'http://localhost:11434';
         } else if (modelConfig.apiKey) {
@@ -159,44 +294,49 @@ const LandingPage = () => {
       }
 
       let buffer = '';
-
+      
       while (true) {
         const { done, value } = await reader.read();
-
+        
         if (done) break;
-
+        
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split('\n\n');
         buffer = lines.pop() || '';
-
+        
         for (const line of lines) {
           if (line.startsWith('data: ')) {
             try {
               const event = JSON.parse(line.slice(6));
-
+              
               if (event.type === 'progress') {
                 setLoadingStep(event.step);
-                setProgress(event.progress);
+                setLoadingProgress(event.progress);
                 setLoadingMessage(event.message || '');
               } else if (event.type === 'complete') {
                 const data = event.data;
+                
+                if (data.warning) {
+                  setWarningMessage({
+                    message: data.warning.message,
+                    details: data.warning.details
+                  });
+                  setShowWarningModal(true);
+                }
 
+                const interpretation = generateInterpretationMessage(data.data);
+                setInterpretationMessage(interpretation);
+                setReportData(data.data);
                 const finalScore = Math.round(data.data.aiReadiness.overall);
-
+                setScore(finalScore);
+                
                 // Save to recent scans
                 saveRecentScan(validatedUrl, finalScore, data.data.aiReadiness.grade);
-
-                // Navigate to results with URL params
-                const domain = new URL(validatedUrl).hostname;
-                const params = new URLSearchParams({ url: domain });
-                if (isAiPowered) params.set('ai', 'true');
-
-                trackEvent.analyzeComplete(validatedUrl, finalScore, isAiPowered);
-
-                // Navigate to main page with results
-                setTimeout(() => {
-                  router.push(`/?${params.toString()}`);
-                }, 500);
+                
+                // Update URL for deep linking
+                updateUrlWithResult(validatedUrl, enableLLM);
+                
+                trackEvent.analyzeComplete(validatedUrl, finalScore, enableLLM);
               } else if (event.type === 'error') {
                 throw new Error(event.error);
               }
@@ -213,22 +353,14 @@ const LandingPage = () => {
       }
       const errorMessage = err.message || 'An error occurred during the audit';
       setError(errorMessage);
-      setIsAnalyzing(false);
-
+      
       // Track error
-      trackEvent.analyzeError(validatedUrl, errorMessage, isAiPowered);
+      trackEvent.analyzeError(validatedUrl, errorMessage, enableLLM);
     } finally {
+      setLoading(false);
       abortControllerRef.current = null;
     }
   };
-
-  const steps = [
-    { label: "Fetching website", done: progress > 20 },
-    { label: "Parsing HTML structure", done: progress > 40 },
-    { label: "Running audit rules", done: progress > 60 },
-    { label: "Analyzing extractability", done: progress > 80 },
-    { label: "AI analyzing content", active: progress > 80 && progress < 100, done: progress === 100 }
-  ];
 
   return (
     <div className="min-h-screen bg-[#050505] text-white selection:bg-white selection:text-black font-sans overflow-x-hidden">
@@ -249,7 +381,7 @@ const LandingPage = () => {
             <div className="flex flex-col items-center justify-center gap-6 mb-8">
               <div className="relative">
                 <span className="text-4xl">🏮</span>
-                {isAnalyzing && (
+                {loading && (
                   <motion.div 
                     animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
                     transition={{ repeat: Infinity, duration: 2 }}
@@ -271,7 +403,7 @@ const LandingPage = () => {
             transition={{ delay: 0.1 }}
             className="space-y-6 max-w-2xl mx-auto"
           >
-            <form onSubmit={handleAnalyze} className="relative group">
+            <form onSubmit={handleSubmit} className="relative group">
               <div className="absolute -inset-1 bg-gradient-to-r from-white/0 via-white/5 to-white/0 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
               <div className="relative flex flex-col gap-2">
                 <div className="flex gap-2">
@@ -289,10 +421,10 @@ const LandingPage = () => {
                   </div>
                   <Button
                     type="submit"
-                    disabled={isAnalyzing}
-                    className={`h-16 px-10 rounded-xl font-bold transition-all ${isAnalyzing ? 'bg-red-500/10 text-red-500 border border-red-500/20' : 'bg-white text-black hover:bg-white/90'}`}
+                    disabled={loading}
+                    className={`h-16 px-10 rounded-xl font-bold transition-all ${loading ? 'bg-red-500/10 text-red-500 border border-red-500/20' : 'bg-white text-black hover:bg-white/90'}`}
                   >
-                    {isAnalyzing ? (
+                    {loading ? (
                       <div className="flex items-center gap-2">
                         <motion.div
                           animate={{ rotate: 360 }}
@@ -317,7 +449,7 @@ const LandingPage = () => {
               </div>
             </form>
             
-            {!isAnalyzing && (
+            {!loading && (
               <div className="flex flex-col items-center gap-4">
                 <p className="text-[10px] uppercase tracking-widest font-bold text-white/20">
                   Free • No signup • Results in ~30 seconds
@@ -360,140 +492,40 @@ const LandingPage = () => {
                     <p className="text-[10px] uppercase tracking-widest font-bold text-white/20">(deeper insights)</p>
                   </div>
                 </div>
-                <Switch checked={isAiPowered} onCheckedChange={setIsAiPowered} />
+                <Switch checked={enableLLM} onCheckedChange={setEnableLLM} />
               </div>
 
-              <AnimatePresence>
-                {isAiPowered && (
-                  <motion.div 
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="p-8 rounded-3xl bg-white/[0.02] border border-white/5 text-left space-y-6 overflow-hidden"
-                  >
-                    <div className="space-y-4">
-                      <h4 className="text-xs font-bold text-white/80 uppercase tracking-widest">AI Model Configuration</h4>
-                      <div className="space-y-2">
-                        <p className="text-[10px] uppercase font-bold text-white/20">Provider</p>
-                        <div className="flex flex-wrap gap-2">
-                          {["Openrouter", "Openai", "Anthropic", "Gemini", "Ollama"].map((p) => (
-                            <Button key={p} variant="outline" size="sm" className={`rounded-lg border-white/5 text-[10px] font-bold ${p === 'Openrouter' ? 'bg-primary/10 text-primary border-primary/20' : 'bg-white/[0.02] text-white/40'}`}>
-                              {p}
-                            </Button>
-                          ))}
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <p className="text-[10px] uppercase font-bold text-white/20">Model</p>
-                        <div className="relative">
-                          <Input 
-                            readOnly 
-                            value="meta-llama/llama-3.3-70b-instruct:free" 
-                            className="bg-white/[0.02] border-white/5 text-xs text-white/60 h-10 pr-10"
-                          />
-                          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20" />
-                        </div>
-                      </div>
-                      <div className="p-4 rounded-xl bg-yellow-500/5 border border-yellow-500/10 flex gap-3">
-                        <span className="text-yellow-500">💡</span>
-                        <p className="text-[10px] text-yellow-500/80 leading-relaxed font-medium">
-                          <span className="font-bold">Note:</span> Free models available! API key configured on backend.
-                        </p>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              <ModelSelector 
+                value={modelConfig}
+                onChange={setModelConfig}
+                enableLLM={enableLLM}
+                modelConfig={modelConfig}
+                provider={modelConfig.provider}
+              />
             </motion.div>
 
             {/* Loading State Container */}
-            <AnimatePresence>
-              {isAnalyzing && (
-                <motion.div 
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  className="p-8 rounded-[2.5rem] bg-[#0A0A0A] border border-white/5 text-left space-y-8 shadow-2xl"
-                >
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-3">
-                      <Search className="w-5 h-5 text-primary" />
-                      <h3 className="text-xl font-medium text-white">Analyzing...</h3>
-                    </div>
-                    <span className="text-sm font-mono text-primary">{progress}%</span>
-                  </div>
-
-                  <div className="space-y-6">
-                    <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                      <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${progress}%` }}
-                        className="h-full bg-primary transition-all duration-300"
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <p className="text-[10px] uppercase font-bold text-white/20">
-                        {loadingMessage || 'AI analyzing content...'}
-                      </p>
-                      <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 flex items-center gap-3">
-                         <MessageSquare className="w-4 h-4 text-white/20" />
-                         <p className="text-xs text-white/40 italic">
-                           {isAiPowered
-                             ? 'Using AI to analyze content quality and extractability...'
-                             : 'AI systems process millions of websites daily...'}
-                         </p>
-                      </div>
-                    </div>
-
-                    <div className="space-y-3">
-                      {steps.map((step, i) => (
-                        <div key={i} className={`flex items-center gap-3 text-xs transition-colors ${step.done ? 'text-green-400' : step.active ? 'text-primary' : 'text-white/20'}`}>
-                          {step.done ? <CheckCircle2 className="w-4 h-4" /> : step.active ? <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 2, ease: "linear" }}><Clock className="w-4 h-4" /></motion.div> : <div className="w-4 h-4 rounded-full border border-white/10" />}
-                          <span className={step.active ? "font-bold" : ""}>{step.label}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="pt-4 border-t border-white/5 text-center">
-                    <button
-                      onClick={cancelAnalysis}
-                      className="text-[10px] text-white/20 uppercase font-bold hover:text-white/40 transition-colors"
-                    >
-                      Press <span className="px-1.5 py-0.5 rounded bg-white/5 border border-white/10 text-white/40">ESC</span> to cancel
-                    </button>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            {loading && (
+              <LoadingProgress 
+                currentStep={loadingStep} 
+                progress={loadingProgress} 
+                message={loadingMessage}
+                enableLLM={enableLLM} 
+              />
+            )}
 
             {/* Recent Scans (only if not analyzing) */}
-            {!isAnalyzing && (
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.3 }}
-                className="space-y-4 text-left"
-              >
-                <div className="flex items-center justify-between px-2">
-                  <h4 className="text-[10px] uppercase tracking-widest font-bold text-white/20">Your recent scans</h4>
-                  <button className="text-white/20 hover:text-white"><Layers className="w-4 h-4" /></button>
-                </div>
-                <div
-                  onClick={() => router.push("/audit")}
-                  className="flex items-center justify-between p-4 rounded-xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] transition-all cursor-pointer group"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center text-[10px] font-bold text-red-400 border border-red-500/20">
-                      C-
-                    </div>
-                    <span className="text-sm text-white/60 font-medium group-hover:text-white transition-colors">stripe.com</span>
-                    <span className="text-[10px] text-white/20">2m ago</span>
-                  </div>
-                  <ExternalLink className="w-4 h-4 text-white/10 group-hover:text-white transition-colors" />
-                </div>
-              </motion.div>
+            {!reportData && !loading && (
+              <RecentScans 
+                onSelect={(recentUrl) => {
+                  setUrl(recentUrl);
+                  setTimeout(() => {
+                    const form = document.querySelector('form');
+                    if (form) form.requestSubmit();
+                  }, 50);
+                }}
+                currentUrl={url}
+              />
             )}
           </div>
 
