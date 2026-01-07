@@ -13,6 +13,7 @@ import { formatComprehensiveReport, formatDetailedIssues } from '../utils/compre
 import { render } from 'ink';
 import React from 'react';
 import { AuditReportUI } from '../ui/AuditReportUI.js';
+import { SetupWizard, type AuditConfig } from '../ui/SetupWizard.js';
 
 interface AuditOptions {
   output?: string;
@@ -62,6 +63,55 @@ export function auditCommand(program: Command) {
     .option('--llm-base-url <url>', 'LLM API base URL')
     .option('--llm-api-key <key>', 'LLM API key')
     .action(async (url: string, options: AuditOptions) => {
+      // Detect if user wants wizard (no feature flags provided)
+      const hasFeatureFlags =
+        options.enableChunking ||
+        options.enableExtractability ||
+        options.enableHallucination ||
+        options.enableLlm ||
+        options.llmProvider;
+
+      // If interactive mode and no feature flags, show wizard
+      if (options.output === 'interactive' && !hasFeatureFlags) {
+        const originalConsoleError = console.error;
+        const originalConsoleWarn = console.warn;
+        console.error = () => {};
+        console.warn = () => {};
+
+        let auditConfig: AuditConfig | null = null;
+
+        // Show setup wizard
+        const wizardRender = render(
+          React.createElement(SetupWizard, {
+            initialUrl: url,
+            onComplete: (config: AuditConfig) => {
+              auditConfig = config;
+            },
+          })
+        );
+
+        // Wait for wizard to complete
+        await wizardRender.waitUntilExit();
+
+        if (!auditConfig) {
+          console.error = originalConsoleError;
+          console.warn = originalConsoleWarn;
+          console.log('\nAudit cancelled.');
+          process.exit(0);
+        }
+
+        // Continue with audit using wizard config
+        url = auditConfig.url;
+        options.enableChunking = auditConfig.enableChunking;
+        options.enableExtractability = auditConfig.enableExtractability;
+        options.enableHallucination = auditConfig.enableHallucination;
+        options.enableLlm = auditConfig.enableLlm;
+        options.llmProvider = auditConfig.llmProvider;
+        options.llmModel = auditConfig.llmModel;
+        options.llmApiKey = auditConfig.llmApiKey;
+        options.llmBaseUrl = auditConfig.llmBaseUrl;
+      }
+
       // Check if interactive mode
       if (options.output === 'interactive') {
         // Suppress console.error and console.warn in interactive mode for cleaner UI

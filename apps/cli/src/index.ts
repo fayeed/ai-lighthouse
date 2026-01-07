@@ -4,6 +4,7 @@ import { Command } from 'commander';
 import { auditCommand } from './commands/audit.js';
 import { crawlCommand } from './commands/crawl.js';
 import { reportCommand } from './commands/report.js';
+import { auditWizardCommand } from './commands/audit-wizard.js';
 
 const program = new Command();
 
@@ -13,6 +14,7 @@ program
   .version('1.0.0');
 
 // Register commands
+auditWizardCommand(program); // Interactive wizard (recommended for new users)
 auditCommand(program);
 crawlCommand(program);
 reportCommand(program);

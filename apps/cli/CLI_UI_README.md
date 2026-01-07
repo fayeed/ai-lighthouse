@@ -1,6 +1,9 @@
 # AI Lighthouse Beautiful CLI
 
-The AI Lighthouse CLI now features a beautiful, interactive terminal UI built with React (using Ink) that matches the functionality and design of the web version!
+The AI Lighthouse CLI now features:
+- 🧙‍♂️ **Interactive Setup Wizard** - No complex flags needed!
+- 🎨 **Beautiful Terminal UI** - Built with React (using Ink)
+- 📊 **Full Feature Parity** - Matches the web version's functionality
 
 ## Features
 
