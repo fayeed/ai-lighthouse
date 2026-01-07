@@ -64,9 +64,11 @@ export function auditCommand(program: Command) {
     .action(async (url: string, options: AuditOptions) => {
       // Check if interactive mode
       if (options.output === 'interactive') {
-        // Suppress console.error in interactive mode for cleaner UI
+        // Suppress console.error and console.warn in interactive mode for cleaner UI
         const originalConsoleError = console.error;
+        const originalConsoleWarn = console.warn;
         console.error = () => {}; // Suppress all console.error calls
+        console.warn = () => {}; // Suppress all console.warn calls
 
         // Show loading UI
         const { waitUntilExit, clear, rerender } = render(
@@ -148,8 +150,9 @@ export function auditCommand(program: Command) {
           // Wait for user to exit
           await finalRender.waitUntilExit();
 
-          // Restore console.error
+          // Restore console methods
           console.error = originalConsoleError;
+          console.warn = originalConsoleWarn;
 
           // Check threshold
           if (options.threshold !== undefined) {
@@ -159,8 +162,9 @@ export function auditCommand(program: Command) {
             }
           }
         } catch (error) {
-          // Restore console.error before showing error
+          // Restore console methods before showing error
           console.error = originalConsoleError;
+          console.warn = originalConsoleWarn;
 
           clear();
           // Show error in UI format instead of console.error
