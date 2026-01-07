@@ -133,7 +133,6 @@ export async function analyzeUrlWithRules(url: string, opts?: ScanOptions): Prom
   if (options.enableLLM && options.llmConfig) {
     try {
       reportProgress('llm', 35);
-      console.log('[LLM] Starting parallel LLM operations');
       const llmStartTime = Date.now();
 
       // Run all LLM operations in parallel
@@ -206,7 +205,6 @@ export async function analyzeUrlWithRules(url: string, opts?: ScanOptions): Prom
       ]);
 
       const llmDuration = Date.now() - llmStartTime;
-      console.log(`[LLM] All parallel operations completed in ${llmDuration}ms`);
 
       reportProgress('processing', 85);
       

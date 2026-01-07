@@ -10,6 +10,9 @@ import { join, resolve } from 'path';
 import { existsSync } from 'fs';
 import html_to_pdf from 'html-pdf-node';
 import { formatComprehensiveReport, formatDetailedIssues } from '../utils/comprehensive-formatter.js';
+import { render } from 'ink';
+import React from 'react';
+import { AuditReportUI } from '../ui/AuditReportUI.js';
 
 interface AuditOptions {
   output?: string;
@@ -31,6 +34,7 @@ interface AuditOptions {
   llmModel?: string;
   llmBaseUrl?: string;
   llmApiKey?: string;
+  interactive?: boolean;
 }
 
 export function auditCommand(program: Command) {
@@ -38,7 +42,7 @@ export function auditCommand(program: Command) {
     .command('audit')
     .description('Audit a website for AI readiness')
     .argument('<url>', 'URL to audit')
-    .option('-o, --output <format>', 'Output format: json, html, pdf, lhr, csv', 'json')
+    .option('-o, --output <format>', 'Output format: json, html, pdf, lhr, csv, interactive', 'interactive')
     .option('-r, --rules <preset>', 'Rule preset: default, strict, minimal', 'default')
     .option('-d, --depth <number>', 'Crawl depth (for multi-page audits)', parseInt, 1)
     .option('-p, --pages <urls>', 'Comma-separated list of specific pages to audit')
@@ -58,6 +62,118 @@ export function auditCommand(program: Command) {
     .option('--llm-base-url <url>', 'LLM API base URL')
     .option('--llm-api-key <key>', 'LLM API key')
     .action(async (url: string, options: AuditOptions) => {
+      // Check if interactive mode
+      if (options.output === 'interactive') {
+        // Suppress console.error in interactive mode for cleaner UI
+        const originalConsoleError = console.error;
+        console.error = () => {}; // Suppress all console.error calls
+
+        // Show loading UI
+        const { waitUntilExit, clear, rerender } = render(
+          React.createElement(AuditReportUI, {
+            url,
+            result: {},
+            aiReadiness: {},
+            loading: true,
+            currentStep: 'Starting audit...',
+          })
+        );
+
+        try {
+          // Validate URL
+          const urlObj = new URL(url);
+
+          // Build scan options
+          const scanOptions: ScanOptions = {
+            maxChunkTokens: options.maxChunkTokens,
+            chunkingStrategy: options.chunkingStrategy,
+            enableChunking: options.enableChunking,
+            enableExtractability: options.enableExtractability,
+            enableHallucinationDetection: options.enableHallucination,
+            enableLLM: options.enableLlm,
+            minImpactScore: options.minImpact,
+            minConfidence: options.minConfidence,
+            maxIssues: options.maxIssues,
+          };
+
+          // Configure LLM if enabled
+          if (options.enableLlm && options.llmProvider) {
+            scanOptions.llmConfig = {
+              provider: options.llmProvider as any,
+              model: options.llmModel,
+              baseUrl: options.llmBaseUrl,
+              apiKey: options.llmApiKey,
+            };
+          }
+
+          // Update loading step
+          rerender(
+            React.createElement(AuditReportUI, {
+              url: urlObj.href,
+              result: {},
+              aiReadiness: {},
+              loading: true,
+              currentStep: 'Scanning page...',
+            })
+          );
+
+          // Run the audit
+          const result = await analyzeUrlWithRules(url, scanOptions);
+
+          // Update loading step
+          rerender(
+            React.createElement(AuditReportUI, {
+              url: urlObj.href,
+              result,
+              aiReadiness: {},
+              loading: true,
+              currentStep: 'Calculating AI readiness scores...',
+            })
+          );
+
+          // Calculate AI readiness
+          const aiReadiness = calculateAIReadiness(result);
+
+          // Clear loading and show results
+          clear();
+          const finalRender = render(
+            React.createElement(AuditReportUI, {
+              url: urlObj.href,
+              result,
+              aiReadiness,
+              loading: false,
+            })
+          );
+
+          // Wait for user to exit
+          await finalRender.waitUntilExit();
+
+          // Restore console.error
+          console.error = originalConsoleError;
+
+          // Check threshold
+          if (options.threshold !== undefined) {
+            const overallScore = aiReadiness.overall;
+            if (overallScore !== undefined && overallScore < options.threshold) {
+              process.exit(1);
+            }
+          }
+        } catch (error) {
+          // Restore console.error before showing error
+          console.error = originalConsoleError;
+
+          clear();
+          // Show error in UI format instead of console.error
+          console.log('\n' + chalk.bold.red('❌ Audit Failed'));
+          console.log(chalk.red('─'.repeat(70)));
+          console.log(chalk.red(error instanceof Error ? error.message : String(error)));
+          console.log('\n' + chalk.dim('Please check the URL and your configuration.'));
+          process.exit(1);
+        }
+        return;
+      }
+
+      // Non-interactive mode - original logic
       const spinner = ora('Starting audit...').start();
 
       try {
