@@ -1,5 +1,5 @@
 import React from 'react';
-import ScoringGuide from '../../components/ScoringGuide';
+import ScoringGuide from '../../../components/ScoringGuide';
 
 export default function Page() {
   return (
