@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { motion } from "framer-motion";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Cpu, Github, Clock } from "lucide-react";
@@ -14,7 +14,7 @@ import FAQ from "@/components/FAQ";
 import LoadingProgress from "@/components/LoadingProgress";
 import Tabs from './tabs'
 
-const LandingPage = () => {
+const CheckPageContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const hasTriggeredFromUrl = useRef(false);
@@ -613,4 +613,22 @@ const LandingPage = () => {
   );
 };
 
-export default LandingPage;
+export default function CheckPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
+          >
+            <Clock className="w-8 h-8 text-white/40 mx-auto" />
+          </motion.div>
+          <p className="text-white/40">Loading...</p>
+        </div>
+      </div>
+    }>
+      <CheckPageContent />
+    </Suspense>
+  );
+}
