@@ -152,31 +152,31 @@ export default function IssuesTab({ issues, currentScore }: IssuesTabProps) {
   return (
     <div>
       {/* Summary Banner */}
-      <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 mb-6">
+      <div className="bg-[#0a0a0a] border border-zinc-800 rounded-2xl p-5 sm:p-6 mb-8">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h3 className="text-lg font-bold text-white mb-1">
+            <h3 className="text-xl sm:text-2xl font-bold text-white mb-2">
               {issues.length} Issues Found
             </h3>
-            <p className="text-sm text-gray-400">
+            <p className="text-sm sm:text-base text-gray-400">
               {severityCounts.critical > 0 && (
-                <span className="text-red-400 font-medium">{severityCounts.critical} critical</span>
+                <span className="text-red-400 font-semibold">{severityCounts.critical} critical</span>
               )}
               {severityCounts.critical > 0 && severityCounts.high > 0 && ' • '}
               {severityCounts.high > 0 && (
-                <span className="text-orange-400 font-medium">{severityCounts.high} high priority</span>
+                <span className="text-orange-400 font-semibold">{severityCounts.high} high priority</span>
               )}
               {(severityCounts.critical > 0 || severityCounts.high > 0) && ' — address these first'}
             </p>
           </div>
           {currentScore && totalPotentialImprovement > 0 && (
-            <div className="bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2">
-              <div className="text-xs text-gray-400 mb-1">Potential improvement</div>
-              <div className="flex items-center gap-2">
-                <span className="text-lg font-bold text-white">{currentScore}</span>
-                <span className="text-gray-500">→</span>
-                <span className="text-lg font-bold text-teal-400">
-                  ~{Math.min(100, currentScore + Math.round(totalPotentialImprovement * 0.7))}
+            <div className="bg-zinc-900 border border-zinc-800 rounded-xl px-5 py-3">
+              <div className="text-xs sm:text-sm text-gray-500 uppercase tracking-wide mb-1">Potential Improvement</div>
+              <div className="flex items-center gap-3">
+                <span className="text-2xl font-bold text-white">{currentScore}</span>
+                <span className="text-gray-600">→</span>
+                <span className="text-2xl font-bold text-green-400">
+                  {Math.min(100, currentScore + Math.round(totalPotentialImprovement * 0.7))}
                 </span>
               </div>
             </div>
@@ -185,21 +185,30 @@ export default function IssuesTab({ issues, currentScore }: IssuesTabProps) {
       </div>
 
       {/* Severity Quick Stats */}
-      <div className="grid grid-cols-4 gap-2 sm:gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-8">
         {severities.map(severity => {
           const info = severityInfo[severity];
           const isActive = severityFilter.includes(severity);
+          const getSeverityBg = (sev: string) => {
+            switch (sev) {
+              case 'critical': return 'bg-gradient-to-br from-red-950/40 to-red-900/20 border-red-900/50';
+              case 'high': return 'bg-gradient-to-br from-orange-950/40 to-orange-900/20 border-orange-900/50';
+              case 'medium': return 'bg-gradient-to-br from-yellow-950/40 to-yellow-900/20 border-yellow-900/50';
+              case 'low': return 'bg-gradient-to-br from-blue-950/40 to-blue-900/20 border-blue-900/50';
+              default: return 'bg-zinc-900 border-zinc-800';
+            }
+          };
           return (
             <button
               key={severity}
               onClick={() => toggleSeverity(severity)}
-              className={`${getSeverityColor(severity)} border-l-4 rounded-xl p-2 sm:p-4 text-left transition-all ${
-                isActive ? 'ring-2 ring-teal-500' : ''
+              className={`${getSeverityBg(severity)} border rounded-2xl p-3 sm:p-5 text-left transition-all hover:scale-105 ${
+                isActive ? 'ring-2 ring-white' : ''
               }`}
             >
-              <div className="text-xs sm:text-sm text-gray-400">{info.label}</div>
-              <div className="text-xl sm:text-3xl font-bold text-white">{severityCounts[severity]}</div>
-              <div className="text-xs text-gray-500 hidden sm:block mt-1">{info.description}</div>
+              <div className="text-xs sm:text-sm text-gray-400 uppercase tracking-wide font-semibold mb-2">{severity}</div>
+              <div className="text-2xl sm:text-4xl font-bold text-white mb-1">{severityCounts[severity]}</div>
+              <div className="text-xs text-gray-500 hidden sm:block">{info.description}</div>
             </button>
           );
         })}
@@ -310,70 +319,54 @@ export default function IssuesTab({ issues, currentScore }: IssuesTabProps) {
                     return (
                       <div
                         key={idx}
-                        className={`border-l-4 border rounded-xl overflow-hidden ${getSeverityColor(issue.severity)} transition-all`}
+                        className={`border-l-4 border rounded-2xl overflow-hidden ${getSeverityColor(issue.severity)} transition-all hover:shadow-lg`}
                       >
                         {/* Issue Header - Always visible */}
                         <div
-                          className="p-4 cursor-pointer hover:bg-zinc-800/30 transition-colors"
+                          className="p-4 sm:p-5 cursor-pointer hover:bg-zinc-800/50 transition-all"
                           onClick={() => toggleIssueExpanded(globalIdx)}
                         >
                           <div className="flex items-start justify-between gap-3">
                             <div className="flex-1 min-w-0">
-                              <div className="font-medium text-white mb-1">
+                              <div className="font-semibold text-white mb-2 text-sm sm:text-base leading-relaxed">
                                 {issue.message}
                               </div>
                               <div className="flex flex-wrap items-center gap-2 text-xs">
                                 {viewMode !== 'category' && (
-                                  <span className="text-gray-400">
+                                  <span className="text-gray-400 bg-zinc-800/50 px-2 py-1 rounded-md">
                                     {categoryDescriptions[issue.category?.toLowerCase()]?.icon || '📋'} {issue.category}
                                   </span>
                                 )}
                                 {viewMode !== 'priority' && (
-                                  <span className={`px-2 py-0.5 rounded-full ${getSeverityBadgeColor(issue.severity)}`}>
+                                  <span className={`px-2.5 py-1 rounded-md font-medium uppercase tracking-wide ${getSeverityBadgeColor(issue.severity)}`}>
                                     {issue.severity}
                                   </span>
                                 )}
                                 {scoreImprovement > 0 && (
-                                  <span className="text-teal-400 font-semibold">
-                                    +{scoreImprovement} pts if fixed
+                                  <span className="text-green-400 font-bold bg-green-500/10 px-2.5 py-1 rounded-md">
+                                    +{scoreImprovement} pts
                                   </span>
                                 )}
                               </div>
                             </div>
                             <div className="flex items-center gap-2 flex-shrink-0">
-                              <span className="text-gray-500 text-sm">
+                              <div className="bg-zinc-800 px-2 py-1 rounded-md text-gray-400 text-sm">
                                 {isExpanded ? '▼' : '▶'}
-                              </span>
+                              </div>
                             </div>
                           </div>
                         </div>
 
                         {/* Expanded Details */}
                         {isExpanded && (
-                          <div className="px-4 pb-4 border-t border-zinc-700/50">
-                            {/* Why it matters */}
-                            <div className="mt-3 p-3 bg-zinc-800 border border-zinc-700 rounded-lg">
-                              <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">
-                                Why it matters
-                              </div>
-                              <p className="text-sm text-gray-300">
-                                {issue.severity === 'critical'
-                                  ? 'This issue prevents AI systems from properly understanding your content. AI may completely miss or misinterpret important information.'
-                                  : issue.severity === 'high'
-                                  ? 'This significantly reduces how accurately AI can process your content. May lead to incomplete or partially incorrect information.'
-                                  : issue.severity === 'medium'
-                                  ? 'This may cause AI to miss some nuances or make minor errors when presenting your content.'
-                                  : 'A minor optimization that can improve AI understanding, but not critical.'}
-                              </p>
-                            </div>
-
+                          <div className="px-4 sm:px-5 pb-4 sm:pb-5 border-t border-zinc-800">
                             {/* How to fix */}
                             {issue.suggested_fix && (
-                              <div className="mt-3 p-3 bg-teal-500/5 border border-teal-500/20 rounded-lg border-l-2 border-l-teal-500">
-                                <div className="text-xs font-semibold text-teal-400 uppercase tracking-wide mb-1 flex items-center gap-1">
-                                  <span>💡</span> How to fix
+                              <div className="mt-4 p-4 bg-zinc-900 border border-zinc-800 rounded-xl">
+                                <div className="text-xs sm:text-sm font-bold text-gray-400 uppercase tracking-wide mb-2 flex items-center gap-2">
+                                  <span className="text-lg">💡</span> How to fix
                                 </div>
-                                <p className="text-sm text-gray-300">
+                                <p className="text-sm sm:text-base text-gray-300 leading-relaxed">
                                   {issue.suggested_fix}
                                 </p>
                               </div>

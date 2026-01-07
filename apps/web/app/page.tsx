@@ -39,6 +39,7 @@ function HomeContent() {
   const [loadingMessage, setLoadingMessage] = useState('');
   const [error, setError] = useState('');
   const [reportData, setReportData] = useState<any>(null);
+  const [progress, setProgress] = useState(0);
   const [interpretationMessage, setInterpretationMessage] = useState<string>('');
   const [score, setScore] = useState<number>(0);
   const [enableLLM, setEnableLLM] = useState(false);
@@ -359,22 +360,35 @@ function HomeContent() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-black text-white transition-colors duration-300">
-      <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-8 flex-1">
+    <div className="min-h-screen flex flex-col bg-[#050505] text-white transition-colors duration-300 selection:bg-white selection:text-black overflow-x-hidden">
+      {/* Background Gradients */}
+      {!reportData && (
+        <div className="fixed inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-white/[0.03] blur-[120px]" />
+          <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-white/[0.02] blur-[120px]" />
+        </div>
+      )}
+
+      <div className="container mx-auto px-3 sm:px-6 py-3 sm:py-8 flex-1 relative z-10">
         {/* Header with View Toggle */}
         <div className="text-center mb-12 sm:mb-20 relative">
           {/* Main Hero */}
           {!reportData && (
-            <div className="max-w-3xl mx-auto pt-12 sm:pt-20 pb-8">
-              <div className="inline-flex items-center gap-2 mb-6">
-                <span className="text-4xl sm:text-5xl">🚨</span>
-                <h1 className="text-4xl sm:text-6xl font-bold text-white tracking-tight">
-                  AI Lighthouse
-                </h1>
+            <div className="max-w-4xl mx-auto pt-24 sm:pt-32 pb-6 text-center space-y-12">
+              <div className="space-y-6">
+                <div className="flex flex-col items-center justify-center gap-6 mb-8">
+                  <div className="relative">
+                    <span className="text-4xl">🏮</span>
+                    {loading && (
+                      <div className="absolute inset-0 bg-red-500/20 blur-xl rounded-full animate-pulse" />
+                    )}
+                  </div>
+                  <h1 className="text-5xl md:text-6xl font-bold tracking-tighter">AI Lighthouse</h1>
+                </div>
+                <p className="text-xl text-white/40 font-light max-w-2xl mx-auto leading-relaxed">
+                  Analyze how AI systems like ChatGPT, Perplexity, and search engines understand your website
+                </p>
               </div>
-              <p className="text-lg sm:text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed">
-                Analyze how AI systems like ChatGPT, Perplexity, and search engines understand your website
-              </p>
             </div>
           )}
 
@@ -383,7 +397,7 @@ function HomeContent() {
             <div className="flex justify-between items-start mb-8">
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="text-2xl">🚨</span>
+                  <span className="text-2xl">🏮</span>
                   <h1 className="text-2xl sm:text-3xl font-bold text-white">
                     AI Lighthouse
                   </h1>
@@ -468,6 +482,7 @@ function HomeContent() {
                 <ScoreDisplay
                   score={Math.round(reportData.aiReadiness.overall)}
                   grade={reportData.aiReadiness.grade}
+                  url={url}
                 />
               </div>
 
@@ -542,6 +557,7 @@ function HomeContent() {
               <ScoreDisplay
                 score={Math.round(reportData.aiReadiness.overall)}
                 grade={reportData.aiReadiness.grade}
+                url={url}
               />
 
               {/* Scoring Guide Section */}
@@ -557,41 +573,41 @@ function HomeContent() {
 
               {/* Tabs Navigation */}
               <Tabs.Root value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <div className="sticky top-0 z-10 bg-zinc-900/95 backdrop-blur-md border-b border-zinc-800 mb-8 -mx-6 sm:-mx-8 md:-mx-12 px-6 sm:px-8 md:px-12 pt-4">
-                  <Tabs.List className="-mb-px flex space-x-6 sm:space-x-8 overflow-x-auto scrollbar-hide">
+                <div className="mb-8">
+                  <Tabs.List className="w-full justify-start bg-transparent border-b border-white/5 h-auto p-0 mb-12 overflow-x-auto gap-6 sm:gap-8 flex scrollbar-hide">
                     <Tabs.Trigger
                       value="overview"
-                      className="whitespace-nowrap pb-4 border-b-2 font-medium text-sm transition-colors duration-200 border-transparent text-gray-500 hover:text-white data-[state=active]:border-white data-[state=active]:text-white"
+                      className="bg-transparent border-b-2 border-transparent data-[state=active]:border-white data-[state=active]:text-white text-white/40 rounded-none px-0 py-4 text-[10px] uppercase tracking-[0.2em] font-bold hover:text-white transition-all"
                     >
                       Overview
                     </Tabs.Trigger>
                     <Tabs.Trigger
                       value="ai-understanding"
-                      className="whitespace-nowrap pb-4 border-b-2 font-medium text-sm transition-colors duration-200 border-transparent text-gray-500 hover:text-white data-[state=active]:border-white data-[state=active]:text-white"
+                      className="bg-transparent border-b-2 border-transparent data-[state=active]:border-white data-[state=active]:text-white text-white/40 rounded-none px-0 py-4 text-[10px] uppercase tracking-[0.2em] font-bold hover:text-white transition-all whitespace-nowrap"
                     >
                       AI Understanding
                     </Tabs.Trigger>
                     <Tabs.Trigger
                       value="hallucination"
-                      className="whitespace-nowrap pb-4 border-b-2 font-medium text-sm transition-colors duration-200 border-transparent text-gray-500 hover:text-white data-[state=active]:border-white data-[state=active]:text-white"
+                      className="bg-transparent border-b-2 border-transparent data-[state=active]:border-white data-[state=active]:text-white text-white/40 rounded-none px-0 py-4 text-[10px] uppercase tracking-[0.2em] font-bold hover:text-white transition-all whitespace-nowrap"
                     >
                       Hallucination Risk
                     </Tabs.Trigger>
                     <Tabs.Trigger
                       value="alignment"
-                      className="whitespace-nowrap pb-4 border-b-2 font-medium text-sm transition-colors duration-200 border-transparent text-gray-500 hover:text-white data-[state=active]:border-white data-[state=active]:text-white"
+                      className="bg-transparent border-b-2 border-transparent data-[state=active]:border-white data-[state=active]:text-white text-white/40 rounded-none px-0 py-4 text-[10px] uppercase tracking-[0.2em] font-bold hover:text-white transition-all whitespace-nowrap"
                     >
                       Message Alignment
                     </Tabs.Trigger>
                     <Tabs.Trigger
                       value="issues"
-                      className="whitespace-nowrap pb-4 border-b-2 font-medium text-sm transition-colors duration-200 border-transparent text-gray-500 hover:text-white data-[state=active]:border-white data-[state=active]:text-white"
+                      className="bg-transparent border-b-2 border-transparent data-[state=active]:border-white data-[state=active]:text-white text-white/40 rounded-none px-0 py-4 text-[10px] uppercase tracking-[0.2em] font-bold hover:text-white transition-all"
                     >
                       Issues
                     </Tabs.Trigger>
                     <Tabs.Trigger
                       value="technical"
-                      className="whitespace-nowrap pb-4 border-b-2 font-medium text-sm transition-colors duration-200 border-transparent text-gray-500 hover:text-white data-[state=active]:border-white data-[state=active]:text-white"
+                      className="bg-transparent border-b-2 border-transparent data-[state=active]:border-white data-[state=active]:text-white text-white/40 rounded-none px-0 py-4 text-[10px] uppercase tracking-[0.2em] font-bold hover:text-white transition-all"
                     >
                       Technical
                     </Tabs.Trigger>
@@ -656,40 +672,33 @@ function HomeContent() {
       <PrivacyNotice />
 
       {/* Footer */}
-      <footer className="text-center py-6 sm:py-8 text-sm text-gray-500 border-t border-zinc-800 mt-auto bg-black/50 backdrop-blur-sm px-4">
-        <div className="flex flex-wrap justify-center items-center gap-2 sm:gap-3 mb-3">
+      <footer className="text-center py-8 sm:py-10 text-xs text-gray-700 border-t border-zinc-900 mt-auto bg-black px-4">
+        <div className="flex flex-wrap justify-center items-center gap-4">
           <a
-            href="https://github.com/fayeed/ai-lighthouse"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 hover:text-teal-400 py-1 transition-colors"
+            href="#"
+            className="hover:text-gray-400 uppercase tracking-widest font-semibold transition-colors text-[10px] sm:text-xs"
           >
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-              <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.17 6.839 9.49.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.604-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.831.092-.646.35-1.086.636-1.336-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.167 22 16.418 22 12c0-5.523-4.477-10-10-10z"/>
-            </svg>
-            <span className="hidden xs:inline">Star on GitHub</span>
-            <span className="xs:hidden">GitHub</span>
+            Settings
           </a>
-          <span className="text-zinc-600">•</span>
+          <span className="text-zinc-800">•</span>
           <a
             href="https://fayeed.dev"
             target="_blank"
             rel="noopener noreferrer"
-            className="hover:text-teal-400 py-1 transition-colors"
+            className="hover:text-gray-400 uppercase tracking-widest font-semibold transition-colors text-[10px] sm:text-xs"
           >
             By Fayeed
           </a>
-          <span className="text-zinc-600">•</span>
+          <span className="text-zinc-800">•</span>
           <a
             href="https://github.com/fayeed/ai-lighthouse/issues"
             target="_blank"
             rel="noopener noreferrer"
-            className="hover:text-teal-400 py-1 transition-colors"
+            className="hover:text-gray-400 uppercase tracking-widest font-semibold transition-colors text-[10px] sm:text-xs"
           >
             Report issue
           </a>
         </div>
-        <p>Made with ❤️ in India</p>
       </footer>
   </div>
   );
@@ -700,12 +709,12 @@ export default function Home() {
     <Suspense fallback={
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
-          <div className="text-5xl mb-6 animate-pulse">🚨</div>
+          <div className="text-5xl mb-6 animate-pulse">🏮</div>
           <h1 className="text-2xl font-bold text-white mb-3">AI Lighthouse</h1>
           <div className="flex items-center justify-center gap-2">
-            <div className="w-2 h-2 bg-teal-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-            <div className="w-2 h-2 bg-teal-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-            <div className="w-2 h-2 bg-teal-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+            <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+            <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+            <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
           </div>
         </div>
       </div>

@@ -118,27 +118,29 @@ export default function AuditForm({
               </button>
             </div>
           )}
-          <form onSubmit={onSubmit} className="max-w-3xl mx-auto">
+          <form onSubmit={onSubmit} className="max-w-2xl mx-auto">
             {/* Simplified URL Input with prominent CTA */}
-            <div className="mb-8">
-              <div className="flex flex-col sm:flex-row gap-3">
-                <input
-                  type="text"
-                  id="url"
-                  value={url}
-                  onChange={(e) => {
-                    setUrl(e.target.value);
-                    if (error) {
-                      setError('');
-                    }
-                  }}
-                  placeholder="yoursite.com"
-                  required
-                  autoFocus
-                  className={`flex-1 px-6 py-4 border rounded-xl focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 text-white bg-black/50 border-zinc-800 transition-all text-base placeholder:text-gray-600 ${
-                    error && error.toLowerCase().includes('url') ? 'border-red-500' : 'border-zinc-800'
-                  }`}
-                />
+            <div className="mb-6">
+              <div className="relative group">
+                <div className="absolute -inset-1 bg-gradient-to-r from-white/0 via-white/5 to-white/0 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
+                <div className="relative flex flex-col sm:flex-row gap-3">
+                  <input
+                    type="text"
+                    id="url"
+                    value={url}
+                    onChange={(e) => {
+                      setUrl(e.target.value);
+                      if (error) {
+                        setError('');
+                      }
+                    }}
+                    placeholder="https://yoursite.com"
+                    required
+                    autoFocus
+                    className={`flex-1 px-6 h-16 border rounded-xl focus:ring-1 focus:ring-white/20 text-white bg-white/[0.02] border-white/10 transition-all text-lg placeholder:text-white/10 ${
+                      error && error.toLowerCase().includes('url') ? 'border-red-500' : ''
+                    }`}
+                  />
                 {loading ? (
                   <button
                     type="button"
@@ -164,19 +166,20 @@ export default function AuditForm({
                 ) : (
                   <button
                     type="submit"
-                    className="bg-white hover:bg-gray-100 text-black font-medium py-4 px-8 rounded-xl transition-all whitespace-nowrap text-base"
+                    className="bg-white hover:bg-gray-100 text-black font-semibold py-3.5 px-8 rounded-xl transition-all whitespace-nowrap text-base shadow-sm"
                   >
                     {hasResults ? 'Reanalyze' : 'Analyze'}
                   </button>
                 )}
+                </div>
               </div>
               {error && error.toLowerCase().includes('url') && (
                 <p className="text-red-400 text-sm mt-3">⚠️ {error}</p>
               )}
               {!hasResults && !loading && (
                 <div className="mt-4 text-center">
-                  <p className="text-sm text-gray-500">
-                    Free • No signup • Results in ~30 seconds
+                  <p className="text-[10px] text-gray-600 uppercase tracking-widest font-semibold">
+                    FREE • NO SIGNUP • RESULTS IN ~30 SECONDS
                   </p>
                   {scanStats && scanStats.thisWeek > 0 && (
                     <p className="text-xs text-gray-600 mt-2">
@@ -191,15 +194,15 @@ export default function AuditForm({
             </div>
 
             {/* AI Analysis Toggle */}
-            <div className="pt-8 border-t border-zinc-900/50">
-              <label className="flex items-center justify-between cursor-pointer group p-4 rounded-xl hover:bg-white/5 transition-all">
+            <div className="pt-6 border-t border-zinc-900 mt-6">
+              <label className="flex items-center justify-between cursor-pointer group p-2.5 rounded-lg hover:bg-white/5 transition-all">
                 <div className="flex items-center gap-3">
-                  <span className="text-2xl">🤖</span>
+                  <span className="text-lg">🤖</span>
                   <div>
                     <span className="text-sm font-medium text-white block">
                       AI-powered analysis
                     </span>
-                    <span className="text-xs text-gray-500">(deeper insights)</span>
+                    <span className="text-xs text-gray-600">(deeper insights)</span>
                   </div>
                 </div>
                 <Switch.Root
@@ -212,7 +215,8 @@ export default function AuditForm({
               </label>
 
               {enableLLM && (
-                <div className="mt-4 space-y-4 animate-fade-in-up p-4 bg-white/5 rounded-xl border border-zinc-900">
+                <div className="mt-6 space-y-4 animate-fade-in-up p-5 bg-zinc-950 rounded-xl border border-zinc-900">
+                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-4">AI Model Configuration</h3>
                   <ModelSelector value={modelConfig} onChange={setModelConfig} />
                   <ScanEstimate
                     enableLLM={enableLLM}

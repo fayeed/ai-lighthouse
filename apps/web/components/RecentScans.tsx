@@ -122,9 +122,9 @@ export default function RecentScans({ onSelect, currentUrl }: RecentScansProps) 
   if (scans.length === 0) return null;
 
   return (
-    <div className="max-w-3xl mx-auto mb-8 px-4">
+    <div className="max-w-2xl mx-auto mb-10 px-4">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-medium text-gray-400">Your recent scans</h3>
+        <h3 className="text-xs font-semibold text-gray-600 uppercase tracking-widest">Your recent scans</h3>
         <div className="relative">
           <button
             onClick={() => setShowExport(!showExport)}
@@ -163,23 +163,23 @@ export default function RecentScans({ onSelect, currentUrl }: RecentScansProps) 
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-2">
         {scans.map((scan) => (
           <button
             key={scan.domain}
             onClick={() => onSelect(scan.url)}
             disabled={currentUrl === scan.url}
-            className={`group flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-sm font-medium transition-all border ${
+            className={`group flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all border ${
               currentUrl === scan.url
                 ? 'bg-teal-500/10 border-teal-500/30 text-teal-400 cursor-default'
-                : 'bg-white/5 border-zinc-800 hover:bg-white/10 hover:border-zinc-700 text-gray-300'
+                : 'bg-zinc-950 border-zinc-900 hover:bg-zinc-900 hover:border-zinc-800 text-gray-400'
             }`}
           >
-            <span className={`px-2 py-0.5 rounded-md text-xs font-bold border ${getGradeColor(scan.grade)}`}>
-              {scan.grade}
-            </span>
-            <span className="truncate max-w-[160px]">{scan.domain}</span>
-            <span className="text-xs text-gray-500 hidden sm:inline">
+            <div className={`w-4 h-4 rounded-sm flex items-center justify-center flex-shrink-0 ${getGradeColor(scan.grade)}`}>
+              <span className="text-[10px] font-bold">{scan.grade}</span>
+            </div>
+            <span className="truncate max-w-[120px] text-xs font-medium">{scan.domain}</span>
+            <span className="text-[10px] text-gray-600 hidden sm:inline">
               {formatTimeAgo(scan.timestamp)}
             </span>
           </button>

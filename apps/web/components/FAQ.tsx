@@ -48,26 +48,26 @@ const faqs: FAQItem[] = [
 
 export default function FAQ() {
   return (
-    <section className="w-full max-w-3xl mx-auto mt-20 mb-12 px-4">
-      <h2 className="text-3xl sm:text-4xl font-bold text-white mb-12 text-center">
+    <section className="w-full max-w-2xl mx-auto mt-16 mb-12 px-4">
+      <h2 className="text-2xl sm:text-3xl font-bold text-white mb-6 text-center">
         Frequently Asked Questions
       </h2>
 
-      <Accordion.Root type="single" collapsible className="space-y-3 w-full">
+      <Accordion.Root type="single" collapsible defaultValue="item-0" className="space-y-2 w-full">
         {faqs.map((faq, index) => (
           <Accordion.Item
             key={index}
             value={`item-${index}`}
-            className="w-full border border-zinc-900 rounded-xl overflow-hidden transition-colors duration-200 hover:border-zinc-800"
+            className="w-full border border-zinc-900 rounded-lg overflow-hidden bg-zinc-950 transition-colors duration-200 hover:border-zinc-800"
           >
             <Accordion.Header className="w-full">
-              <Accordion.Trigger className="w-full px-6 py-5 text-left flex items-center gap-4 hover:bg-white/5 transition-colors group">
-                <span className="text-xl flex-shrink-0">{faq.icon}</span>
-                <span className="font-medium text-white text-base flex-1 pr-4">
+              <Accordion.Trigger className="w-full px-4 py-3.5 text-left flex items-center gap-3 hover:bg-white/5 transition-colors group">
+                <span className="text-base flex-shrink-0">{faq.icon}</span>
+                <span className="font-medium text-white text-sm flex-1 pr-4">
                   {faq.question}
                 </span>
                 <svg
-                  className="w-5 h-5 text-gray-500 transition-transform duration-200 flex-shrink-0 group-data-[state=open]:rotate-180"
+                  className="w-4 h-4 text-gray-600 transition-transform duration-200 flex-shrink-0 group-data-[state=open]:rotate-180"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -78,7 +78,7 @@ export default function FAQ() {
             </Accordion.Header>
 
             <Accordion.Content className="overflow-hidden data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up">
-              <div className="px-6 pb-5 text-base text-gray-400 leading-relaxed pl-16">
+              <div className="px-4 pb-4 text-sm text-gray-500 leading-relaxed pl-10">
                 {faq.answer}
               </div>
             </Accordion.Content>
@@ -87,8 +87,8 @@ export default function FAQ() {
       </Accordion.Root>
 
       {/* Contact CTA */}
-      <div className="mt-12 p-6 bg-white/5 rounded-xl border border-zinc-900">
-        <p className="text-base text-gray-400 text-center">
+      <div className="mt-6 p-4 bg-zinc-950 rounded-lg border border-zinc-900">
+        <p className="text-sm text-gray-500 text-center">
           Still have questions?{' '}
           <a
             href="https://github.com/fayeed/ai-lighthouse/discussions"
