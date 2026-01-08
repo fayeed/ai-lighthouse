@@ -1,12 +1,10 @@
 import { Metadata } from 'next';
 import { Suspense } from "react";
-import { Clock } from "lucide-react";
-import CheckPageContent from './CheckPageContent';
 
 export async function generateMetadata(
   { searchParams }: { searchParams: { url?: string } }
 ): Promise<Metadata> {
-  const url = (await searchParams).url;
+  const url = searchParams.url;
 
   if (url) {
     try {
@@ -37,24 +35,3 @@ export async function generateMetadata(
   };
 }
 
-// Fallback component for loading state (server-side safe)
-function LoadingFallback() {
-  return (
-    <div className="min-h-screen bg-[#050505] flex items-center justify-center">
-      <div className="text-center space-y-4">
-        <div className="w-8 h-8 mx-auto">
-          <Clock className="w-full h-full text-white/40" />
-        </div>
-        <p className="text-white/40">Loading...</p>
-      </div>
-    </div>
-  );
-}
-
-export default function CheckPage() {
-  return (
-    <Suspense fallback={<LoadingFallback />}>
-      <CheckPageContent />
-    </Suspense>
-  );
-}
