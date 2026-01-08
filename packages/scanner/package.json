@@ -1,6 +1,6 @@
 {
   "name": "@ai-lighthouse/scanner",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "AI Lighthouse Scanner - Core scanning engine for website AI readiness analysis",
   "type": "module",
   "main": "./dist/exports.js",

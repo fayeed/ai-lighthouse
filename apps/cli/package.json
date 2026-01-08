@@ -1,6 +1,6 @@
 {
   "name": "@ai-lighthouse/cli",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "AI Lighthouse CLI - Audit websites for AI readiness",
   "type": "module",
   "bin": {
