@@ -49,6 +49,12 @@ export default function Home() {
             </div>
             <div className="flex items-center gap-4">
               <a
+                href="/cli"
+                className="text-white/60 hover:text-white transition-colors text-sm font-medium"
+              >
+                CLI
+              </a>
+              <a
                 href="https://github.com/fayeed/ai-lighthouse"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -278,13 +284,6 @@ export default function Home() {
             className="max-w-4xl mx-auto"
           >
             <div className="glass p-12 rounded-3xl border-white/10 relative overflow-hidden">
-              {/* Coming Soon Badge */}
-              <div className="absolute top-6 right-6">
-                <span className="px-4 py-1.5 rounded-full bg-teal-500/10 border border-teal-500/20 text-teal-400 text-xs font-bold uppercase tracking-wider">
-                  Coming Soon
-                </span>
-              </div>
-
               <div className="flex flex-col md:flex-row items-start gap-8">
                 <div className="flex-1 space-y-6">
                   <div className="flex items-center gap-3">
@@ -314,8 +313,8 @@ export default function Home() {
 
                   <div className="pt-4">
                     <button
-                      disabled
-                      className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-white/[0.03] border border-white/10 text-white/30 cursor-not-allowed"
+                      onClick={() => router.push('/cli')}
+                      className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-white text-black hover:bg-white/90 transition-colors font-medium"
                     >
                       <Code2 className="w-4 h-4" />
                       View Documentation
@@ -335,10 +334,10 @@ export default function Home() {
                     </div>
                     <div className="font-mono text-sm space-y-2">
                       <div className="text-white/30">
-                        <span className="text-teal-400">$</span> npm install -g ai-lighthouse
+                        <span className="text-teal-400">$</span> npm install -g @ai-lighthouse/cli
                       </div>
                       <div className="text-white/30">
-                        <span className="text-teal-400">$</span> lighthouse analyze https://yoursite.com
+                        <span className="text-teal-400">$</span> ai-lighthouse audit https://yoursite.com
                       </div>
                       <div className="text-white/50 ml-4 mt-3">
                         ✓ Analyzing website...<br />
