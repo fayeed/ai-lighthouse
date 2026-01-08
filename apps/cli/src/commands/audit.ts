@@ -14,14 +14,20 @@ import { render } from 'ink';
 import React from 'react';
 import { AuditReportUI } from '../ui/AuditReportUI.js';
 import { SetupWizard, type AuditConfig } from '../ui/SetupWizard.js';
+import { getPreset, mergePresetWithOptions, listPresets, type PresetName } from '../presets.js';
 
 interface AuditOptions {
   output?: string;
+  preset?: PresetName;
+
+  // Legacy flags (now optional, will be removed in future versions)
   rules?: string;
   depth?: number;
   pages?: string;
   cacheTtl?: number;
   threshold?: number;
+
+  // Advanced overrides (for power users)
   maxChunkTokens?: number;
   chunkingStrategy?: 'auto' | 'heading-based' | 'paragraph-based';
   enableChunking?: boolean;
@@ -31,10 +37,13 @@ interface AuditOptions {
   minImpact?: number;
   minConfidence?: number;
   maxIssues?: number;
+
+  // LLM configuration (only needed when using AI features)
   llmProvider?: string;
   llmModel?: string;
   llmBaseUrl?: string;
   llmApiKey?: string;
+
   interactive?: boolean;
 }
 
@@ -43,27 +52,48 @@ export function auditCommand(program: Command) {
     .command('audit')
     .description('Audit a website for AI readiness')
     .argument('<url>', 'URL to audit')
+
+    // Primary options
     .option('-o, --output <format>', 'Output format: json, html, pdf, lhr, csv, interactive', 'interactive')
-    .option('-r, --rules <preset>', 'Rule preset: default, strict, minimal', 'default')
-    .option('-d, --depth <number>', 'Crawl depth (for multi-page audits)', parseInt, 1)
-    .option('-p, --pages <urls>', 'Comma-separated list of specific pages to audit')
-    .option('--cache-ttl <seconds>', 'Cache TTL in seconds to avoid re-fetching', parseInt)
-    .option('--threshold <score>', 'Minimum score threshold (exit 1 if below)', parseInt)
-    .option('--max-chunk-tokens <number>', 'Maximum tokens per content chunk', parseInt, 1200)
-    .option('--chunking-strategy <strategy>', 'Chunking strategy: auto, heading-based, paragraph-based', 'auto')
-    .option('--enable-chunking', 'Enable detailed content chunking analysis', false)
-    .option('--enable-extractability', 'Enable extractability mapping', false)
-    .option('--enable-hallucination', 'Enable hallucination detection', false)
-    .option('--enable-llm', 'Enable LLM comprehension analysis', false)
-    .option('--min-impact <number>', 'Minimum impact score to include', parseInt, 8)
-    .option('--min-confidence <number>', 'Minimum confidence to include (0-1)', parseFloat, 0.7)
-    .option('--max-issues <number>', 'Maximum issues to return', parseInt, 20)
-    .option('--llm-provider <provider>', 'LLM provider: openai, anthropic, ollama, local')
-    .option('--llm-model <model>', 'LLM model name')
-    .option('--llm-base-url <url>', 'LLM API base URL')
-    .option('--llm-api-key <key>', 'LLM API key')
+    .option('-p, --preset <name>', 'Preset configuration: basic, ai-optimized, full, minimal')
+
+    // LLM configuration (only needed for AI-powered presets)
+    .option('--llm-provider <provider>', 'LLM provider: openai, anthropic, ollama (default: ollama)')
+    .option('--llm-model <model>', 'LLM model name (e.g., qwen2.5:0.5b, gpt-4o-mini)')
+    .option('--llm-api-key <key>', 'LLM API key (for OpenAI, Anthropic, etc.)')
+    .option('--llm-base-url <url>', 'LLM API base URL (for custom endpoints)')
+
+    // Advanced overrides (hidden by default - for power users)
+    .option('--enable-chunking', 'Override: Enable chunking analysis', false)
+    .option('--enable-extractability', 'Override: Enable extractability mapping', false)
+    .option('--enable-hallucination', 'Override: Enable hallucination detection', false)
+    .option('--enable-llm', 'Override: Enable LLM comprehension', false)
+    .option('--min-impact <number>', 'Override: Minimum impact score', parseInt)
+    .option('--min-confidence <number>', 'Override: Minimum confidence (0-1)', parseFloat)
+    .option('--max-issues <number>', 'Override: Maximum issues to show', parseInt)
+    .option('--max-chunk-tokens <number>', 'Override: Max tokens per chunk', parseInt)
+    .option('--chunking-strategy <strategy>', 'Override: Chunking strategy (auto, heading-based, paragraph-based)')
+
+    // Utility options
+    .option('--threshold <score>', 'Exit with code 1 if score is below this threshold', parseInt)
+
+    .addHelpText('after', `
+Presets:
+  basic         Fast scan with core rules only (~5-10 seconds)
+  ai-optimized  Balanced scan with AI insights (~30-60 seconds) [Recommended]
+  full          Comprehensive scan with all features (~2-5 minutes)
+  minimal       Only critical issues (~3-5 seconds)
+
+Examples:
+  $ ai-lighthouse audit https://example.com
+  $ ai-lighthouse audit https://example.com --preset ai-optimized
+  $ ai-lighthouse audit https://example.com --preset full --llm-provider openai --llm-api-key sk-...
+  $ ai-lighthouse audit https://example.com --preset basic --output json
+  $ ai-lighthouse audit https://example.com --preset minimal --threshold 80
+    `)
     .action(async (url: string, options: AuditOptions) => {
-      // Detect if user wants wizard (no feature flags provided)
+      // Determine if user has explicitly set a preset or any flags
+      const hasPreset = options.preset !== undefined;
       const hasFeatureFlags =
         options.enableChunking ||
         options.enableExtractability ||
@@ -71,8 +101,8 @@ export function auditCommand(program: Command) {
         options.enableLlm ||
         options.llmProvider;
 
-      // If interactive mode and no feature flags, show wizard
-      if (options.output === 'interactive' && !hasFeatureFlags) {
+      // If interactive mode and no preset or feature flags, show wizard
+      if (options.output === 'interactive' && !hasPreset && !hasFeatureFlags) {
         const originalConsoleError = console.error;
         const originalConsoleWarn = console.warn;
         console.error = () => {};
@@ -135,27 +165,49 @@ export function auditCommand(program: Command) {
           // Validate URL
           const urlObj = new URL(url);
 
-          // Build scan options
-          const scanOptions: ScanOptions = {
-            maxChunkTokens: options.maxChunkTokens,
-            chunkingStrategy: options.chunkingStrategy,
-            enableChunking: options.enableChunking,
-            enableExtractability: options.enableExtractability,
-            enableHallucinationDetection: options.enableHallucination,
-            enableLLM: options.enableLlm,
-            minImpactScore: options.minImpact,
-            minConfidence: options.minConfidence,
-            maxIssues: options.maxIssues,
-          };
+          // Build scan options from preset or manual flags
+          let scanOptions: ScanOptions;
 
-          // Configure LLM if enabled
-          if (options.enableLlm && options.llmProvider) {
-            scanOptions.llmConfig = {
-              provider: options.llmProvider as any,
-              model: options.llmModel,
-              baseUrl: options.llmBaseUrl,
-              apiKey: options.llmApiKey,
+          if (hasPreset) {
+            // Use preset with user overrides
+            scanOptions = mergePresetWithOptions(options.preset!, {
+              maxChunkTokens: options.maxChunkTokens,
+              chunkingStrategy: options.chunkingStrategy,
+              enableChunking: options.enableChunking,
+              enableExtractability: options.enableExtractability,
+              enableHallucinationDetection: options.enableHallucination,
+              enableLLM: options.enableLlm,
+              minImpactScore: options.minImpact,
+              minConfidence: options.minConfidence,
+              maxIssues: options.maxIssues,
+              llmProvider: options.llmProvider,
+              llmModel: options.llmModel,
+              llmApiKey: options.llmApiKey,
+              llmBaseUrl: options.llmBaseUrl,
+            });
+          } else {
+            // Legacy mode: manual flags (default to basic preset behavior)
+            scanOptions = {
+              maxChunkTokens: options.maxChunkTokens || 1200,
+              chunkingStrategy: options.chunkingStrategy || 'auto',
+              enableChunking: options.enableChunking || false,
+              enableExtractability: options.enableExtractability || false,
+              enableHallucinationDetection: options.enableHallucination || false,
+              enableLLM: options.enableLlm || false,
+              minImpactScore: options.minImpact ?? 8,
+              minConfidence: options.minConfidence ?? 0.7,
+              maxIssues: options.maxIssues ?? 20,
             };
+
+            // Configure LLM if enabled
+            if (options.enableLlm && options.llmProvider) {
+              scanOptions.llmConfig = {
+                provider: options.llmProvider as any,
+                model: options.llmModel,
+                baseUrl: options.llmBaseUrl,
+                apiKey: options.llmApiKey,
+              };
+            }
           }
 
           // Update loading step
@@ -233,29 +285,55 @@ export function auditCommand(program: Command) {
       try {
         // Validate URL
         const urlObj = new URL(url);
-        spinner.text = `Auditing ${chalk.cyan(urlObj.href)}...`;
 
-        // Build scan options
-        const scanOptions: ScanOptions = {
-          maxChunkTokens: options.maxChunkTokens,
-          chunkingStrategy: options.chunkingStrategy,
-          enableChunking: options.enableChunking,
-          enableExtractability: options.enableExtractability,
-          enableHallucinationDetection: options.enableHallucination,
-          enableLLM: options.enableLlm,
-          minImpactScore: options.minImpact,
-          minConfidence: options.minConfidence,
-          maxIssues: options.maxIssues,
-        };
+        // Build scan options from preset or manual flags
+        let scanOptions: ScanOptions;
 
-        // Configure LLM if enabled
-        if (options.enableLlm && options.llmProvider) {
-          scanOptions.llmConfig = {
-            provider: options.llmProvider as any,
-            model: options.llmModel,
-            baseUrl: options.llmBaseUrl,
-            apiKey: options.llmApiKey,
+        if (hasPreset) {
+          // Use preset with user overrides
+          const presetConfig = getPreset(options.preset!);
+          spinner.text = `Using ${chalk.cyan(options.preset!)} preset (${presetConfig.estimatedDuration})...`;
+
+          scanOptions = mergePresetWithOptions(options.preset!, {
+            maxChunkTokens: options.maxChunkTokens,
+            chunkingStrategy: options.chunkingStrategy,
+            enableChunking: options.enableChunking,
+            enableExtractability: options.enableExtractability,
+            enableHallucinationDetection: options.enableHallucination,
+            enableLLM: options.enableLlm,
+            minImpactScore: options.minImpact,
+            minConfidence: options.minConfidence,
+            maxIssues: options.maxIssues,
+            llmProvider: options.llmProvider,
+            llmModel: options.llmModel,
+            llmApiKey: options.llmApiKey,
+            llmBaseUrl: options.llmBaseUrl,
+          });
+        } else {
+          // Legacy mode: manual flags (default to basic preset behavior)
+          spinner.text = `Auditing ${chalk.cyan(urlObj.href)}...`;
+
+          scanOptions = {
+            maxChunkTokens: options.maxChunkTokens || 1200,
+            chunkingStrategy: options.chunkingStrategy || 'auto',
+            enableChunking: options.enableChunking || false,
+            enableExtractability: options.enableExtractability || false,
+            enableHallucinationDetection: options.enableHallucination || false,
+            enableLLM: options.enableLlm || false,
+            minImpactScore: options.minImpact ?? 8,
+            minConfidence: options.minConfidence ?? 0.7,
+            maxIssues: options.maxIssues ?? 20,
           };
+
+          // Configure LLM if enabled
+          if (options.enableLlm && options.llmProvider) {
+            scanOptions.llmConfig = {
+              provider: options.llmProvider as any,
+              model: options.llmModel,
+              baseUrl: options.llmBaseUrl,
+              apiKey: options.llmApiKey,
+            };
+          }
         }
 
         // Run the audit

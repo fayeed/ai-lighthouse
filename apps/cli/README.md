@@ -9,30 +9,100 @@ pnpm install
 pnpm build
 ```
 
+## Quick Start
+
+The simplest way to audit a website:
+
+```bash
+# Interactive wizard (recommended for beginners)
+ai-lighthouse audit https://example.com
+
+# Using presets (recommended for most users)
+ai-lighthouse audit https://example.com --preset ai-optimized
+```
+
 ## Usage
 
-### Audit a single page
+### Audit with Presets (Recommended)
+
+Presets provide pre-configured scanning profiles for common use cases:
 
 ```bash
-ai-lighthouse audit https://example.com --output html
+# Fast scan with core rules only (~5-10 seconds)
+ai-lighthouse audit https://example.com --preset basic
+
+# Balanced scan with AI insights (~30-60 seconds) - Recommended
+ai-lighthouse audit https://example.com --preset ai-optimized
+
+# Comprehensive scan with all features (~2-5 minutes)
+ai-lighthouse audit https://example.com --preset full
+
+# Quick scan showing only critical issues (~3-5 seconds)
+ai-lighthouse audit https://example.com --preset minimal
 ```
 
-### Audit with specific rules
+### List Available Presets
 
 ```bash
-ai-lighthouse audit https://example.com --rules strict --enable-llm
+ai-lighthouse presets
 ```
 
-### Crawl multiple pages
+### Configure LLM Provider (for AI-powered presets)
 
 ```bash
-ai-lighthouse crawl https://example.com --depth 2 --sitemap
+# Using Ollama (local, free)
+ai-lighthouse audit https://example.com --preset ai-optimized \
+  --llm-provider ollama \
+  --llm-model qwen2.5:0.5b
+
+# Using OpenAI
+ai-lighthouse audit https://example.com --preset ai-optimized \
+  --llm-provider openai \
+  --llm-model gpt-4o-mini \
+  --llm-api-key sk-...
+
+# Using Anthropic
+ai-lighthouse audit https://example.com --preset full \
+  --llm-provider anthropic \
+  --llm-model claude-3-5-sonnet-20241022 \
+  --llm-api-key sk-ant-...
 ```
 
-### Generate report from saved results
+### Output Formats
 
 ```bash
-ai-lighthouse report ./.ai-lighthouse/last_run.json --open
+# Save as JSON
+ai-lighthouse audit https://example.com --preset basic --output json
+
+# Generate HTML report
+ai-lighthouse audit https://example.com --preset ai-optimized --output html
+
+# Generate PDF report
+ai-lighthouse audit https://example.com --preset full --output pdf
+
+# Interactive terminal UI (default)
+ai-lighthouse audit https://example.com --preset ai-optimized
+```
+
+### CI/CD Integration
+
+```bash
+# Exit with code 1 if score is below threshold
+ai-lighthouse audit https://example.com --preset minimal --threshold 80
+```
+
+### Advanced: Override Preset Defaults
+
+You can override any preset option:
+
+```bash
+# Use ai-optimized preset but enable hallucination detection
+ai-lighthouse audit https://example.com --preset ai-optimized \
+  --enable-hallucination
+
+# Use full preset but limit to 10 issues
+ai-lighthouse audit https://example.com --preset full \
+  --max-issues 10
 ```
 
 ## Commands
@@ -41,57 +111,37 @@ ai-lighthouse report ./.ai-lighthouse/last_run.json --open
 
 Audit a single webpage for AI readiness.
 
-**Options:**
-- `-o, --output <format>` - Output format: json, html, lhr, csv (default: json)
-- `-r, --rules <preset>` - Rule preset: default, strict, minimal (default: default)
-- `-d, --depth <number>` - Crawl depth for multi-page audits (default: 1)
-- `-p, --pages <urls>` - Comma-separated list of specific pages to audit
-- `--cache-ttl <seconds>` - Cache TTL in seconds to avoid re-fetching
-- `--threshold <score>` - Minimum score threshold (exit 1 if below)
-- `--max-chunk-tokens <number>` - Maximum tokens per content chunk (default: 1200)
-- `--chunking-strategy <strategy>` - Chunking strategy: auto, heading-based, paragraph-based (default: auto)
-- `--enable-chunking` - Enable detailed content chunking analysis
-- `--enable-extractability` - Enable extractability mapping
-- `--enable-hallucination` - Enable hallucination detection
-- `--enable-llm` - Enable LLM comprehension analysis
-- `--min-impact <number>` - Minimum impact score to include (default: 8)
-- `--min-confidence <number>` - Minimum confidence to include 0-1 (default: 0.7)
-- `--max-issues <number>` - Maximum issues to return (default: 20)
-- `--llm-provider <provider>` - LLM provider: openai, anthropic, ollama, local
-- `--llm-model <model>` - LLM model name
-- `--llm-base-url <url>` - LLM API base URL
-- `--llm-api-key <key>` - LLM API key
+**Primary Options:**
 
-**Examples:**
+- `-o, --output <format>` - Output format: json, html, pdf, interactive (default: interactive)
+- `-p, --preset <name>` - Preset configuration: basic, ai-optimized, full, minimal
 
-```bash
-# Basic audit
-ai-lighthouse audit https://example.com
+**LLM Configuration (for AI-powered presets):**
 
-# HTML report with all features enabled
-ai-lighthouse audit https://example.com \
-  --output html \
-  --enable-chunking \
-  --enable-extractability \
-  --enable-hallucination \
-  --enable-llm \
-  --llm-provider ollama \
-  --llm-model qwen2.5:0.5b
+- `--llm-provider <provider>` - LLM provider: openai, anthropic, ollama (default: ollama)
+- `--llm-model <model>` - LLM model name (e.g., qwen2.5:0.5b, gpt-4o-mini)
+- `--llm-api-key <key>` - LLM API key (for OpenAI, Anthropic, etc.)
+- `--llm-base-url <url>` - LLM API base URL (for custom endpoints)
 
-# Force paragraph-based chunking for consistent chunk sizes
-ai-lighthouse audit https://example.com \
-  --enable-chunking \
-  --chunking-strategy paragraph-based \
-  --max-chunk-tokens 1000
+**Advanced Overrides (for power users):**
 
-# Force heading-based chunking for semantic sections
-ai-lighthouse audit https://example.com \
-  --enable-chunking \
-  --chunking-strategy heading-based
+- `--enable-chunking` - Override: Enable chunking analysis
+- `--enable-extractability` - Override: Enable extractability mapping
+- `--enable-hallucination` - Override: Enable hallucination detection
+- `--enable-llm` - Override: Enable LLM comprehension
+- `--min-impact <number>` - Override: Minimum impact score to include
+- `--min-confidence <number>` - Override: Minimum confidence (0-1)
+- `--max-issues <number>` - Override: Maximum issues to show
+- `--max-chunk-tokens <number>` - Override: Max tokens per chunk
+- `--chunking-strategy <strategy>` - Override: Chunking strategy (auto, heading-based, paragraph-based)
 
-# CI/CD integration with score threshold
-ai-lighthouse audit https://example.com --threshold 80
-```
+**Utility Options:**
+
+- `--threshold <score>` - Exit with code 1 if score is below this threshold
+
+### `presets`
+
+List all available preset configurations with descriptions and estimated durations.
 
 ### `crawl <url>`
 
