@@ -26,7 +26,7 @@ export default function Home() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (url.trim()) {
-      router.push(`/check?url=${encodeURIComponent(url)}`);
+      router.push(`/check?url=${encodeURIComponent(url)}&ai=true`);
     }
   };
 
@@ -136,7 +136,7 @@ export default function Home() {
                 </div>
               </form>
               <p className="text-xs text-white/20 mt-4 uppercase tracking-widest font-bold">
-                No signup required • Results in ~30 seconds
+                No signup required • AI-powered insights • Results in ~30 seconds
               </p>
             </motion.div>
           </motion.div>

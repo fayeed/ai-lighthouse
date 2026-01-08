@@ -30,7 +30,7 @@ const CheckPageContent = () => {
   const [progress, setProgress] = useState(0);
   const [interpretationMessage, setInterpretationMessage] = useState<string>('');
   const [score, setScore] = useState<number>(0);
-  const [enableLLM, setEnableLLM] = useState(false);
+  const [enableLLM, setEnableLLM] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
   const [showScoringGuide, setShowScoringGuide] = useState(false);
   const [showWarningModal, setShowWarningModal] = useState(false);
@@ -539,7 +539,7 @@ const CheckPageContent = () => {
                       </div>
                       <div className="text-left">
                         <h3 className="text-sm font-bold text-white/80">AI-powered analysis</h3>
-                        <p className="text-[10px] uppercase tracking-widest font-bold text-white/20">(deeper insights)</p>
+                        <p className="text-[10px] uppercase tracking-widest font-bold text-white/20">(enabled by default - deeper insights)</p>
                       </div>
                     </div>
                     <Switch checked={enableLLM} onCheckedChange={setEnableLLM} />
