@@ -1,87 +1,197 @@
-# Example Usage
+# AI Lighthouse CLI - Examples
 
-## Basic Audit
+Real-world usage examples for common scenarios.
+
+## Basic Audits
+
+### Quick Health Check
 
 ```bash
-cd apps/cli
-pnpm dev audit https://example.com
+# Fastest scan - only critical issues (~3-5 seconds)
+ai-lighthouse audit https://example.com --preset minimal
 ```
 
-## Audit with HTML Output
+### Standard Audit
 
 ```bash
-pnpm dev audit https://github.com --output html
+# Fast scan with core rules (~5-10 seconds)
+ai-lighthouse audit https://example.com --preset basic
 ```
 
-## Audit with All Features Enabled
+## AI-Powered Audits
+
+### Recommended: Balanced AI Analysis
 
 ```bash
-pnpm dev audit https://example.com \
-  --output html \
-  --enable-chunking \
-  --enable-extractability \
-  --enable-hallucination \
-  --enable-llm \
+# Best balance of speed and insights (~30-60 seconds)
+ai-lighthouse audit https://example.com --preset ai-optimized \
   --llm-provider ollama \
-  --llm-model qwen2.5:0.5b \
-  --llm-base-url http://localhost:11434
+  --llm-model qwen2.5:0.5b
 ```
 
-## Crawl Multiple Pages
+### Comprehensive Analysis
 
 ```bash
-pnpm dev crawl https://example.com --depth 2 --max-pages 10 --output html
+# Full analysis with all features (~2-5 minutes)
+ai-lighthouse audit https://example.com --preset full \
+  --llm-provider ollama \
+  --llm-model qwen2.5:0.5b
 ```
 
-## Crawl Using Sitemap
+## LLM Provider Examples
+
+### Using Ollama (Local, Free)
 
 ```bash
-pnpm dev crawl https://example.com --sitemap --max-pages 50 --output json
+# Install Ollama first: https://ollama.ai
+# Pull model: ollama pull qwen2.5:0.5b
+
+ai-lighthouse audit https://example.com --preset ai-optimized \
+  --llm-provider ollama \
+  --llm-model qwen2.5:0.5b
 ```
 
-## Generate Report from Previous Run
+### Using OpenAI
 
 ```bash
-pnpm dev report ./.ai-lighthouse/audit_example_com_2024-12-05T10-30-00.json --open
+ai-lighthouse audit https://example.com --preset ai-optimized \
+  --llm-provider openai \
+  --llm-model gpt-4o-mini \
+  --llm-api-key sk-...
+```
+
+### Using Anthropic Claude
+
+```bash
+ai-lighthouse audit https://example.com --preset full \
+  --llm-provider anthropic \
+  --llm-model claude-3-5-sonnet-20241022 \
+  --llm-api-key sk-ant-...
+```
+
+## Output Formats
+
+### Generate HTML Report
+
+```bash
+ai-lighthouse audit https://example.com --preset ai-optimized \
+  --output html
+```
+
+### Generate PDF Report
+
+```bash
+ai-lighthouse audit https://example.com --preset full \
+  --output pdf
+```
+
+### Save as JSON
+
+```bash
+ai-lighthouse audit https://example.com --preset basic \
+  --output json
 ```
 
 ## CI/CD Integration
 
-```bash
-# Fail build if score is below 80
-pnpm dev audit https://example.com --threshold 80 --output json
+### GitHub Actions
+
+```yaml
+name: AI Readiness Check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install AI Lighthouse
+        run: npm install -g @ai-lighthouse/cli
+
+      - name: Audit site
+        run: |
+          ai-lighthouse audit https://staging.example.com \
+            --preset minimal \
+            --threshold 80 \
+            --output json
 ```
 
-## Export to Different Formats
+### GitLab CI
 
-```bash
-# JSON (default)
-pnpm dev audit https://example.com --output json
-
-# HTML (beautiful report)
-pnpm dev audit https://example.com --output html
-
-# Lighthouse-compatible format
-pnpm dev audit https://example.com --output lhr
-
-# CSV for spreadsheets
-pnpm dev audit https://example.com --output csv
+```yaml
+ai-readiness-check:
+  stage: test
+  script:
+    - npm install -g @ai-lighthouse/cli
+    - ai-lighthouse audit https://staging.example.com --preset minimal --threshold 80
+  only:
+    - merge_requests
+    - main
 ```
 
-## Advanced Options
+## Advanced Usage
+
+### Override Preset Defaults
 
 ```bash
-# Fine-tune issue detection
-pnpm dev audit https://example.com \
-  --min-impact 9 \
-  --min-confidence 0.8 \
-  --max-issues 10
-
-# Enable all analysis features
-pnpm dev audit https://example.com \
-  --enable-chunking \
-  --enable-extractability \
+# Use ai-optimized preset but add hallucination detection
+ai-lighthouse audit https://example.com --preset ai-optimized \
   --enable-hallucination \
-  --enable-llm \
-  --max-chunk-tokens 1500
+  --llm-provider ollama \
+  --llm-model qwen2.5:0.5b
 ```
+
+### Custom Filtering
+
+```bash
+# Show only high-impact issues
+ai-lighthouse audit https://example.com --preset basic \
+  --min-impact 15 \
+  --max-issues 5
+```
+
+### Multi-Page Crawl
+
+```bash
+# Crawl entire site using sitemap
+ai-lighthouse crawl https://example.com \
+  --sitemap \
+  --max-pages 100 \
+  --output html
+```
+
+## Comparing Multiple Sites
+
+```bash
+# Audit multiple sites and compare
+for url in https://site1.com https://site2.com https://site3.com; do
+  ai-lighthouse audit $url --preset basic --output json
+done
+```
+
+## Interactive Wizard
+
+```bash
+# Let the wizard guide you (recommended for beginners)
+ai-lighthouse audit https://example.com
+# Then follow the prompts to select features and configure LLM
+```
+
+## Preset Comparison
+
+| Preset         | Duration | Features                             | Use Case                       |
+| -------------- | -------- | ------------------------------------ | ------------------------------ |
+| `minimal`      | 3-5s     | Core rules, strict filtering         | Quick health checks, CI/CD     |
+| `basic`        | 5-10s    | Core rules, no AI                    | Fast audits, baseline scans    |
+| `ai-optimized` | 30-60s   | AI comprehension, message alignment  | Recommended for most users     |
+| `full`         | 2-5min   | All features enabled                 | Comprehensive pre-launch audits|

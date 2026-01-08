@@ -21,6 +21,29 @@ ai-lighthouse audit https://example.com
 ai-lighthouse audit https://example.com --preset ai-optimized
 ```
 
+## Interactive Features
+
+### Beautiful Terminal UI
+
+The CLI features a beautiful interactive terminal UI built with React (Ink) that includes:
+
+- **Animated Score Display** - Gradient text and grade badges
+- **Tab Navigation** - Navigate through 6 analysis sections using arrow keys (1-6)
+- **Real-time Loading** - Progress indicators for each analysis step
+- **Color-coded Data** - All severity levels and scores are color-coded
+- **Progress Bars** - Visual progress bars for dimension scores
+
+### Interactive Wizard
+
+When you run `ai-lighthouse audit <url>` without flags, the interactive wizard appears:
+
+1. **Feature Selection** - Choose which analyses to run (AI Understanding, Chunking, etc.)
+2. **LLM Configuration** - If AI features selected, configure your LLM provider
+3. **Confirmation** - Review settings before starting the audit
+4. **Results** - View results in the interactive terminal UI
+
+The wizard mode makes it easy to configure audits without memorizing command-line flags.
+
 ## Usage
 
 ### Audit with Presets (Recommended)

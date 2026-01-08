@@ -1,13 +1,21 @@
 # 🚨 AI Lighthouse
 
-**SEO and AI Readability Audits** - A comprehensive toolkit for auditing websites for AI readiness, SEO optimization, and content quality.
+**AI Readiness Audits** - A comprehensive toolkit for auditing websites for AI readiness, SEO optimization, and content quality.
 
 ## 📦 Packages
 
 This monorepo contains:
 
-- **`packages/scanner`** - Core scanning engine with 50+ rules for detecting AI readiness issues
-- **`apps/cli`** - Command-line interface for running audits and generating reports
+### Core Packages
+
+- **`packages/scanner`** - Core scanning engine with 50+ rules for AI readiness detection
+- **`packages/utils`** - Shared utilities across packages
+
+### Applications
+
+- **`apps/cli`** - Command-line interface with interactive wizard and preset configurations
+- **`apps/web`** - Next.js web application for visual audits
+- **`apps/api`** - Express API server for programmatic access
 
 ## 🚀 Quick Start
 
@@ -20,15 +28,32 @@ pnpm install
 ### CLI Usage
 
 ```bash
-# Audit a single page
-cd apps/cli
-pnpm dev audit https://example.com --output html
+# Interactive wizard (simplest way)
+pnpm --filter=@ai-lighthouse/cli dev audit https://example.com
 
-# Crawl multiple pages
-pnpm dev crawl https://example.com --depth 2 --sitemap
+# Using presets (recommended)
+pnpm --filter=@ai-lighthouse/cli dev audit https://example.com --preset ai-optimized
 
-# Generate report from saved results
-pnpm dev report ./.ai-lighthouse/last_run.json --open
+# List available presets
+pnpm --filter=@ai-lighthouse/cli dev presets
+```
+
+### Web Application
+
+```bash
+# Start the web app
+pnpm --filter=@ai-lighthouse/web dev
+
+# Visit http://localhost:3000
+```
+
+### API Server
+
+```bash
+# Start the API server
+pnpm --filter=@ai-lighthouse/api dev
+
+# API available at http://localhost:3001
 ```
 
 ## 🎯 Features
@@ -59,62 +84,101 @@ pnpm dev report ./.ai-lighthouse/last_run.json --open
 
 ### CLI (`apps/cli`)
 
-Three powerful commands:
+**Interactive Features:**
 
-1. **`audit`** - Audit a single webpage
+- Beautiful terminal UI built with React (Ink)
+- Interactive wizard for easy configuration
+- Preset configurations (basic, ai-optimized, full, minimal)
+- Tab navigation through analysis sections
+
+**Commands:**
+
+1. **`audit`** - Audit a single webpage with presets
 2. **`crawl`** - Crawl and audit multiple pages
 3. **`report`** - Generate and view reports
+4. **`presets`** - List available preset configurations
 
 **Output Formats:**
+
+- Interactive terminal UI (default)
 - JSON (CI/CD friendly)
 - HTML (beautiful visualizations)
-- LHR (Lighthouse-compatible)
+- PDF (for sharing)
 - CSV (spreadsheet analysis)
+
+### Web App (`apps/web`)
+
+- Visual audit interface built with Next.js
+- Real-time AI readiness analysis
+- Interactive charts and visualizations
+- Tab-based navigation through results
+- Export capabilities
+
+### API Server (`apps/api`)
+
+- RESTful API for programmatic access
+- Rate limiting and security features
+- Webhook support for automation
+- OpenAPI documentation
 
 ## 📖 Documentation
 
 - [`packages/scanner/README.md`](packages/scanner/README.md) - Scanner API documentation
-- [`apps/cli/README.md`](apps/cli/README.md) - CLI documentation
-- [`apps/cli/EXAMPLES.md`](apps/cli/EXAMPLES.md) - Usage examples
-- [`apps/cli/IMPLEMENTATION.md`](apps/cli/IMPLEMENTATION.md) - Implementation details
+- [`packages/scanner/SCORING.md`](packages/scanner/SCORING.md) - Scoring system explained
+- [`apps/cli/README.md`](apps/cli/README.md) - CLI documentation and commands
+- [`apps/cli/EXAMPLES.md`](apps/cli/EXAMPLES.md) - Usage examples and recipes
+- [`apps/web/README.md`](apps/web/README.md) - Web application documentation
+- [`apps/api/README.md`](apps/api/README.md) - API server documentation
 
 ## 💻 Development
+
+This project uses [Turborepo](https://turborepo.com/) for managing the monorepo.
 
 ```bash
 # Install dependencies
 pnpm install
 
-# Run scanner tests
-cd packages/scanner
-pnpm dev
+# Build all packages
+pnpm build
 
-# Use the CLI
-cd apps/cli
-pnpm dev audit https://example.com
+# Run specific package in dev mode
+pnpm --filter=@ai-lighthouse/cli dev
+pnpm --filter=@ai-lighthouse/web dev
+pnpm --filter=@ai-lighthouse/api dev
+
+# Run tests
+pnpm test
+
+# Lint all packages
+pnpm lint
 ```
 
 ## 🏗️ Architecture
 
-```
+```text
 ai-lighthouse/
 ├── packages/
 │   ├── scanner/          # Core scanning engine
 │   │   ├── src/
 │   │   │   ├── rules/    # 50+ detection rules
 │   │   │   ├── llm/      # LLM integration
-│   │   │   └── ...       # Core functionality
+│   │   │   └── scoring/  # AI readiness scoring
 │   └── utils/            # Shared utilities
 └── apps/
-    └── cli/              # Command-line interface
-        ├── src/
-        │   └── commands/ # CLI commands
-        └── bin/          # Executable entry
+    ├── cli/              # Command-line interface
+    │   ├── src/
+    │   │   ├── commands/ # CLI commands
+    │   │   ├── ui/       # Interactive UI components
+    │   │   └── presets.ts # Preset configurations
+    ├── web/              # Next.js web app
+    └── api/              # Express API server
 ```
 
 ## 🎨 Example Output
 
 ### AI Readiness Score
-```
+
+```text
 ╔════════════════════════════════════════════════════════════════╗
 ║           AI Readiness Assessment for example.com              ║
 ╚════════════════════════════════════════════════════════════════╝
@@ -130,6 +194,7 @@ ai-lighthouse/
 ### HTML Report
 
 Beautiful, interactive reports with:
+
 - Color-coded severity levels
 - Score visualizations
 - Detailed issue breakdowns
@@ -142,8 +207,10 @@ Beautiful, interactive reports with:
 # GitHub Actions example
 - name: Audit Website
   run: |
-    cd apps/cli
-    pnpm dev audit ${{ secrets.SITE_URL }} --threshold 80 --output json
+    pnpm --filter=@ai-lighthouse/cli dev audit ${{ secrets.SITE_URL }} \
+      --preset minimal \
+      --threshold 80 \
+      --output json
 ```
 
 Exit code 1 if score is below threshold - perfect for automated quality gates!
@@ -155,128 +222,3 @@ MIT
 ## 🤝 Contributing
 
 Contributions welcome! Please see individual package READMEs for specific contribution guidelines.
-
-
-## What's inside?
-
-This Turborepo includes the following packages/apps:
-
-### Apps and Packages
-
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
-
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
-```
-
-You can build a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
-
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build --filter=docs
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-```
-
-### Develop
-
-To develop all apps and packages, run the following command:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
-```
-
-You can develop a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
-
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev --filter=web
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-```
-
-### Remote Caching
-
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo login
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
-```
-
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo link
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.com/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.com/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.com/docs/reference/configuration)
-- [CLI Usage](https://turborepo.com/docs/reference/command-line-reference)
