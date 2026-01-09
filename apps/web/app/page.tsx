@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 import HomePage from '@/components/HomePage';
 
-const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://ai-lighthouse.com";
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://www.getlighthouse.dev/";
 
 export const metadata: Metadata = {
   title: 'AI Lighthouse - Website AI Readiness Analyzer',

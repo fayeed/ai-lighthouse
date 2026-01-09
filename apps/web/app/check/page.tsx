@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { Clock } from "lucide-react";
 import CheckPageContent from './CheckPageContent';
 
-const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://ai-lighthouse.com";
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://www.getlighthouse.dev/";
 
 export async function generateMetadata(
   { searchParams }: { searchParams: { url?: string } }

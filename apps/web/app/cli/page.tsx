@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 import CLIPage from '@/components/CLIPage';
 
-const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://ai-lighthouse.com";
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://www.getlighthouse.dev/";
 
 export const metadata: Metadata = {
   title: 'AI Lighthouse CLI - Command Line Tool for AI Readiness Testing',

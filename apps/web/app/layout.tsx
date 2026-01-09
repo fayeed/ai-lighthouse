@@ -5,7 +5,7 @@ import ScrollToTop from "@/components/ScrollToTop";
 import { Analytics } from "@/components/Analytics";
 import ErrorBoundary from "@/components/ErrorBoundary";
 
-const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://ai-lighthouse.com";
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://www.getlighthouse.dev/";
 
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-space-grotesk",
