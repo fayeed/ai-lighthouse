@@ -124,6 +124,7 @@ export default function HomePage() {
                     placeholder="Enter your website URL"
                     value={url}
                     onChange={(e) => setUrl(e.target.value)}
+                    aria-label="Website URL to analyze"
                     className="h-14 bg-white/[0.02] border-white/10 rounded-xl px-6 text-base focus:ring-1 focus:ring-white/20 transition-all placeholder:text-white/20 text-white flex-1"
                   />
                   <Button

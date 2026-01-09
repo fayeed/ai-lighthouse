@@ -141,6 +141,7 @@ export default function AuditForm({
               <div className="relative group">
                 <div className="absolute -inset-1 bg-gradient-to-r from-white/0 via-white/5 to-white/0 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
                 <div className="relative flex flex-col sm:flex-row gap-3">
+                  <label htmlFor="url" className="sr-only">Website URL to analyze</label>
                   <input
                     type="text"
                     id="url"

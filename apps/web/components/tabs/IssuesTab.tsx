@@ -250,6 +250,7 @@ export default function IssuesTab({ issues, currentScore }: IssuesTabProps) {
               placeholder="Search issues..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              aria-label="Search issues"
               className="w-full px-4 py-2 border border-zinc-700 rounded-lg focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 bg-zinc-800 text-white placeholder:text-gray-500 text-sm"
             />
           </div>
