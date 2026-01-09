@@ -10,6 +10,21 @@ export const metadata: Metadata = {
   alternates: {
     canonical: `${baseUrl}/check/scoring-guide`,
   },
+  openGraph: {
+    title: 'AI Readiness Scoring Guide - AI Lighthouse',
+    description: 'Understand how AI Lighthouse scores website AI readiness. Learn about the metrics, categories, and what each score means.',
+    url: `${baseUrl}/check/scoring-guide`,
+    siteName: 'AI Lighthouse',
+    type: 'website',
+    images: [
+      {
+        url: `${baseUrl}/android-chrome-512x512.png`,
+        width: 512,
+        height: 512,
+        alt: 'AI Lighthouse Scoring Guide',
+      },
+    ],
+  },
 };
 
 export default function Page() {

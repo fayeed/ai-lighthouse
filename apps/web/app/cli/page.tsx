@@ -13,7 +13,17 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'AI Lighthouse CLI - Automate AI Readiness Checks',
     description: 'Integrate AI readiness checks directly into your development workflow. Perfect for CI/CD pipelines and automated testing.',
+    url: `${baseUrl}/cli`,
+    siteName: 'AI Lighthouse',
     type: 'website',
+    images: [
+      {
+        url: `${baseUrl}/android-chrome-512x512.png`,
+        width: 512,
+        height: 512,
+        alt: 'AI Lighthouse CLI - Command Line Tool',
+      },
+    ],
   },
 };
 

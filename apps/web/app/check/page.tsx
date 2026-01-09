@@ -22,7 +22,17 @@ export async function generateMetadata(
         openGraph: {
           title: `AI Readiness Analysis for ${domain}`,
           description: `Comprehensive AI readiness analysis for ${domain}. See how AI systems understand your content.`,
+          url: `${baseUrl}/check`,
+          siteName: 'AI Lighthouse',
           type: 'website',
+          images: [
+            {
+              url: `${baseUrl}/android-chrome-512x512.png`,
+              width: 512,
+              height: 512,
+              alt: 'AI Lighthouse - Website AI Readiness Analyzer',
+            },
+          ],
         },
       };
     } catch {
@@ -40,7 +50,17 @@ export async function generateMetadata(
     openGraph: {
       title: 'Check Website AI Readiness - AI Lighthouse',
       description: 'Analyze your website\'s AI readiness. Get instant insights and actionable recommendations.',
+      url: `${baseUrl}/check`,
+      siteName: 'AI Lighthouse',
       type: 'website',
+      images: [
+        {
+          url: `${baseUrl}/android-chrome-512x512.png`,
+          width: 512,
+          height: 512,
+          alt: 'AI Lighthouse - Website AI Readiness Analyzer',
+        },
+      ],
     },
   };
 }
