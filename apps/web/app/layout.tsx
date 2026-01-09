@@ -89,6 +89,8 @@ export default function RootLayout({
               description:
                 "Analyze your website's AI readiness and optimize it for AI systems, search engines, and voice assistants.",
               url: baseUrl,
+              datePublished: '2024-12-01',
+              dateModified: '2025-01-09',
               publisher: {
                 '@type': 'Organization',
                 name: 'AI Lighthouse',
@@ -98,6 +100,26 @@ export default function RootLayout({
                 '@type': 'Offer',
                 price: '0',
                 priceCurrency: 'USD',
+              },
+            }),
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'WebSite',
+              name: 'AI Lighthouse',
+              url: baseUrl,
+              datePublished: '2024-12-01',
+              dateModified: '2025-01-09',
+              description:
+                "Analyze your website's AI readiness and optimize it for AI systems, search engines, and voice assistants.",
+              publisher: {
+                '@type': 'Organization',
+                name: 'AI Lighthouse',
+                url: baseUrl,
               },
             }),
           }}
