@@ -345,7 +345,7 @@ export default function HomePage() {
                         ✓ Generating report...
                       </div>
                       <div className="text-teal-400 ml-4 mt-3">
-                        Score: 87/100 ✨
+                        AI Readiness Score: 87/100 points ✨
                       </div>
                     </div>
                   </div>
