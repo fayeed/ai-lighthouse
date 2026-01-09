@@ -3,6 +3,8 @@ import { Suspense } from "react";
 import { Clock } from "lucide-react";
 import CheckPageContent from './CheckPageContent';
 
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://ai-lighthouse.com";
+
 export async function generateMetadata(
   { searchParams }: { searchParams: { url?: string } }
 ): Promise<Metadata> {
@@ -14,6 +16,9 @@ export async function generateMetadata(
       return {
         title: `AI Readiness Analysis for ${domain} - AI Lighthouse`,
         description: `Comprehensive AI readiness analysis for ${domain}. See how AI systems understand your content and get actionable insights.`,
+        alternates: {
+          canonical: `${baseUrl}/check`,
+        },
         openGraph: {
           title: `AI Readiness Analysis for ${domain}`,
           description: `Comprehensive AI readiness analysis for ${domain}. See how AI systems understand your content.`,
@@ -29,6 +34,9 @@ export async function generateMetadata(
     title: 'Check Website AI Readiness - AI Lighthouse',
     description: 'Analyze your website\'s AI readiness. Get instant insights on how AI systems like ChatGPT, Perplexity, and search engines understand your content.',
     keywords: ['AI readiness check', 'website analysis', 'AI comprehension', 'content audit', 'SEO analysis'],
+    alternates: {
+      canonical: `${baseUrl}/check`,
+    },
     openGraph: {
       title: 'Check Website AI Readiness - AI Lighthouse',
       description: 'Analyze your website\'s AI readiness. Get instant insights and actionable recommendations.',

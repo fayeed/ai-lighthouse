@@ -308,6 +308,11 @@ function detectPreRenderingMarkers($: any, html: string): {
     markers.push('Content present with hydration markers (likely SSR)');
   }
 
+  // Next.js App Router detection (SSG without __NEXT_DATA__)
+  if (bodyText.length > 1000 && html.includes('_next/static/chunks/') && !html.includes('__NEXT_DATA__')) {
+    markers.push('Next.js App Router SSG (substantial pre-rendered content)');
+  }
+
   return {
     hasPreRendering: markers.length > 0,
     markers
@@ -322,7 +327,15 @@ function buildRemediation(framework: string, hasNoscript: boolean, hasContent: b
 
   if (framework.includes('Next.js')) {
     advice = 'Enable Server-Side Rendering (SSR) or Static Site Generation (SSG) in Next.js. ';
-    advice += 'Use `getServerSideProps` for dynamic SSR or `getStaticProps` for SSG. ';
+    // Check if App Router or Pages Router
+    if (framework.includes('App Router')) {
+      advice += 'For App Router: Pages are static by default. ';
+      advice += 'Use async Server Components for SSR, or add "use client" only for interactive components. ';
+      advice += 'Ensure substantial content is in Server Components, not hidden behind client-side state. ';
+    } else {
+      advice += 'Use `getServerSideProps` for dynamic SSR or `getStaticProps` for SSG in Pages Router. ';
+      advice += 'Or migrate to App Router where pages are static by default. ';
+    }
     advice += 'Ensure pages are exported with pre-rendered HTML. ';
   } else if (framework.includes('Nuxt')) {
     advice = 'Enable Universal mode or Static Site Generation in Nuxt.js. ';

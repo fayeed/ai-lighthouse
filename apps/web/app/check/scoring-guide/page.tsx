@@ -1,5 +1,16 @@
 import React from 'react';
+import { Metadata } from 'next';
 import ScoringGuide from '../../../components/ScoringGuide';
+
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://ai-lighthouse.com";
+
+export const metadata: Metadata = {
+  title: 'AI Readiness Scoring Guide - AI Lighthouse',
+  description: 'Understand how AI Lighthouse scores website AI readiness. Learn about the metrics, categories, and what each score means.',
+  alternates: {
+    canonical: `${baseUrl}/check/scoring-guide`,
+  },
+};
 
 export default function Page() {
   return (
