@@ -22,7 +22,6 @@ export class InconsistentNumericalFormattingRule extends BaseRule {
 
     // Track formatting inconsistencies
     const dateFormats: Set<string> = new Set();
-    const currencyFormats: Set<string> = new Set();
     const numberFormats: { withCommas: number; withoutCommas: number } = {
       withCommas: 0,
       withoutCommas: 0
@@ -66,22 +65,42 @@ export class InconsistentNumericalFormattingRule extends BaseRule {
     }
 
     // 2. Check currency formatting
-    const currencyPatterns = {
-      '$X,XXX.XX': /\$\d{1,3}(,\d{3})*(\.\d{2})?/g,
-      '$XXXX': /\$\d+(?!,)/g,
-      'X,XXX USD': /\d{1,3}(,\d{3})*\s*(USD|dollars?)/gi,
-      '€X,XXX': /€\d{1,3}(,\d{3})*(\.\d{2})?/g,
-      '£X,XXX': /£\d{1,3}(,\d{3})*(\.\d{2})?/g
-    };
+    // Look for genuinely inconsistent patterns - not just different valid formats
+    // e.g., mixing "$100" with "100 USD" or "$100.00" with "$100"
 
-    Object.entries(currencyPatterns).forEach(([format, pattern]) => {
-      const matches = text.match(pattern);
-      if (matches && matches.length > 0) {
-        currencyFormats.add(format);
-      }
-    });
+    // Find all dollar amounts
+    const dollarWithDecimals = text.match(/\$\d{1,3}(,\d{3})*\.\d{2}\b/g) || [];
+    const dollarWithoutDecimals = text.match(/\$\d{1,3}(,\d{3})*(?!\.\d)/g) || [];
+    const amountWithUSD = text.match(/\d{1,3}(,\d{3})*(\.\d{2})?\s*(USD|dollars?)\b/gi) || [];
+    const euroAmounts = text.match(/€\d{1,3}(,\d{3})*(\.\d{2})?/g) || [];
+    const poundAmounts = text.match(/£\d{1,3}(,\d{3})*(\.\d{2})?/g) || [];
 
-    if (currencyFormats.size > 1) {
+    // Track which currency symbols are used
+    const currencySymbolsUsed: Set<string> = new Set();
+    if (dollarWithDecimals.length > 0 || dollarWithoutDecimals.length > 0) currencySymbolsUsed.add('$');
+    if (amountWithUSD.length > 0) currencySymbolsUsed.add('USD');
+    if (euroAmounts.length > 0) currencySymbolsUsed.add('€');
+    if (poundAmounts.length > 0) currencySymbolsUsed.add('£');
+
+    // Only flag if mixing different currency notations for the SAME currency
+    // e.g., "$100" and "100 USD" on the same page (both are USD but formatted differently)
+    const hasDollarSymbol = dollarWithDecimals.length > 0 || dollarWithoutDecimals.length > 0;
+    const hasUSDWord = amountWithUSD.length > 0;
+
+    // Check for inconsistent decimal usage (some with .XX, some without) - only if significant
+    const hasInconsistentDecimals = dollarWithDecimals.length > 2 && dollarWithoutDecimals.length > 2;
+
+    // Check for mixing symbol ($) with code (USD) - but allow "$0 USD" as that's actually good practice
+    const hasMixedNotation = hasDollarSymbol && hasUSDWord &&
+      // Exclude cases where they appear together like "$0 USD"
+      !text.match(/\$\d+(\.\d{2})?\s*USD/i);
+
+    if (hasInconsistentDecimals || (hasMixedNotation && currencySymbolsUsed.size === 2)) {
+      const formats: string[] = [];
+      if (dollarWithDecimals.length > 0) formats.push(`$X.XX (${dollarWithDecimals.length} occurrences)`);
+      if (dollarWithoutDecimals.length > 0) formats.push(`$X (${dollarWithoutDecimals.length} occurrences)`);
+      if (amountWithUSD.length > 0) formats.push(`X USD (${amountWithUSD.length} occurrences)`);
+
       issues.push({
         id: 'CONTENT_CLARITY-009-currency',
         title: 'Inconsistent currency formatting',
@@ -91,7 +110,7 @@ export class InconsistentNumericalFormattingRule extends BaseRule {
         remediation: 'Use consistent currency formatting. For international audiences, always specify the currency code (USD, EUR, GBP).',
         impactScore: 15,
         location: { url },
-        evidence: [`Currency formats found: ${Array.from(currencyFormats).join(', ')}`],
+        evidence: [`Currency formats found: ${formats.join(', ')}`],
         tags: ['currency', 'formatting', 'consistency'],
         confidence: 0.8,
         timestamp: new Date().toISOString()
@@ -192,7 +211,9 @@ export class InconsistentNumericalFormattingRule extends BaseRule {
     const ambiguousNumbers = text.match(/\b\d+\b/g);
     if (ambiguousNumbers && ambiguousNumbers.length > 20) {
       // Count how many have nearby context (units, labels, etc.)
-      const numbersWithContext = text.match(/\d+\s*(kg|lbs?|km|miles?|%|USD|\$|€|£|years?|months?|days?|hours?|minutes?|people|users|customers)/gi);
+      // Also include common patterns like "X/100" (scores), "X pts/points", "X issues", "X seconds", etc.
+      const numbersWithContext = text.match(/\d+\s*(kg|lbs?|km|miles?|%|USD|\$|€|£|years?|months?|days?|hours?|minutes?|seconds?|people|users|customers|pts|points?|issues?|fixes?|items?|steps?|stars?|ratings?)|\d+\/\d+|\$\d+|\d+\s*USD/gi);
+
 
       const contextRatio = numbersWithContext ? numbersWithContext.length / ambiguousNumbers.length : 0;
 
