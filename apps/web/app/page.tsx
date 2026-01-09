@@ -13,7 +13,17 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'AI Lighthouse - Optimize Your Website for the AI Era',
     description: 'Discover how AI systems understand your content. Get actionable insights to improve discoverability and accuracy.',
+    url: baseUrl,
+    siteName: 'AI Lighthouse',
     type: 'website',
+    images: [
+      {
+        url: `${baseUrl}/android-chrome-512x512.png`,
+        width: 512,
+        height: 512,
+        alt: 'AI Lighthouse - Website AI Readiness Analyzer',
+      },
+    ],
   },
 };
 
