@@ -1,16 +1,27 @@
 import express from 'express';
-import rateLimit from 'express-rate-limit';
 import { redisClient } from '../index.js';
 import { config } from '../config/index.js';
-import { 
-  analyzeUrlWithRules, 
-  calculateAIReadiness, 
-  exportAuditReport
+import { prisma } from '../lib/prisma.js';
+import {
+  analyzeUrlWithRules,
+  calculateAIReadiness,
+  exportAuditReport,
+  crawlSite,
+  type CrawlProgress,
+  type PageCrawlResult,
+  type CrawlResult,
 } from '../../../../packages/scanner/src/exports.js';
-import { auditRequestSchema, validateRequest } from '../validation/schemas.js';
+import { auditRequestSchema, crawlRequestSchema, validateRequest } from '../validation/schemas.js';
 import { logger, logAuditStart, logAuditComplete, logAuditError, logRateLimitHit } from '../utils/logger.js';
 import { cacheMiddleware } from '../middleware/cache.js';
 import { ErrorTypes, estimateScanDuration, formatDuration } from '../utils/errors.js';
+import {
+  canScanMiddleware,
+  enforceLLMAccess,
+  enforceFullCrawlAccess,
+  incrementUsage,
+  TIER_LIMITS
+} from '../middleware/subscription.js';
 
 export const auditRouter = express.Router();
 
@@ -58,10 +69,110 @@ function getWeekNumber(date: Date): number {
   return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
 }
 
+// Extract domain from URL
+function extractDomain(url: string): string {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return url;
+  }
+}
+
+// Save scan to database
+async function saveScanToDatabase(
+  userId: string | null,
+  url: string,
+  aiReadiness: any,
+  auditReport: any,
+  scanResult: any,
+  duration: number,
+  enableLLM: boolean
+) {
+  try {
+    // Only save for authenticated users
+    if (!userId) return null;
+
+    const domain = extractDomain(url);
+
+    const scan = await prisma.scan.create({
+      data: {
+        userId,
+        url,
+        domain,
+        scanType: 'SINGLE_PAGE',
+        status: 'COMPLETED',
+        enableLLM,
+        enableChunking: true,
+        maxPages: 1,
+        overallScore: aiReadiness?.overall || null,
+        grade: aiReadiness?.grade || null,
+        pagesScanned: 1,
+        issuesFound: auditReport?.issues?.length || 0,
+        startedAt: new Date(Date.now() - duration),
+        completedAt: new Date(),
+        duration,
+      },
+    });
+
+    // Create page result
+    await prisma.pageResult.create({
+      data: {
+        scanId: scan.id,
+        url,
+        title: auditReport?.pageTitle || null,
+        overallScore: aiReadiness?.overall || null,
+        contentQuality: aiReadiness?.dimensions?.contentQuality?.score || null,
+        discoverability: aiReadiness?.dimensions?.discoverability?.score || null,
+        extractability: aiReadiness?.dimensions?.extractability?.score || null,
+        comprehensibility: aiReadiness?.dimensions?.comprehensibility?.score || null,
+        trustworthiness: aiReadiness?.dimensions?.trustworthiness?.score || null,
+        criticalIssues: auditReport?.issues?.filter((i: any) => i.severity === 'critical').length || 0,
+        highIssues: auditReport?.issues?.filter((i: any) => i.severity === 'high').length || 0,
+        mediumIssues: auditReport?.issues?.filter((i: any) => i.severity === 'medium').length || 0,
+        lowIssues: auditReport?.issues?.filter((i: any) => i.severity === 'low').length || 0,
+        issuesJson: auditReport?.issues || [],
+        llmAnalysisJson: scanResult?.llm || null,
+        extractabilityJson: scanResult?.extractability || null,
+      },
+    });
+
+    // Create report
+    await prisma.report.create({
+      data: {
+        scanId: scan.id,
+        format: 'json',
+        reportJson: {
+          auditReport,
+          aiReadiness,
+          scanResult,
+        },
+        summaryJson: {
+          score: aiReadiness?.overall,
+          grade: aiReadiness?.grade,
+          issueCount: auditReport?.issues?.length || 0,
+          dimensions: aiReadiness?.dimensions,
+        },
+        quickWinsJson: aiReadiness?.quickWins || [],
+        roadmapJson: aiReadiness?.roadmap || null,
+      },
+    });
+
+    return scan.id;
+  } catch (error) {
+    logger.error('Error saving scan to database', { error, userId, url });
+    return null;
+  }
+}
+
 // LLM-specific rate limiter middleware using Redis
 const llmRateLimiter = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+  // Skip rate limiting in development
+  if (!config.rateLimit.enabled) {
+    return next();
+  }
+
   const { enableLLM, llmProvider } = req.body;
-  
+
   // Only apply rate limiting for OpenRouter
   if (!enableLLM || llmProvider !== 'openrouter') {
     return next();
@@ -111,10 +222,11 @@ const llmRateLimiter = async (req: express.Request, res: express.Response, next:
 };
 
 // POST /api/audit/stream - Stream audit progress via SSE
-auditRouter.post('/stream', validateRequest(auditRequestSchema), llmRateLimiter, async (req, res) => {
+auditRouter.post('/stream', canScanMiddleware, enforceLLMAccess, validateRequest(auditRequestSchema), llmRateLimiter, async (req, res) => {
   const startTime = Date.now();
   const ip = req.ip || 'unknown';
-  
+  const userContext = (req as any).userContext;
+
   // Set up SSE headers
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
@@ -131,15 +243,15 @@ auditRouter.post('/stream', validateRequest(auditRequestSchema), llmRateLimiter,
     res.end();
   };
 
-  const sendError = (error: string) => {
-    res.write(`data: ${JSON.stringify({ type: 'error', error })}\n\n`);
+  const sendError = (error: string, details?: any) => {
+    res.write(`data: ${JSON.stringify({ type: 'error', error, ...details })}\n\n`);
     res.end();
   };
 
   try {
     const validatedData = (req as any).validatedData;
-    const { 
-      url, 
+    let {
+      url,
       enableLLM = false,
       llmProvider = 'openrouter',
       llmModel = 'meta-llama/llama-3.3-70b-instruct:free',
@@ -148,6 +260,12 @@ auditRouter.post('/stream', validateRequest(auditRequestSchema), llmRateLimiter,
       minImpactScore = 5,
       maxChunkTokens = 1200,
     } = validatedData;
+
+    // Check if LLM was downgraded due to subscription
+    const llmDowngradeWarning = (req as any).llmDowngradeWarning;
+    if (llmDowngradeWarning) {
+      enableLLM = false;
+    }
 
     logAuditStart(url, enableLLM, ip);
     sendProgress('starting', 0, 'Starting analysis...');
@@ -199,7 +317,7 @@ auditRouter.post('/stream', validateRequest(auditRequestSchema), llmRateLimiter,
       }
     }
 
-    let llmWarning = (req as any).llmRateLimitWarning || null;
+    let llmWarning = (req as any).llmRateLimitWarning || llmDowngradeWarning || null;
 
     const result = await analyzeUrlWithRules(url, scanOptions);
 
@@ -221,11 +339,37 @@ auditRouter.post('/stream', validateRequest(auditRequestSchema), llmRateLimiter,
     logAuditComplete(url, duration, true, ip);
     incrementScanCounter(); // Track successful scan
 
+    // Increment user usage
+    await incrementUsage(userContext?.userId, ip, 1, enableLLM);
+
+    // Save to database for authenticated users
+    const scanId = await saveScanToDatabase(
+      userContext?.userId,
+      url,
+      aiReadiness,
+      auditReport,
+      {
+        llm: result.llm,
+        chunking: result.chunking,
+        extractability: result.extractability,
+        hallucinationReport: result.hallucinationReport,
+        mirrorReport: result.mirrorReport,
+        scoring: result.scoring,
+      },
+      duration,
+      enableLLM
+    );
+
     sendResult({
       success: true,
       url,
+      scanId,
       timestamp: new Date().toISOString(),
       warning: llmWarning,
+      userContext: userContext ? {
+        plan: userContext.plan,
+        scansRemaining: userContext.usage.scansRemaining - 1,
+      } : null,
       scanDuration: {
         actual: Math.round(duration / 1000),
         message: `Scan completed in ${formatDuration(Math.round(duration / 1000))}`
@@ -240,6 +384,11 @@ auditRouter.post('/stream', validateRequest(auditRequestSchema), llmRateLimiter,
           hallucinationReport: result.hallucinationReport,
           mirrorReport: result.mirrorReport,
           scoring: result.scoring,
+          // Optimization analysis
+          seo: result.seo,
+          pseo: result.pseo,
+          aeo: result.aeo,
+          geo: result.geo,
         }
       }
     });
@@ -252,15 +401,16 @@ auditRouter.post('/stream', validateRequest(auditRequestSchema), llmRateLimiter,
 });
 
 // POST /api/audit - Start a new audit
-auditRouter.post('/', cacheMiddleware(1800), validateRequest(auditRequestSchema), llmRateLimiter, async (req, res) => {
+auditRouter.post('/', canScanMiddleware, enforceLLMAccess, cacheMiddleware(1800), validateRequest(auditRequestSchema), llmRateLimiter, async (req, res) => {
   const startTime = Date.now();
   const ip = req.ip || 'unknown';
-  
+  const userContext = (req as any).userContext;
+
   try {
     // Use validated data from middleware
     const validatedData = (req as any).validatedData;
-    const { 
-      url, 
+    let {
+      url,
       enableLLM = false,
       llmProvider = 'openrouter',
       llmModel = 'meta-llama/llama-3.3-70b-instruct:free',
@@ -362,20 +512,28 @@ auditRouter.post('/', cacheMiddleware(1800), validateRequest(auditRequestSchema)
       });
     }
 
+    // Check if LLM was downgraded due to subscription
+    const llmDowngradeWarning = (req as any).llmDowngradeWarning;
+    if (llmDowngradeWarning) {
+      enableLLM = false;
+      scanOptions.enableLLM = false;
+      scanOptions.enableHallucinationDetection = false;
+    }
+
     // Synchronous mode - wait for completion
     logger.info('Starting synchronous audit', { url, enableLLM, provider: llmProvider, model: llmModel });
-    
+
     // Check if rate limiter set a warning
-    let llmWarning = (req as any).llmRateLimitWarning || null;
-    
+    let llmWarning = (req as any).llmRateLimitWarning || llmDowngradeWarning || null;
+
     const scanStartTime = Date.now();
     logger.info('Beginning URL analysis', { url, options: scanOptions });
-    
+
     const result = await analyzeUrlWithRules(url, scanOptions);
-    
+
     const scanDuration = Date.now() - scanStartTime;
     logger.info('URL analysis completed', { url, duration: `${scanDuration}ms` });
-    
+
     // Check if LLM limit was exceeded during the scan
     if (result.llmLimitExceeded && !llmWarning) {
       llmWarning = {
@@ -384,10 +542,10 @@ auditRouter.post('/', cacheMiddleware(1800), validateRequest(auditRequestSchema)
         details: 'Rate limit exceeded during scan execution'
       };
     }
-    
+
     logger.info('Calculating AI readiness', { url });
     const aiReadiness = calculateAIReadiness(result);
-    
+
     logger.info('Generating audit report', { url });
     const auditReportJson = exportAuditReport(result);
     const auditReport = JSON.parse(auditReportJson);
@@ -395,13 +553,39 @@ auditRouter.post('/', cacheMiddleware(1800), validateRequest(auditRequestSchema)
     const duration = Date.now() - startTime;
     logAuditComplete(url, duration, true, ip);
     incrementScanCounter(); // Track successful scan
-    
+
+    // Increment user usage
+    await incrementUsage(userContext?.userId, ip, 1, enableLLM);
+
+    // Save to database for authenticated users
+    const scanId = await saveScanToDatabase(
+      userContext?.userId,
+      url,
+      aiReadiness,
+      auditReport,
+      {
+        llm: result.llm,
+        chunking: result.chunking,
+        extractability: result.extractability,
+        hallucinationReport: result.hallucinationReport,
+        mirrorReport: result.mirrorReport,
+        scoring: result.scoring,
+      },
+      duration,
+      enableLLM
+    );
+
     // Return comprehensive data (quickWins with score impact are in aiReadiness)
     return res.json({
       success: true,
       url,
+      scanId,
       timestamp: new Date().toISOString(),
       warning: llmWarning,
+      userContext: userContext ? {
+        plan: userContext.plan,
+        scansRemaining: userContext.usage.scansRemaining - 1,
+      } : null,
       scanDuration: {
         actual: Math.round(duration / 1000),
         estimated: timeEstimate.estimate,
@@ -417,6 +601,11 @@ auditRouter.post('/', cacheMiddleware(1800), validateRequest(auditRequestSchema)
           hallucinationReport: result.hallucinationReport,
           mirrorReport: result.mirrorReport,
           scoring: result.scoring,
+          // Optimization analysis
+          seo: result.seo,
+          pseo: result.pseo,
+          aeo: result.aeo,
+          geo: result.geo,
         }
       }
     });
@@ -536,10 +725,259 @@ async function runAudit(jobId: string, url: string, scanOptions: any) {
       }
     });
   } catch (error: any) {
-    await setAuditJob(jobId, { 
-      status: 'failed', 
+    await setAuditJob(jobId, {
+      status: 'failed',
       error: error.message,
       stack: error.stack
     });
   }
 }
+
+// Save crawl to database
+async function saveCrawlToDatabase(
+  userId: string | null,
+  url: string,
+  crawlResult: CrawlResult,
+  enableLLM: boolean
+) {
+  try {
+    if (!userId) return null;
+
+    const domain = extractDomain(url);
+
+    const scan = await prisma.scan.create({
+      data: {
+        userId,
+        url,
+        domain,
+        scanType: 'FULL_CRAWL',
+        status: 'COMPLETED',
+        enableLLM,
+        enableChunking: true,
+        maxPages: crawlResult.pagesScanned,
+        overallScore: crawlResult.aggregatedScores.overall,
+        grade: crawlResult.aggregatedScores.overall >= 90 ? 'A' :
+               crawlResult.aggregatedScores.overall >= 80 ? 'B' :
+               crawlResult.aggregatedScores.overall >= 70 ? 'C' :
+               crawlResult.aggregatedScores.overall >= 60 ? 'D' : 'F',
+        pagesScanned: crawlResult.pagesScanned,
+        issuesFound: crawlResult.siteIssues.length,
+        startedAt: new Date(crawlResult.startTime),
+        completedAt: new Date(crawlResult.endTime),
+        duration: crawlResult.duration,
+      },
+    });
+
+    // Create page results for each successfully scanned page
+    for (const page of crawlResult.pages.filter(p => p.success && p.scanResult)) {
+      const result = page.scanResult!;
+      const aiReadiness = calculateAIReadiness(result);
+
+      await prisma.pageResult.create({
+        data: {
+          scanId: scan.id,
+          url: page.url,
+          title: result.url || null,
+          overallScore: aiReadiness?.overall || null,
+          contentQuality: aiReadiness?.dimensions?.contentQuality?.score || null,
+          discoverability: aiReadiness?.dimensions?.discoverability?.score || null,
+          extractability: aiReadiness?.dimensions?.extractability?.score || null,
+          comprehensibility: aiReadiness?.dimensions?.comprehensibility?.score || null,
+          trustworthiness: aiReadiness?.dimensions?.trustworthiness?.score || null,
+          criticalIssues: result.issues?.filter((i: any) => i.severity === 'critical').length || 0,
+          highIssues: result.issues?.filter((i: any) => i.severity === 'high').length || 0,
+          mediumIssues: result.issues?.filter((i: any) => i.severity === 'medium').length || 0,
+          lowIssues: result.issues?.filter((i: any) => i.severity === 'low').length || 0,
+          issuesJson: result.issues as any || [],
+          llmAnalysisJson: result.llm as any || null,
+          extractabilityJson: result.extractability as any || null,
+        },
+      });
+    }
+
+    // Create report
+    await prisma.report.create({
+      data: {
+        scanId: scan.id,
+        format: 'json',
+        reportJson: crawlResult as any,
+        summaryJson: {
+          score: crawlResult.aggregatedScores.overall,
+          pagesScanned: crawlResult.pagesScanned,
+          pagesFailed: crawlResult.pagesFailed,
+          issueCount: crawlResult.siteIssues.length,
+          aggregatedScores: crawlResult.aggregatedScores,
+        } as any,
+        quickWinsJson: crawlResult.siteAnalysis.topRecommendations as any,
+        roadmapJson: null,
+      },
+    });
+
+    return scan.id;
+  } catch (error) {
+    logger.error('Error saving crawl to database', { error, userId, url });
+    return null;
+  }
+}
+
+// POST /api/audit/crawl - Multi-page site crawl with SSE progress
+auditRouter.post('/crawl', canScanMiddleware, enforceFullCrawlAccess, validateRequest(crawlRequestSchema), async (req, res) => {
+  const startTime = Date.now();
+  const ip = req.ip || 'unknown';
+  const userContext = (req as any).userContext;
+
+  // Set up SSE headers
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('X-Accel-Buffering', 'no');
+  res.flushHeaders();
+
+  const sendProgress = (progress: CrawlProgress & { pageResult?: PageCrawlResult }) => {
+    res.write(`data: ${JSON.stringify({ type: 'progress', ...progress })}\n\n`);
+  };
+
+  const sendResult = (data: any) => {
+    res.write(`data: ${JSON.stringify({ type: 'complete', data })}\n\n`);
+    res.end();
+  };
+
+  const sendError = (error: string, details?: any) => {
+    res.write(`data: ${JSON.stringify({ type: 'error', error, ...details })}\n\n`);
+    res.end();
+  };
+
+  try {
+    const validatedData = (req as any).validatedData;
+    const {
+      url,
+      maxPages = 10,
+      maxDepth = 3,
+      maxConcurrency = 3,
+      crawlDelay = 1000,
+      respectRobotsTxt = true,
+      includeSitemap = true,
+      excludePatterns,
+      enableLLM = false,
+      minImpactScore = 5,
+      llmProvider,
+      llmModel,
+      llmApiKey,
+    } = validatedData;
+
+    // Apply subscription limits
+    const tierLimits = TIER_LIMITS[userContext?.plan || 'FREE'];
+    const effectiveMaxPages = userContext?.plan === 'FREE' ? 1 : Math.min(maxPages, tierLimits.maxPagesPerCrawl || 50);
+
+    // If FREE tier, they shouldn't even get here (enforceFullCrawlAccess blocks them)
+    // but double-check anyway
+    if (userContext?.plan === 'FREE' && effectiveMaxPages > 1) {
+      sendError('Upgrade required', {
+        message: 'Full site crawl requires a Pro subscription.',
+        upgradeUrl: '/pricing'
+      });
+      return;
+    }
+
+    logger.info('Starting site crawl', { url, maxPages: effectiveMaxPages, ip });
+
+    // Configure crawl options
+    const crawlOptions: any = {
+      maxPages: effectiveMaxPages,
+      maxDepth,
+      maxConcurrency,
+      crawlDelay,
+      respectRobotsTxt,
+      includeSitemap,
+      excludePatterns,
+      enableLLM,
+      minImpactScore,
+      minConfidence: 0.7,
+      onProgress: (progress: CrawlProgress) => {
+        sendProgress(progress);
+      },
+      onPageComplete: (pageResult: PageCrawlResult) => {
+        sendProgress({
+          pagesCompleted: 0,
+          pagesFailed: 0,
+          pagesRemaining: 0,
+          totalPages: 0,
+          percentComplete: 0,
+          pageResult,
+        });
+      },
+    };
+
+    // Configure LLM if enabled
+    if (enableLLM && llmProvider && llmModel) {
+      crawlOptions.llmConfig = {
+        provider: llmProvider,
+        model: llmModel,
+      };
+
+      if (llmProvider === 'ollama') {
+        crawlOptions.llmConfig.baseUrl = 'http://localhost:11434';
+      } else if (llmApiKey) {
+        crawlOptions.llmConfig.apiKey = llmApiKey;
+      } else if (llmProvider === 'openrouter') {
+        const defaultKey = process.env.OPENROUTER_API_KEY;
+        if (defaultKey) {
+          crawlOptions.llmConfig.apiKey = defaultKey;
+        }
+      }
+    }
+
+    // Run the crawl
+    const crawlResult = await crawlSite(url, crawlOptions);
+
+    const duration = Date.now() - startTime;
+    logger.info('Crawl completed', {
+      url,
+      duration,
+      pagesScanned: crawlResult.pagesScanned,
+      pagesFailed: crawlResult.pagesFailed,
+      ip
+    });
+
+    // Increment usage based on pages scanned
+    await incrementUsage(userContext?.userId, ip, crawlResult.pagesScanned, enableLLM);
+
+    // Save to database for authenticated users
+    const scanId = await saveCrawlToDatabase(
+      userContext?.userId,
+      url,
+      crawlResult,
+      enableLLM
+    );
+
+    sendResult({
+      success: true,
+      url,
+      scanId,
+      timestamp: new Date().toISOString(),
+      userContext: userContext ? {
+        plan: userContext.plan,
+        scansRemaining: Math.max(0, userContext.usage.scansRemaining - crawlResult.pagesScanned),
+      } : null,
+      scanDuration: {
+        actual: Math.round(duration / 1000),
+        message: `Crawl completed in ${formatDuration(Math.round(duration / 1000))}`
+      },
+      data: {
+        crawlResult,
+        summary: {
+          pagesScanned: crawlResult.pagesScanned,
+          pagesFailed: crawlResult.pagesFailed,
+          aggregatedScores: crawlResult.aggregatedScores,
+          topIssues: crawlResult.siteIssues.slice(0, 10),
+          topRecommendations: crawlResult.siteAnalysis.topRecommendations,
+        }
+      }
+    });
+
+  } catch (error: any) {
+    const validatedData = (req as any).validatedData;
+    logger.error('Crawl failed', { url: validatedData?.url, error: error.message, ip });
+    sendError(error.message || 'Crawl failed');
+  }
+});
