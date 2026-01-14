@@ -7,6 +7,7 @@ export enum SEVERITY {
 }
 
 export enum CATEGORY {
+  // AI Readability & Understanding
   AIREAD = 'AIREAD',
   EXTRACT = 'EXTRACT',
   CHUNK = 'CHUNK',
@@ -22,7 +23,13 @@ export enum CATEGORY {
   LLMCON = 'LLMCONF',
   CI = 'CI',
   DX = 'DX',
-  MISC = 'MISC'
+  MISC = 'MISC',
+
+  // SEO & Optimization Categories
+  SEO = 'SEO',       // Traditional Search Engine Optimization
+  PSEO = 'PSEO',     // Programmatic SEO
+  AEO = 'AEO',       // Answer Engine Optimization
+  GEO = 'GEO',       // Generative Engine Optimization
 }
 
 export interface IssueLocation {
@@ -354,5 +361,269 @@ export interface ScanResult {
     };
     recommendations: string[];
   };
+
+  // ===== OPTIMIZATION ANALYSIS =====
+  /** SEO analysis - Traditional search engine optimization */
+  seo?: SEOAnalysis;
+
+  /** PSEO analysis - Programmatic SEO optimization */
+  pseo?: PSEOAnalysis;
+
+  /** AEO analysis - Answer Engine Optimization */
+  aeo?: AEOAnalysis;
+
+  /** GEO analysis - Generative Engine Optimization */
+  geo?: GEOAnalysis;
+}
+
+/**
+ * SEO Analysis - Traditional Search Engine Optimization
+ */
+export interface SEOAnalysis {
+  score: number; // 0-100
+  grade: string;
+
+  // Core SEO elements
+  title: {
+    present: boolean;
+    length: number;
+    optimal: boolean; // 50-60 chars
+    content?: string;
+  };
+
+  metaDescription: {
+    present: boolean;
+    length: number;
+    optimal: boolean; // 150-160 chars
+    content?: string;
+  };
+
+  headings: {
+    h1Count: number;
+    h1Content?: string;
+    hasProperHierarchy: boolean;
+    headingStructure: { level: number; count: number }[];
+  };
+
+  images: {
+    total: number;
+    withAlt: number;
+    withoutAlt: number;
+    altCoverage: number; // percentage
+  };
+
+  links: {
+    internal: number;
+    external: number;
+    broken: number;
+    nofollow: number;
+  };
+
+  canonical: {
+    present: boolean;
+    url?: string;
+    selfReferencing: boolean;
+  };
+
+  robots: {
+    metaRobots?: string;
+    robotsTxtAccessible: boolean;
+    isIndexable: boolean;
+  };
+
+  mobile: {
+    hasViewport: boolean;
+    viewportContent?: string;
+  };
+
+  performance: {
+    hasCompression: boolean;
+    hasCaching: boolean;
+  };
+
+  issues: SEOIssue[];
+  recommendations: string[];
+}
+
+export interface SEOIssue {
+  id: string;
+  type: 'critical' | 'warning' | 'info';
+  title: string;
+  description: string;
+  fix: string;
+}
+
+/**
+ * PSEO Analysis - Programmatic SEO
+ * Analyzes content patterns for scalable, template-based SEO
+ */
+export interface PSEOAnalysis {
+  score: number;
+  grade: string;
+
+  // Template detection
+  templateSignals: {
+    hasConsistentStructure: boolean;
+    hasPlaceholderPatterns: boolean;
+    hasDynamicContent: boolean;
+    templateConfidence: number;
+  };
+
+  // Content uniqueness
+  contentUniqueness: {
+    uniqueContentRatio: number; // 0-1
+    boilerplateRatio: number;
+    uniqueSentences: number;
+    duplicatePhrases: string[];
+  };
+
+  // Keyword optimization
+  keywordOptimization: {
+    primaryKeyword?: string;
+    keywordDensity: number;
+    keywordInTitle: boolean;
+    keywordInH1: boolean;
+    keywordInFirstParagraph: boolean;
+    relatedKeywords: string[];
+  };
+
+  // Internal linking patterns
+  internalLinking: {
+    linksToOtherPages: number;
+    linksFromPattern: boolean; // links following a pattern (e.g., /city/service)
+    hubPagePotential: boolean;
+  };
+
+  // Schema readiness
+  schemaReadiness: {
+    hasSchema: boolean;
+    schemaTypes: string[];
+    canAutoGenerate: boolean;
+    suggestedSchemas: string[];
+  };
+
+  issues: SEOIssue[];
+  recommendations: string[];
+}
+
+/**
+ * AEO Analysis - Answer Engine Optimization
+ * Analyzes content for voice search, featured snippets, and answer boxes
+ */
+export interface AEOAnalysis {
+  score: number;
+  grade: string;
+
+  // Question targeting
+  questionTargeting: {
+    questionsAnswered: number;
+    questionFormats: { question: string; hasDirectAnswer: boolean }[];
+    faqMarkupPresent: boolean;
+    howToMarkupPresent: boolean;
+  };
+
+  // Answer formatting
+  answerFormatting: {
+    hasConciseAnswers: boolean; // 40-60 word answers
+    hasDefinitions: boolean;
+    hasListAnswers: boolean;
+    hasStepByStep: boolean;
+    answerBoxPotential: number; // 0-100
+  };
+
+  // Featured snippet optimization
+  featuredSnippetOptimization: {
+    paragraphSnippetReady: boolean;
+    listSnippetReady: boolean;
+    tableSnippetReady: boolean;
+    snippetCandidates: {
+      type: 'paragraph' | 'list' | 'table';
+      content: string;
+      score: number;
+    }[];
+  };
+
+  // Voice search optimization
+  voiceSearchOptimization: {
+    conversationalTone: boolean;
+    naturalLanguageQueries: string[];
+    speakableContent: boolean;
+    localRelevance: boolean;
+  };
+
+  // Structured data
+  structuredData: {
+    hasFAQSchema: boolean;
+    hasHowToSchema: boolean;
+    hasQAPageSchema: boolean;
+    hasSpeakableSchema: boolean;
+  };
+
+  issues: SEOIssue[];
+  recommendations: string[];
+}
+
+/**
+ * GEO Analysis - Generative Engine Optimization
+ * Analyzes content for AI/LLM consumption and citation potential
+ */
+export interface GEOAnalysis {
+  score: number;
+  grade: string;
+
+  // AI Visibility
+  aiVisibility: {
+    score: number; // 0-100
+    crawlable: boolean;
+    extractable: boolean;
+    semanticallyRich: boolean;
+    structuredDataPresent: boolean;
+  };
+
+  // Citation potential
+  citationPotential: {
+    score: number; // 0-100
+    hasAuthoritySignals: boolean;
+    hasUniqueInsights: boolean;
+    hasDataPoints: boolean;
+    hasExpertQuotes: boolean;
+    citationReadyContent: string[];
+  };
+
+  // Content attribution
+  contentAttribution: {
+    hasAuthor: boolean;
+    hasPublishDate: boolean;
+    hasLastModified: boolean;
+    hasSourceLinks: boolean;
+    authorityScore: number;
+  };
+
+  // AI comprehension
+  aiComprehension: {
+    clarityScore: number; // 0-100
+    ambiguityScore: number; // lower is better
+    factDensity: number;
+    topicCoherence: number;
+  };
+
+  // Knowledge graph optimization
+  knowledgeGraphOptimization: {
+    entityRichness: number;
+    relationshipClarity: number;
+    topicClustering: number;
+    conceptHierarchy: boolean;
+  };
+
+  // Brand protection
+  brandProtection: {
+    brandMentions: number;
+    consistentMessaging: boolean;
+    competitorMentions: number;
+    messagingClarity: number;
+  };
+
+  issues: SEOIssue[];
+  recommendations: string[];
 }
 

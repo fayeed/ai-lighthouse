@@ -16,6 +16,7 @@ export const SEVERITY_WEIGHTS: Record<SEVERITY, number> = {
  * Higher weights mean issues in that category affect the score more
  */
 export const CATEGORY_WEIGHTS: Record<CATEGORY, number> = {
+  // AI Readability & Understanding
   [CATEGORY.AIREAD]: 1.5,      // AI readability is crucial
   [CATEGORY.EXTRACT]: 1.4,     // Data extraction quality
   [CATEGORY.CHUNK]: 1.3,       // Content chunking for embeddings
@@ -32,6 +33,12 @@ export const CATEGORY_WEIGHTS: Record<CATEGORY, number> = {
   [CATEGORY.CI]: 0.7,          // Citation issues
   [CATEGORY.DX]: 0.6,          // Developer experience
   [CATEGORY.MISC]: 0.5,        // Miscellaneous
+
+  // SEO & Optimization Categories
+  [CATEGORY.SEO]: 1.3,         // Traditional SEO - important for search visibility
+  [CATEGORY.PSEO]: 1.1,        // Programmatic SEO - scalable content optimization
+  [CATEGORY.AEO]: 1.2,         // Answer Engine Optimization - voice & featured snippets
+  [CATEGORY.GEO]: 1.4,         // Generative Engine Optimization - AI citation potential
 };
 
 /**

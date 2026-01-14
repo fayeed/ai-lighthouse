@@ -141,10 +141,27 @@ export type {
   ScoringResult,
   CategoryScore,
   ChunkingAnalysis,
-  ExtractabilityAnalysis
+  ExtractabilityAnalysis,
+  SEOAnalysis,
+  SEOIssue,
+  PSEOAnalysis,
+  AEOAnalysis,
+  GEOAnalysis,
 } from './types.js';
 
 export { SEVERITY, CATEGORY, EFFORT_LEVEL, IMPACT_LEVEL } from './types.js';
+
+// Optimization Analysis
+export {
+  analyzeSEO,
+  seoIssuesToScannerIssues,
+  analyzePSEO,
+  pseoIssuesToScannerIssues,
+  analyzeAEO,
+  aeoIssuesToScannerIssues,
+  analyzeGEO,
+  geoIssuesToScannerIssues,
+} from './analysis/index.js';
 
 // Utilities
 export {
@@ -163,3 +180,31 @@ export {
   sortByPriority,
   getQuickWins
 } from './utils/effort-impact.js';
+
+// Crawler - Multi-page website crawling
+export {
+  crawlSite,
+  CrawlQueue,
+  fetchRobotsTxt,
+  parseRobotsTxt,
+  isPathAllowed,
+  fetchSitemapUrls,
+  discoverLinks,
+  extractNavigationPages,
+  isPriorityPath,
+} from './crawler/index.js';
+
+export type {
+  CrawlOptions,
+  CrawlResult,
+  CrawlProgress,
+  PageCrawlResult,
+  SiteIssue,
+  CrawlQueueOptions,
+  QueuedUrl,
+  QueueStats,
+  RobotsTxtRules,
+  RobotsParseResult,
+  DiscoveredLink,
+  DiscoveryOptions,
+} from './crawler/index.js';

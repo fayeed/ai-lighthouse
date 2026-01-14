@@ -6,11 +6,17 @@ import { runRegisteredRules } from "./rules/runner.js";
 import { calculateScore } from "./scoring.js";
 import { chunkContent } from "./chunker.js";
 import { buildExtractabilityMap, analyzeContentTypeExtractability } from "./extractability.js";
-import { generateLLMComprehension } from "./llm/comprehension.js";
-import { detectHallucinations, hallucinationTriggersToIssues } from "./llm/hallucination.js";
-import { extractNamedEntities } from "./llm/entities.js";
-import { generateFAQs } from "./llm/faq.js";
-import { runMirrorTest } from "./llm/mirror.js";
+import { runUnifiedAnalysis, runQuickAnalysis, sanitizeHtmlForLLM } from "./llm/unified-analysis.js";
+import {
+  analyzeSEO,
+  seoIssuesToScannerIssues,
+  analyzePSEO,
+  pseoIssuesToScannerIssues,
+  analyzeAEO,
+  aeoIssuesToScannerIssues,
+  analyzeGEO,
+  geoIssuesToScannerIssues,
+} from "./analysis/index.js";
 import "./rules/index.js";
 
 export async function analyzeUrlWithRules(url: string, opts?: ScanOptions): Promise<ScanResult> {
@@ -126,195 +132,109 @@ export async function analyzeUrlWithRules(url: string, opts?: ScanOptions): Prom
   // LLM comprehension analysis (if enabled)
   let llm;
   let hallucinationReport;
-  let entities;
-  let faqs;
-  let mirrorReport;
 
   if (options.enableLLM && options.llmConfig) {
     try {
       reportProgress('llm', 35);
       const llmStartTime = Date.now();
 
-      // Run all LLM operations in parallel
-      const [
-        comprehensionResult,
-        hallucinationResult,
-        entityResult,
-        faqResult,
-        mirrorResult
-      ] = await Promise.all([
-        // Comprehension
-        generateLLMComprehension($, url, {
-          provider: options.llmConfig.provider,
-          apiKey: options.llmConfig.apiKey,
-          baseUrl: options.llmConfig.baseUrl,
-          model: options.llmConfig.model,
-          maxTokens: options.llmConfig.maxTokens,
-          temperature: options.llmConfig.temperature
-        }).catch(error => {
-          console.error('LLM comprehension failed:', error);
-          return null;
-        }),
-
-        // Hallucination detection
-        (options.enableHallucinationDetection !== false
-          ? detectHallucinations($, url, {
-              provider: options.llmConfig.provider,
-              apiKey: options.llmConfig.apiKey,
-              baseUrl: options.llmConfig.baseUrl,
-              model: options.llmConfig.model
-            }).catch(error => {
-              console.error('Hallucination detection failed:', error);
-              return null;
-            })
-          : Promise.resolve(null)
-        ),
-
-        // Entity extraction
-        extractNamedEntities($, {
-          enableLLM: true,
-          llmConfig: options.llmConfig,
-          minConfidence: 0.5
-        }).catch(error => {
-          console.error('Entity extraction failed:', error);
-          return null;
-        }),
-
-        // FAQ generation
-        generateFAQs($, {
-          enableLLM: true,
-          llmConfig: options.llmConfig,
-          maxFAQs: 15
-        }).catch(error => {
-          console.error('FAQ generation failed:', error);
-          return null;
-        }),
-
-        // Mirror test
-        runMirrorTest($, {
-          provider: options.llmConfig.provider,
-          apiKey: options.llmConfig.apiKey,
-          baseUrl: options.llmConfig.baseUrl,
-          model: options.llmConfig.model,
-          maxTokens: options.llmConfig.maxTokens,
-          temperature: options.llmConfig.temperature
-        }).catch(error => {
-          console.error('Mirror test failed:', error);
-          return null;
-        })
-      ]);
+      // Single unified LLM call for all content analysis
+      const unifiedResult = await runUnifiedAnalysis($, url, {
+        provider: options.llmConfig.provider,
+        apiKey: options.llmConfig.apiKey,
+        baseUrl: options.llmConfig.baseUrl,
+        model: options.llmConfig.model,
+        maxTokens: options.llmConfig.maxTokens,
+        temperature: options.llmConfig.temperature
+      });
 
       const llmDuration = Date.now() - llmStartTime;
+      console.log(`Unified LLM analysis completed in ${llmDuration}ms`);
 
       reportProgress('processing', 85);
-      
-      // Process comprehension result
-      if (comprehensionResult) {
+
+      // Process unified result into expected format
+      if (unifiedResult) {
         llm = {
-          summary: comprehensionResult.summary,
-          pageType: comprehensionResult.pageType,
-          topEntities: comprehensionResult.topEntities,
-          questions: comprehensionResult.questions,
-          suggestedFAQ: comprehensionResult.suggestedFAQ,
-          readingLevel: comprehensionResult.readingLevel,
-          keyTopics: comprehensionResult.keyTopics,
-          sentiment: comprehensionResult.sentiment,
-          technicalDepth: comprehensionResult.technicalDepth,
-          structureQuality: comprehensionResult.structureQuality,
-          pageTypeInsights: comprehensionResult.pageTypeInsights
+          summary: unifiedResult.summary,
+          pageType: unifiedResult.pageType,
+          topEntities: unifiedResult.topEntities,
+          questions: unifiedResult.questions,
+          suggestedFAQ: unifiedResult.suggestedFAQ,
+          readingLevel: unifiedResult.readingLevel,
+          keyTopics: unifiedResult.keyTopics,
+          sentiment: unifiedResult.sentiment,
+          technicalDepth: unifiedResult.technicalDepth,
+          structureQuality: unifiedResult.structureQuality,
+          pageTypeInsights: unifiedResult.pageTypeInsights,
+          // SEO suggestions from unified analysis
+          suggestedTitle: unifiedResult.suggestedTitle,
+          suggestedMeta: unifiedResult.suggestedMeta,
+          keywords: unifiedResult.keywords
         };
-      }
 
-      // Process hallucination result
-      if (hallucinationResult) {
-        const hallucinationIssues = hallucinationTriggersToIssues(hallucinationResult);
-        issues.push(...hallucinationIssues);
+        // Build hallucination report from unified analysis
+        if (unifiedResult.hallucinationRisk) {
+          hallucinationReport = {
+            hallucinationRiskScore: unifiedResult.hallucinationRisk.score,
+            triggers: unifiedResult.hallucinationRisk.triggers.map(t => ({
+              type: t.type,
+              severity: t.severity === 'critical' ? SEVERITY.CRITICAL :
+                       t.severity === 'high' ? SEVERITY.HIGH :
+                       t.severity === 'medium' ? SEVERITY.MEDIUM : SEVERITY.LOW,
+              description: t.description,
+              confidence: 0.8
+            })),
+            recommendations: unifiedResult.hallucinationRisk.recommendations,
+            factCheckSummary: {
+              totalFacts: unifiedResult.hallucinationRisk.triggers.length,
+              verifiedFacts: 0,
+              unverifiedFacts: unifiedResult.hallucinationRisk.triggers.length,
+              contradictions: 0,
+              ambiguities: 0
+            },
+            verifications: []
+          };
 
-        hallucinationReport = {
-          hallucinationRiskScore: hallucinationResult.hallucinationRiskScore,
-          triggers: hallucinationResult.triggers.map(t => ({
-            type: t.type,
-            severity: t.severity,
-            description: t.description,
-            confidence: t.confidence
-          })),
-          factCheckSummary: hallucinationResult.factCheckSummary,
-          recommendations: hallucinationResult.recommendations,
-          verifications: hallucinationResult.verifications,
-        };
-      }
-
-      // Process entity result
-      if (entityResult) {
-        entities = {
-          entities: entityResult.entities.map(e => ({
-            name: e.name,
-            type: e.type,
-            confidence: e.confidence,
-            locator: e.locator,
-            metadata: e.metadata
-          })),
-          summary: entityResult.summary,
-          schemaMapping: entityResult.schemaMapping
-        };
-      }
-
-      // Process FAQ result
-      if (faqResult) {
-        faqs = {
-          faqs: faqResult.faqs.map(f => ({
-            question: f.question,
-            suggestedAnswer: f.suggestedAnswer,
-            importance: f.importance,
-            confidence: f.confidence,
-            source: f.source
-          })),
-          summary: faqResult.summary
-        };
-      }
-
-      // Process mirror result
-      if (mirrorResult) {
-        mirrorReport = mirrorResult;
-        
-        // Add critical mismatches as issues
-        for (const mismatch of mirrorResult.mismatches) {
-          if (mismatch.severity === 'critical' || mismatch.severity === 'major') {
-            issues.push({
-              id: `LLMCONF-MIRROR-${mismatch.field.toUpperCase()}`,
-              title: `AI Misunderstanding: ${mismatch.field}`,
-              severity: mismatch.severity === 'critical' ? SEVERITY.HIGH : SEVERITY.MEDIUM,
-              category: CATEGORY.LLMCON,
-              description: mismatch.description,
-              remediation: mismatch.recommendation,
-              impactScore: mismatch.severity === 'critical' ? 8 : 6,
-              location: { url },
-              tags: ['ai-interpretation', 'messaging', 'mirror-test'],
-              confidence: mismatch.confidence,
-              timestamp: new Date().toISOString()
-            } as Issue);
+          // Add high-severity hallucination triggers as issues
+          for (const trigger of unifiedResult.hallucinationRisk.triggers) {
+            if (trigger.severity === 'high' || trigger.severity === 'critical') {
+              issues.push({
+                id: `LLMCONF-HALLUC-${trigger.type.toUpperCase()}`,
+                title: `Hallucination Risk: ${trigger.type.replace(/_/g, ' ')}`,
+                severity: trigger.severity === 'critical' ? SEVERITY.HIGH : SEVERITY.MEDIUM,
+                category: CATEGORY.LLMCON,
+                description: trigger.description,
+                remediation: 'Add specific details, sources, or citations to reduce AI hallucination risk.',
+                impactScore: trigger.severity === 'critical' ? 8 : 6,
+                location: { url },
+                tags: ['hallucination-risk', 'ai-safety', trigger.type],
+                confidence: 0.8,
+                timestamp: new Date().toISOString()
+              } as Issue);
+            }
           }
         }
       }
 
     } catch (error) {
-      console.error('LLM operations failed:', error);
+      console.error('Unified LLM analysis failed:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      const isRateLimit = errorMessage.includes('Rate limit exceeded') || 
+      const isRateLimit = errorMessage.includes('Rate limit exceeded') ||
                           errorMessage.includes('rate limit') ||
                           errorMessage.includes('free-models-per-day') ||
                           errorMessage.includes('quota exceeded');
-      
+
       if (isRateLimit) {
         llmLimitExceeded = true;
       } else {
         // Add issue about LLM failure (only for non-rate-limit errors)
         issues.push({
           id: 'LLMAPI-001',
-          title: 'LLM Operations Failed',
+          title: 'LLM Analysis Failed',
           severity: SEVERITY.LOW,
           category: CATEGORY.LLMAPI,
-          description: `Failed to complete LLM operations: ${errorMessage}`,
+          description: `Failed to complete LLM analysis: ${errorMessage}`,
           remediation: 'Check LLM API credentials and configuration.',
           impactScore: 5,
           location: { url },
@@ -324,40 +244,59 @@ export async function analyzeUrlWithRules(url: string, opts?: ScanOptions): Prom
         } as Issue);
       }
     }
-  } else if (options.enableHallucinationDetection !== false) {
-    // Run hallucination detection without LLM (local heuristics only)
-    try {
-      const report = await detectHallucinations($, url, undefined);
-      const hallucinationIssues = hallucinationTriggersToIssues(report);
-      issues.push(...hallucinationIssues);
-
-      hallucinationReport = {
-        hallucinationRiskScore: report.hallucinationRiskScore,
-        triggers: report.triggers.map(t => ({
-          type: t.type,
-          severity: t.severity,
-          description: t.description,
-          confidence: t.confidence
-        })),
-        factCheckSummary: report.factCheckSummary,
-        recommendations: report.recommendations,
-        verifications: report.verifications,
-      };
-    } catch (error) {
-      console.error('Hallucination detection failed:', error);
-    }
   } else {
-    // Non-LLM scan - report progress faster
+    // Non-LLM scan - use quick heuristic analysis
     reportProgress('processing', 85);
+    const quickAnalysis = runQuickAnalysis($, url);
+    if (quickAnalysis) {
+      llm = {
+        summary: quickAnalysis.summary || '',
+        pageType: quickAnalysis.pageType || 'Other',
+        topEntities: quickAnalysis.topEntities || [],
+        questions: quickAnalysis.questions || [],
+        suggestedFAQ: quickAnalysis.suggestedFAQ || [],
+        keyTopics: quickAnalysis.keyTopics || [],
+        pageTypeInsights: quickAnalysis.pageTypeInsights || [],
+        // Additional fields from quick analysis
+        sentiment: quickAnalysis.sentiment,
+        technicalDepth: quickAnalysis.technicalDepth,
+        structureQuality: quickAnalysis.structureQuality,
+        readingLevel: quickAnalysis.readingLevel,
+        suggestedTitle: quickAnalysis.suggestedTitle,
+        suggestedMeta: quickAnalysis.suggestedMeta,
+        keywords: quickAnalysis.keywords || []
+      };
+      if (quickAnalysis.hallucinationRisk) {
+        hallucinationReport = {
+          hallucinationRiskScore: quickAnalysis.hallucinationRisk.score,
+          triggers: quickAnalysis.hallucinationRisk.triggers || [],
+          recommendations: quickAnalysis.hallucinationRisk.recommendations || [],
+          factCheckSummary: { totalFacts: 0, verifiedFacts: 0, unverifiedFacts: 0, contradictions: 0, ambiguities: 0 },
+          verifications: []
+        };
+      }
+    }
   }
 
   reportProgress('scoring', 95);
-  
+
+  // Run optimization analysis (SEO, PSEO, AEO, GEO)
+  const seo = analyzeSEO({ $, url });
+  const pseo = analyzePSEO({ $, url });
+  const aeo = analyzeAEO({ $, url });
+  const geo = analyzeGEO({ $, url });
+
+  // Add optimization issues to main issues array
+  issues.push(...seoIssuesToScannerIssues(seo));
+  issues.push(...pseoIssuesToScannerIssues(pseo));
+  issues.push(...aeoIssuesToScannerIssues(aeo));
+  issues.push(...geoIssuesToScannerIssues(geo));
+
   // Filter issues based on quality thresholds (reduce noise)
   const minImpact = options.minImpactScore ?? 8;
   const minConf = options.minConfidence ?? 0.7;
   const maxCount = options.maxIssues ?? 100;
-  
+
   const filteredIssues = issues
     .filter(issue => issue.impactScore >= minImpact)
     .filter(issue => (issue.confidence ?? 1.0) >= minConf)
@@ -379,12 +318,14 @@ export async function analyzeUrlWithRules(url: string, opts?: ScanOptions): Prom
     scoring: filteredScoring, // Use filtered scoring
     chunking,
     extractability,
-    llm, // High-level comprehension analysis
-    // @ts-ignore
-    hallucinationReport,
-    entities, // Detailed entity extraction with metadata
-    faqs, // Detailed FAQ generation with sources
-    mirrorReport,
-    llmLimitExceeded // Flag indicating if LLM rate limit was hit
+    llm, // Unified LLM analysis results
+    hallucinationReport, // Hallucination risk from unified analysis
+    llmLimitExceeded, // Flag indicating if LLM rate limit was hit
+
+    // Optimization Analysis
+    seo,
+    pseo,
+    aeo,
+    geo,
   };
 }
