@@ -85,6 +85,68 @@ export const auditRequestSchema = z.object({
 // Type inference
 export type AuditRequest = z.infer<typeof auditRequestSchema>;
 
+// Crawl request schema (multi-page scan)
+export const crawlRequestSchema = z.object({
+  url: urlSchema,
+  maxPages: z.number()
+    .int('Max pages must be an integer')
+    .min(1, 'Max pages must be at least 1')
+    .max(100, 'Max pages cannot exceed 100')
+    .optional()
+    .default(10),
+  maxDepth: z.number()
+    .int('Max depth must be an integer')
+    .min(1, 'Max depth must be at least 1')
+    .max(5, 'Max depth cannot exceed 5')
+    .optional()
+    .default(3),
+  maxConcurrency: z.number()
+    .int('Max concurrency must be an integer')
+    .min(1, 'Max concurrency must be at least 1')
+    .max(5, 'Max concurrency cannot exceed 5')
+    .optional()
+    .default(3),
+  crawlDelay: z.number()
+    .int('Crawl delay must be an integer')
+    .min(500, 'Crawl delay must be at least 500ms')
+    .max(10000, 'Crawl delay cannot exceed 10000ms')
+    .optional()
+    .default(1000),
+  respectRobotsTxt: z.boolean().optional().default(true),
+  includeSitemap: z.boolean().optional().default(true),
+  excludePatterns: z.array(z.string()).optional(),
+  enableLLM: z.boolean().optional().default(false),
+  minImpactScore: z.number()
+    .int('Impact score must be an integer')
+    .min(0, 'Impact score must be at least 0')
+    .max(100, 'Impact score cannot exceed 100')
+    .optional()
+    .default(5),
+  llmProvider: llmProviderSchema.optional(),
+  llmModel: z.string()
+    .min(1, 'LLM model name is required when provider is specified')
+    .max(200, 'LLM model name too long')
+    .optional(),
+  llmApiKey: z.string()
+    .min(1, 'API key is required for this provider')
+    .max(500, 'API key too long')
+    .optional(),
+}).refine((data) => {
+  if (data.enableLLM) {
+    if (!data.llmProvider) return false;
+    if (!data.llmModel) return false;
+    if (data.llmProvider !== 'openrouter' && data.llmProvider !== 'ollama' && !data.llmApiKey) {
+      return false;
+    }
+  }
+  return true;
+}, {
+  message: 'When LLM is enabled, provider and model are required. API key required for non-OpenRouter providers (except Ollama).',
+  path: ['enableLLM']
+});
+
+export type CrawlRequest = z.infer<typeof crawlRequestSchema>;
+
 // Validation middleware factory
 export const validateRequest = (schema: z.ZodSchema) => {
   return async (req: any, res: any, next: any) => {
