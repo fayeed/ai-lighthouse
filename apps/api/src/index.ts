@@ -1,21 +1,29 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
 import { createClient } from 'redis';
 import { RedisStore } from 'rate-limit-redis';
 import { auditRouter } from './routes/audit.js';
 import { gdprRouter } from './routes/gdpr.js';
+import { authRouter } from './routes/auth/index.js';
+import { usersRouter } from './routes/users/index.js';
+import { billingRouter } from './routes/billing/index.js';
 import { healthCheck, livenessProbe, readinessProbe } from './routes/health.js';
 import { logger, requestLogger } from './utils/logger.js';
-import { 
-  requestTimeout, 
-  abuseDetection, 
+import {
+  requestTimeout,
+  abuseDetection,
   requestFingerprint,
   validateUrlSecurity,
   validateContentType,
   requestSizeLimit
 } from './middleware/security.js';
+import {
+  subscriptionMiddleware,
+  tierBasedRateLimiter,
+} from './middleware/subscription.js';
 import config from './config/index.js';
 
 const app = express();
@@ -35,40 +43,51 @@ redisClient.on('connect', () => logger.info('Connected to Redis'));
 
 await redisClient.connect();
 
-const limiter = rateLimit({
-  windowMs: config.rateLimit.windowMs,
-  max: config.rateLimit.maxRequests, 
-  message: 'Too many requests from this IP, please try again later.',
-  standardHeaders: true,
-  legacyHeaders: false, 
-  store: new RedisStore({
-    sendCommand: (...args: string[]) => redisClient.sendCommand(args),
-    prefix: 'rl:general:'
-  }),
-  handler: (req, res) => {
-    logger.warn('Rate limit exceeded', { 
-      ip: req.ip,
-      path: req.path,
-      method: req.method
-    });
-    
-    res.status(429).json({
-      error: 'Rate limit exceeded',
-      message: `Too many requests. Please try again in ${Math.ceil(config.rateLimit.windowMs / 60000)} minutes.`,
-      retryAfter: Math.ceil(config.rateLimit.windowMs / 1000)
-    });
-  }
-});
+// General rate limiter (conditionally enabled based on config)
+const limiter = config.rateLimit.enabled
+  ? rateLimit({
+      windowMs: config.rateLimit.windowMs,
+      max: config.rateLimit.maxRequests,
+      message: 'Too many requests from this IP, please try again later.',
+      standardHeaders: true,
+      legacyHeaders: false,
+      store: new RedisStore({
+        sendCommand: (...args: string[]) => redisClient.sendCommand(args),
+        prefix: 'rl:general:'
+      }),
+      handler: (req, res) => {
+        logger.warn('Rate limit exceeded', {
+          ip: req.ip,
+          path: req.path,
+          method: req.method
+        });
+
+        res.status(429).json({
+          error: 'Rate limit exceeded',
+          message: `Too many requests. Please try again in ${Math.ceil(config.rateLimit.windowMs / 60000)} minutes.`,
+          retryAfter: Math.ceil(config.rateLimit.windowMs / 1000)
+        });
+      }
+    })
+  : (_req: express.Request, _res: express.Response, next: express.NextFunction) => next();
+
+if (!config.rateLimit.enabled) {
+  logger.info('Rate limiting disabled (development mode)');
+}
 
 export { redisClient };
 
 // Middleware - ORDER MATTERS!
 app.use(cors({
   origin: config.corsOrigin,
-  methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Accept'],
+  methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Accept', 'Authorization', 'X-API-Key'],
+  credentials: true,
   maxAge: 86400 // 24 hours
 }));
+
+// Cookie parser for session management
+app.use(cookieParser());
 
 // Security middleware (before body parsing)
 app.use(requestSizeLimit);
@@ -93,8 +112,19 @@ app.get('/health', healthCheck);
 app.get('/health/live', livenessProbe);
 app.get('/health/ready', readinessProbe);
 
-// API Routes (with rate limiting)
-app.use('/api/audit', limiter, auditRouter);
+// Authentication routes (no rate limiting for auth)
+app.use('/api/auth', authRouter);
+
+// User management routes (with subscription context)
+app.use('/api/users', subscriptionMiddleware, usersRouter);
+
+// Billing routes (Dodo Payments webhooks need raw body)
+app.use('/api/billing', billingRouter);
+
+// API Routes (with subscription-aware rate limiting)
+// subscriptionMiddleware adds user context to requests
+// tierBasedRateLimiter applies appropriate rate limits based on user tier
+app.use('/api/audit', subscriptionMiddleware, tierBasedRateLimiter, auditRouter);
 app.use('/api/gdpr', gdprRouter);
 
 // 404 handler

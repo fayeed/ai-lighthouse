@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { logger, logSuspiciousActivity } from '../utils/logger.js';
 import { redisClient } from '../index.js';
+import config from '../config/index.js';
 
 /**
  * Request timeout middleware
@@ -53,9 +54,14 @@ export const requestFingerprint = async (req: Request, res: Response, next: Next
  * Detects patterns of abusive behavior without requiring authentication
  */
 export const abuseDetection = async (req: Request, res: Response, next: NextFunction) => {
+  // Skip abuse detection in development
+  if (!config.rateLimit.enabled) {
+    return next();
+  }
+
   const ip = req.ip || 'unknown';
   const fingerprint = (req as any).fingerprint || ip;
-  
+
   try {
     // Track request patterns
     const now = Date.now();
