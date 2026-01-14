@@ -10,11 +10,14 @@ import {
   Brain,
   Search,
   MessageSquare,
-  Terminal,
   ChevronRight,
   CheckCircle2,
   ArrowRight,
-  Code2
+  Crown,
+  BarChart3,
+  Globe,
+  Lock,
+  TrendingUp
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -49,27 +52,22 @@ export default function HomePage() {
             </div>
             <div className="flex items-center gap-4">
               <a
-                href="/cli"
+                href="/pricing"
                 className="text-white/60 hover:text-white transition-colors text-sm font-medium"
               >
-                CLI
+                Pricing
               </a>
               <a
-                href="https://github.com/fayeed/ai-lighthouse"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-white/40 hover:text-white transition-colors"
-                aria-label="GitHub"
+                href="/login"
+                className="text-white/60 hover:text-white transition-colors text-sm font-medium"
               >
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd" />
-                </svg>
+                Sign In
               </a>
               <Button
                 onClick={() => router.push('/check')}
                 className="bg-white text-black hover:bg-white/90 rounded-lg px-6 py-2 text-sm font-medium"
               >
-                Try It Free
+                Try Free
               </Button>
             </div>
           </div>
@@ -93,20 +91,20 @@ export default function HomePage() {
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.03] border border-white/10 text-sm text-white/60"
             >
               <Sparkles className="w-4 h-4 text-teal-400" />
-              <span>Free AI readiness analysis for your website</span>
+              <span>AI-Powered Website Optimization Platform</span>
             </motion.div>
 
             {/* Main Heading */}
             <h1 className="text-5xl md:text-7xl font-display font-bold tracking-tighter leading-tight">
-              Optimize Your Website<br />
+              Dominate AI Search<br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-white/80 to-white/60">
-                For the AI Era
+                Results & Rankings
               </span>
             </h1>
 
             {/* Subheading */}
             <p className="text-xl md:text-2xl text-white/40 font-light max-w-3xl mx-auto leading-relaxed">
-              Discover how AI systems like ChatGPT, Perplexity, and search engines understand your content. Get actionable insights to improve discoverability and accuracy.
+              Comprehensive SEO, AEO, GEO & AI visibility analysis. Get actionable insights to rank higher in ChatGPT, Perplexity, Google AI, and traditional search.
             </p>
 
             {/* CTA Form */}
@@ -137,14 +135,101 @@ export default function HomePage() {
                 </div>
               </form>
               <p className="text-xs text-white/20 mt-4 uppercase tracking-widest font-bold">
-                No signup required • AI-powered insights • Results in ~30 seconds
+                5 Free Scans/Month • No Credit Card Required • Results in ~30 seconds
               </p>
             </motion.div>
           </motion.div>
         </section>
 
+        {/* Analysis Types Section */}
+        <section className="container mx-auto px-6 py-24 border-t border-white/5">
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="max-w-6xl mx-auto"
+          >
+            <div className="text-center mb-16">
+              <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">
+                Complete Optimization Suite
+              </h2>
+              <p className="text-lg text-white/40">
+                Six powerful analysis engines in one platform
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[
+                {
+                  icon: Search,
+                  title: 'SEO Analysis',
+                  description: 'Traditional search engine optimization with meta tags, content quality, technical SEO, and link analysis',
+                  color: 'text-blue-400',
+                  tag: 'Core'
+                },
+                {
+                  icon: BarChart3,
+                  title: 'PSEO Analysis',
+                  description: 'Programmatic SEO checks for scalable content, URL structures, and automated page optimization',
+                  color: 'text-purple-400',
+                  tag: 'Scale'
+                },
+                {
+                  icon: MessageSquare,
+                  title: 'AEO Analysis',
+                  description: 'Answer Engine Optimization for featured snippets, FAQ structure, and direct answer formatting',
+                  color: 'text-green-400',
+                  tag: 'Answers'
+                },
+                {
+                  icon: Brain,
+                  title: 'GEO Analysis',
+                  description: 'Generative Engine Optimization for AI systems like ChatGPT, Claude, and Perplexity',
+                  color: 'text-teal-400',
+                  tag: 'AI-First'
+                },
+                {
+                  icon: TrendingUp,
+                  title: 'AI Visibility Score',
+                  description: 'Comprehensive scoring across content quality, extractability, comprehensibility, and trustworthiness',
+                  color: 'text-yellow-400',
+                  tag: 'Score'
+                },
+                {
+                  icon: Sparkles,
+                  title: 'AI Recommendations',
+                  description: 'LLM-powered content suggestions, quick wins, and prioritized improvement roadmap',
+                  color: 'text-pink-400',
+                  tag: 'Pro'
+                }
+              ].map((feature, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.1 }}
+                  className="glass glass-hover p-8 rounded-2xl group relative"
+                >
+                  <div className="absolute top-4 right-4">
+                    <span className="text-[10px] uppercase tracking-wider font-bold text-white/30 bg-white/5 px-2 py-1 rounded">
+                      {feature.tag}
+                    </span>
+                  </div>
+                  <div className="w-12 h-12 rounded-xl bg-white/[0.05] flex items-center justify-center mb-4 group-hover:bg-white/[0.08] transition-colors">
+                    <feature.icon className={`w-6 h-6 ${feature.color}`} />
+                  </div>
+                  <h3 className="text-lg font-display font-semibold mb-3">{feature.title}</h3>
+                  <p className="text-sm text-white/50 leading-relaxed">{feature.description}</p>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        </section>
+
         {/* Features Grid */}
-        <section className="container mx-auto px-6 py-24">
+        <section className="container mx-auto px-6 py-24 border-t border-white/5">
           <motion.div
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
@@ -220,7 +305,7 @@ export default function HomePage() {
         </section>
 
         {/* How It Works */}
-        <section className="container mx-auto px-6 py-24">
+        <section className="container mx-auto px-6 py-24 border-t border-white/5">
           <motion.div
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
@@ -276,88 +361,148 @@ export default function HomePage() {
           </motion.div>
         </section>
 
-        {/* CLI Section */}
-        <section className="container mx-auto px-6 py-24">
+        {/* Pricing Preview Section */}
+        <section className="container mx-auto px-6 py-24 border-t border-white/5">
           <motion.div
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
-            className="max-w-4xl mx-auto"
+            className="max-w-5xl mx-auto"
           >
-            <div className="glass p-12 rounded-3xl border-white/10 relative overflow-hidden">
-              <div className="flex flex-col md:flex-row items-start gap-8">
-                <div className="flex-1 space-y-6">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-xl bg-white/[0.05] flex items-center justify-center">
-                      <Terminal className="w-6 h-6 text-teal-400" />
-                    </div>
-                    <h2 className="text-3xl font-display font-bold">CLI Tool</h2>
-                  </div>
+            <div className="text-center mb-16">
+              <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">
+                Simple, Transparent Pricing
+              </h2>
+              <p className="text-lg text-white/40">
+                Start free, upgrade when you need more power
+              </p>
+            </div>
 
-                  <p className="text-lg text-white/60 leading-relaxed">
-                    Integrate AI readiness checks directly into your development workflow. Perfect for CI/CD pipelines and automated testing.
-                  </p>
-
-                  <div className="space-y-3">
-                    {[
-                      'Run analysis from the command line',
-                      'Integrate with CI/CD pipelines',
-                      'Export results in multiple formats',
-                      'Automated monitoring and alerts'
-                    ].map((feature, index) => (
-                      <div key={index} className="flex items-center gap-3">
-                        <CheckCircle2 className="w-5 h-5 text-teal-400 flex-shrink-0" />
-                        <span className="text-sm text-white/50">{feature}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="pt-4">
-                    <button
-                      onClick={() => router.push('/cli')}
-                      className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-white text-black hover:bg-white/90 transition-colors font-medium"
-                    >
-                      <Code2 className="w-4 h-4" />
-                      View Documentation
-                    </button>
-                  </div>
+            <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+              {/* Free Tier */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                className="glass p-8 rounded-2xl"
+              >
+                <div className="mb-6">
+                  <h3 className="text-2xl font-display font-bold mb-2">Free</h3>
+                  <p className="text-white/40 text-sm">Perfect for trying out AI Lighthouse</p>
                 </div>
-
-                <div className="flex-1 w-full">
-                  <div className="glass p-6 rounded-xl border border-white/5 bg-black/20">
-                    <div className="flex items-center gap-2 mb-4 pb-3 border-b border-white/5">
-                      <div className="flex gap-1.5">
-                        <div className="w-3 h-3 rounded-full bg-red-500/20" />
-                        <div className="w-3 h-3 rounded-full bg-yellow-500/20" />
-                        <div className="w-3 h-3 rounded-full bg-green-500/20" />
-                      </div>
-                      <span className="text-xs text-white/30 ml-2">terminal</span>
-                    </div>
-                    <div className="font-mono text-sm space-y-2">
-                      <div className="text-white/30">
-                        <span className="text-teal-400">$</span> npm install -g @ai-lighthouse/cli
-                      </div>
-                      <div className="text-white/30">
-                        <span className="text-teal-400">$</span> ai-lighthouse audit https://yoursite.com
-                      </div>
-                      <div className="text-white/50 ml-4 mt-3">
-                        ✓ Analyzing website...<br />
-                        ✓ Running AI checks...<br />
-                        ✓ Generating report...
-                      </div>
-                      <div className="text-teal-400 ml-4 mt-3">
-                        AI Readiness Score: 87/100 points ✨
-                      </div>
-                    </div>
-                  </div>
+                <div className="mb-6">
+                  <span className="text-4xl font-display font-bold">$0</span>
+                  <span className="text-white/40 ml-2">/month</span>
                 </div>
-              </div>
+                <ul className="space-y-3 mb-8">
+                  {[
+                    '5 scans per month',
+                    'Single page analysis',
+                    'Basic SEO & AEO checks',
+                    'AI readiness score',
+                    'Quick wins report'
+                  ].map((feature, index) => (
+                    <li key={index} className="flex items-center gap-3 text-sm text-white/60">
+                      <CheckCircle2 className="w-4 h-4 text-teal-400 flex-shrink-0" />
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+                <Button
+                  onClick={() => router.push('/check')}
+                  className="w-full h-12 rounded-xl font-medium bg-white/5 text-white hover:bg-white/10 border border-white/10"
+                >
+                  Get Started Free
+                </Button>
+              </motion.div>
+
+              {/* Pro Tier */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.1 }}
+                className="glass p-8 rounded-2xl border-2 border-teal-500/30 relative"
+              >
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                  <span className="bg-teal-500 text-black text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                    Most Popular
+                  </span>
+                </div>
+                <div className="mb-6">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-2xl font-display font-bold">Pro</h3>
+                    <Crown className="w-5 h-5 text-teal-400" />
+                  </div>
+                  <p className="text-white/40 text-sm">For serious optimization</p>
+                </div>
+                <div className="mb-6">
+                  <span className="text-4xl font-display font-bold">$29</span>
+                  <span className="text-white/40 ml-2">/month</span>
+                </div>
+                <ul className="space-y-3 mb-8">
+                  {[
+                    'Unlimited scans',
+                    'Full domain crawling',
+                    'Advanced AI analysis (GEO)',
+                    'LLM-powered recommendations',
+                    'Hallucination detection',
+                    'Priority support',
+                    'API access'
+                  ].map((feature, index) => (
+                    <li key={index} className="flex items-center gap-3 text-sm text-white/60">
+                      <CheckCircle2 className="w-4 h-4 text-teal-400 flex-shrink-0" />
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+                <Button
+                  onClick={() => router.push('/pricing')}
+                  className="w-full h-12 rounded-xl font-medium bg-teal-500 text-black hover:bg-teal-400"
+                >
+                  Upgrade to Pro
+                </Button>
+              </motion.div>
+            </div>
+
+            <p className="text-center text-white/30 text-sm mt-8">
+              All plans include basic support. Enterprise plans available for large teams.
+            </p>
+          </motion.div>
+        </section>
+
+        {/* Social Proof / Trust Section */}
+        <section className="container mx-auto px-6 py-24 border-t border-white/5">
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            className="max-w-4xl mx-auto text-center"
+          >
+            <div className="grid grid-cols-3 gap-8 mb-16">
+              {[
+                { value: '10K+', label: 'Pages Analyzed' },
+                { value: '500+', label: 'Sites Optimized' },
+                { value: '50+', label: 'Audit Rules' }
+              ].map((stat, index) => (
+                <div key={index}>
+                  <div className="text-4xl font-display font-bold text-white mb-2">{stat.value}</div>
+                  <div className="text-sm text-white/40">{stat.label}</div>
+                </div>
+              ))}
+            </div>
+
+            <div className="glass p-8 rounded-2xl inline-flex items-center gap-4">
+              <Lock className="w-6 h-6 text-teal-400" />
+              <span className="text-white/60">
+                Your data is secure. We never store your content permanently.
+              </span>
             </div>
           </motion.div>
         </section>
 
         {/* Final CTA */}
-        <section className="container mx-auto px-6 py-24">
+        <section className="container mx-auto px-6 py-24 border-t border-white/5">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -370,34 +515,45 @@ export default function HomePage() {
             <p className="text-xl text-white/40">
               Join thousands of websites improving their AI discoverability
             </p>
-            <Button
-              onClick={() => router.push('/check')}
-              className="h-14 px-10 rounded-xl text-lg font-bold bg-white text-black hover:bg-white/90 transition-all inline-flex items-center gap-2"
-            >
-              Start Free Analysis
-              <ArrowRight className="w-5 h-5" />
-            </Button>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Button
+                onClick={() => router.push('/check')}
+                className="h-14 px-10 rounded-xl text-lg font-bold bg-white text-black hover:bg-white/90 transition-all inline-flex items-center gap-2"
+              >
+                Start Free Analysis
+                <ArrowRight className="w-5 h-5" />
+              </Button>
+              <Button
+                onClick={() => router.push('/pricing')}
+                className="h-14 px-10 rounded-xl text-lg font-bold bg-white/5 text-white hover:bg-white/10 transition-all border border-white/10"
+              >
+                View Pricing
+              </Button>
+            </div>
           </motion.div>
         </section>
       </main>
 
       {/* Footer */}
       <footer className="border-t border-white/5 py-12 relative z-10">
-        <div className="container mx-auto px-6 text-center space-y-6">
-          <div className="flex items-center justify-center gap-6 text-[10px] uppercase tracking-widest font-bold text-white/20">
-            <a href="https://github.com" className="hover:text-white transition-colors flex items-center gap-2">
-              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
-                <path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd" />
-              </svg> GitHub
-            </a>
-            <span>•</span>
-            <a href="#" className="hover:text-white transition-colors">By Fayed</a>
-            <span>•</span>
-            <a href="#" className="hover:text-white transition-colors">Report Issue</a>
+        <div className="container mx-auto px-6">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">🏮</span>
+              <span className="text-lg font-display font-bold">AI Lighthouse</span>
+            </div>
+            <div className="flex items-center gap-6 text-sm text-white/40">
+              <a href="/pricing" className="hover:text-white transition-colors">Pricing</a>
+              <a href="/privacy" className="hover:text-white transition-colors">Privacy</a>
+              <a href="/terms" className="hover:text-white transition-colors">Terms</a>
+              <a href="/contact" className="hover:text-white transition-colors">Contact</a>
+            </div>
           </div>
-          <p className="text-[10px] uppercase tracking-widest font-bold text-white/10">
-            Made with ❤️ in India
-          </p>
+          <div className="mt-8 pt-8 border-t border-white/5 text-center">
+            <p className="text-xs text-white/20">
+              &copy; {new Date().getFullYear()} AI Lighthouse. All rights reserved.
+            </p>
+          </div>
         </div>
       </footer>
 

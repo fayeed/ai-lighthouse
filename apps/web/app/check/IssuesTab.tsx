@@ -110,7 +110,7 @@ export default function IssuesTab({ issues, overallScore, aiReadiness }: IssuesT
               <span>High ({highIssues})</span>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-              {issues.filter((i: any) => i.severity === 'high').slice(0, 4).map((issue: any, idx: number) => (
+              {issues.filter((i: any) => i.severity === 'high').map((issue: any, idx: number) => (
                 <AuditItem
                   key={idx}
                   title={issue.message}
@@ -126,16 +126,43 @@ export default function IssuesTab({ issues, overallScore, aiReadiness }: IssuesT
 
         {/* Medium Priority Issues */}
         {issues.filter((i: any) => i.severity === 'medium').length > 0 && (
-          <div className="space-y-4 sm:space-y-6 opacity-60 text-left">
+          <div className="space-y-4 sm:space-y-6 text-left">
             <div className="flex items-center gap-2 text-yellow-400 text-[9px] sm:text-[10px] font-bold uppercase tracking-widest">
               <span className="w-2 h-2 rounded-full bg-yellow-500" />
               <span>Medium ({mediumIssues})</span>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-              {issues.filter((i: any) => i.severity === 'medium').slice(0, 4).map((issue: any, idx: number) => (
-                <div key={idx} className="glass p-4 sm:p-6 rounded-xl sm:rounded-2xl border-white/5 text-xs sm:text-sm text-white/40">
-                  {issue.message}
-                </div>
+              {issues.filter((i: any) => i.severity === 'medium').map((issue: any, idx: number) => (
+                <AuditItem
+                  key={idx}
+                  title={issue.message}
+                  score={issue.scoreImpact ? `+${issue.scoreImpact}` : '+0'}
+                  time="~10 min"
+                  description={issue.evidence || issue.impact || 'Medium priority issue'}
+                  fix={issue.suggested_fix || 'Consider addressing this issue'}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Low Priority Issues */}
+        {issues.filter((i: any) => i.severity === 'low').length > 0 && (
+          <div className="space-y-4 sm:space-y-6 text-left">
+            <div className="flex items-center gap-2 text-blue-400 text-[9px] sm:text-[10px] font-bold uppercase tracking-widest">
+              <span className="w-2 h-2 rounded-full bg-blue-500" />
+              <span>Low ({lowIssues})</span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+              {issues.filter((i: any) => i.severity === 'low').map((issue: any, idx: number) => (
+                <AuditItem
+                  key={idx}
+                  title={issue.message}
+                  score={issue.scoreImpact ? `+${issue.scoreImpact}` : '+0'}
+                  time="~5 min"
+                  description={issue.evidence || issue.impact || 'Low priority suggestion'}
+                  fix={issue.suggested_fix || 'Optional improvement'}
+                />
               ))}
             </div>
           </div>

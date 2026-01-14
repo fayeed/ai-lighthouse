@@ -1,15 +1,14 @@
 import { useState } from "react";
-import { ShieldAlert, Info, Layout } from "lucide-react";
+import { ShieldAlert, Info } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/Tabs";
 import ShareButton from "@/components/ShareButton";
-import SimpleView from "./SimpleView";
 import OverviewTab from "./OverviewTab";
-import AIUnderstandingTab from "./AIUnderstandingTab";
-import HallucinationRiskTab from "./HallucinationRiskTab";
-import MessageAlignmentTab from "./MessageAlignmentTab";
+import SEOTab from "./SEOTab";
+import PSEOTab from "./PSEOTab";
+import AEOTab from "./AEOTab";
+import GEOTab from "./GEOTab";
 import IssuesTab from "./IssuesTab";
-import TechnicalTab from "./TechnicalTab";
 
 type AuditReportProps = {
   reportData: any;
@@ -21,7 +20,6 @@ type AuditReportProps = {
 export default function AuditReport({ reportData, interpretationMessage, score, enableLLM }: AuditReportProps) {
   const [url, setUrl] = useState("https://stripe.com");
   const [activeTab, setActiveTab] = useState("overview");
-  const [viewMode, setViewMode] = useState<'simple' | 'complex'>('complex');
 
   // Return null if no report data
   if (!reportData) {
@@ -37,9 +35,12 @@ export default function AuditReport({ reportData, interpretationMessage, score, 
   const aiPerspective = aiReadiness.aiPerspective || {};
   const quickWins = aiReadiness.quickWins || [];
   const issues = auditReport.issues || [];
-  const chunking = scanResult.chunking || {};
-  const hallucinationReport = scanResult.hallucinationReport || {};
-  const mirrorReport = scanResult.mirrorReport || {};
+
+  // Optimization analysis data
+  const seo = scanResult.seo || null;
+  const pseo = scanResult.pseo || null;
+  const aeo = scanResult.aeo || null;
+  const geo = scanResult.geo || null;
 
   // Calculate stats
   const overallScore = Math.round(aiReadiness.overall || 0);
@@ -65,6 +66,16 @@ export default function AuditReport({ reportData, interpretationMessage, score, 
       default: return 'text-white/40';
     }
   };
+
+  // Tab configuration with scores
+  const tabs = [
+    { id: "overview", label: "Overview", score: null },
+    { id: "seo", label: "SEO", score: seo?.score },
+    { id: "pseo", label: "PSEO", score: pseo?.score },
+    { id: "aeo", label: "AEO", score: aeo?.score },
+    { id: "geo", label: "GEO", score: geo?.score },
+    { id: "issues", label: "Issues", score: issues.length },
+  ];
 
   return (
     <div className="min-h-screen text-foreground pb-12 sm:pb-20 selection:bg-white selection:text-black">
@@ -111,99 +122,68 @@ export default function AuditReport({ reportData, interpretationMessage, score, 
           </div>
         </div>
 
-        {/* View Mode Toggle and Tab Navigation */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 sm:mb-8">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <Layout className="w-4 h-4 text-white/40" />
-            <span className="text-[10px] uppercase tracking-widest font-bold text-white/40">View Mode</span>
+        {/* Tab Navigation */}
+        <Tabs defaultValue="overview" onValueChange={setActiveTab} className="w-full">
+          <div className="w-full overflow-x-auto -mx-6 px-6 sm:mx-0 sm:px-0">
+            <TabsList className="w-full min-w-max sm:min-w-0 justify-start bg-transparent border-b border-white/5 h-auto p-0 mb-8 sm:mb-12 flex gap-2 sm:gap-4">
+              {tabs.map((tab) => (
+                <TabsTrigger
+                  key={tab.id}
+                  value={tab.id}
+                  className="bg-transparent border-b-2 border-transparent data-[state=active]:border-white data-[state=active]:text-white text-white/40 rounded-none px-2 sm:px-3 py-3 sm:py-4 text-[9px] sm:text-[10px] uppercase tracking-[0.1em] sm:tracking-[0.15em] font-bold hover:text-white transition-all whitespace-nowrap flex items-center gap-1.5 sm:gap-2"
+                >
+                  {tab.label}
+                  {tab.score !== null && tab.score !== undefined && (
+                    <span className={`text-[8px] sm:text-[9px] px-1.5 py-0.5 rounded-full ${
+                      tab.id === 'issues'
+                        ? 'bg-red-500/20 text-red-400'
+                        : tab.score >= 80
+                          ? 'bg-green-500/20 text-green-400'
+                          : tab.score >= 60
+                            ? 'bg-yellow-500/20 text-yellow-400'
+                            : 'bg-red-500/20 text-red-400'
+                    }`}>
+                      {tab.id === 'issues' ? tab.score : tab.score}
+                    </span>
+                  )}
+                </TabsTrigger>
+              ))}
+            </TabsList>
           </div>
-          <div className="flex items-center gap-1 sm:gap-2 glass rounded-full p-1 w-full sm:w-auto">
-            <button
-              onClick={() => setViewMode('simple')}
-              className={`flex-1 sm:flex-none px-4 sm:px-6 py-2 rounded-full text-[10px] uppercase tracking-widest font-bold transition-all ${viewMode === 'simple' ? 'bg-white text-black' : 'text-white/40 hover:text-white'
-                }`}
-            >
-              Simple
-            </button>
-            <button
-              onClick={() => setViewMode('complex')}
-              className={`flex-1 sm:flex-none px-4 sm:px-6 py-2 rounded-full text-[10px] uppercase tracking-widest font-bold transition-all ${viewMode === 'complex' ? 'bg-white text-black' : 'text-white/40 hover:text-white'
-                }`}
-            >
-              Detailed
-            </button>
-          </div>
-        </div>
 
-        {viewMode === 'simple' ? (
-          // Simple View
-          <div className="space-y-8">
-            <SimpleView
-              overallScore={overallScore}
-              grade={grade}
+          <TabsContent value="overview" className="space-y-12">
+            <OverviewTab
               aiPerspective={aiPerspective}
               dimensions={dimensions}
-              quickWins={quickWins}
-              issues={issues}
-              getGradeColor={getGradeColor}
+              confidence={confidence}
               getStatusColor={getStatusColor}
             />
-          </div>
-        ) : (
-          // Complex/Detailed View with Tabs
-          <Tabs defaultValue="overview" onValueChange={setActiveTab} className="w-full">
-            <div className="w-full overflow-x-auto -mx-6 px-6 sm:mx-0 sm:px-0">
-              <TabsList className="w-full min-w-max sm:min-w-0 justify-start bg-transparent border-b border-white/5 h-auto p-0 mb-8 sm:mb-12 flex gap-4 sm:gap-8">
-                {["Overview", "AI Understanding", "Hallucination Risk", "Message Alignment", "Issues", "Technical"].map((tab) => (
-                  <TabsTrigger
-                    key={tab}
-                    value={tab.toLowerCase().replace(" ", "-")}
-                    className="bg-transparent border-b-2 border-transparent data-[state=active]:border-white data-[state=active]:text-white text-white/40 rounded-none px-0 py-3 sm:py-4 text-[10px] uppercase tracking-[0.15em] sm:tracking-[0.2em] font-bold hover:text-white transition-all whitespace-nowrap"
-                  >
-                    {tab}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-            </div>
+          </TabsContent>
 
-            <TabsContent value="overview" className="space-y-12">
-              <OverviewTab
-                aiPerspective={aiPerspective}
-                dimensions={dimensions}
-                confidence={confidence}
-                getStatusColor={getStatusColor}
-              />
-            </TabsContent>
+          <TabsContent value="seo" className="space-y-12">
+            <SEOTab seo={seo} />
+          </TabsContent>
 
-            <TabsContent value="ai-understanding" className="space-y-12">
-              <AIUnderstandingTab scanResult={scanResult} />
-            </TabsContent>
+          <TabsContent value="pseo" className="space-y-12">
+            <PSEOTab pseo={pseo} />
+          </TabsContent>
 
-            <TabsContent value="hallucination-risk" className="space-y-12">
-              <HallucinationRiskTab hallucinationReport={hallucinationReport} />
-            </TabsContent>
+          <TabsContent value="aeo" className="space-y-12">
+            <AEOTab aeo={aeo} scanResult={scanResult} />
+          </TabsContent>
 
-            <TabsContent value="message-alignment" className="space-y-12">
-              <MessageAlignmentTab mirrorReport={mirrorReport} />
-            </TabsContent>
+          <TabsContent value="geo" className="space-y-12">
+            <GEOTab geo={geo} scanResult={scanResult} />
+          </TabsContent>
 
-            <TabsContent value="issues" className="space-y-12">
-              <IssuesTab
-                issues={issues}
-                overallScore={overallScore}
-                aiReadiness={aiReadiness}
-              />
-            </TabsContent>
-
-            <TabsContent value="technical" className="space-y-12">
-              <TechnicalTab
-                auditReport={auditReport}
-                chunking={chunking}
-              />
-            </TabsContent>
-
-          </Tabs>
-        )}
+          <TabsContent value="issues" className="space-y-12">
+            <IssuesTab
+              issues={issues}
+              overallScore={overallScore}
+              aiReadiness={aiReadiness}
+            />
+          </TabsContent>
+        </Tabs>
 
         {/* Footer Actions */}
         <div className="mt-20 flex flex-col items-center gap-8">

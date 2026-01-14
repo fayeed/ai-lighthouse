@@ -4,6 +4,7 @@ import "./globals.css";
 import ScrollToTop from "@/components/ScrollToTop";
 import { Analytics } from "@/components/Analytics";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import Providers from "@/components/Providers";
 
 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://www.getlighthouse.dev/";
 
@@ -128,11 +129,13 @@ export default function RootLayout({
       <body
         className={`${spaceGrotesk.variable} ${jetBrainsMono.variable} antialiased`}
       >
-        <ErrorBoundary>
-          {children}
-          <ScrollToTop />
-        </ErrorBoundary>
-        <Analytics />
+        <Providers>
+          <ErrorBoundary>
+            {children}
+            <ScrollToTop />
+          </ErrorBoundary>
+          <Analytics />
+        </Providers>
       </body>
     </html>
   );
