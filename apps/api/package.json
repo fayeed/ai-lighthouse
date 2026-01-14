@@ -5,15 +5,21 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc",
+    "build": "prisma generate && tsc",
     "start": "tsx src/index.ts",
     "start:pm2": "pm2-runtime start ecosystem.config.cjs",
     "stop:pm2": "pm2 stop ecosystem.config.cjs",
     "restart:pm2": "pm2 restart ecosystem.config.cjs",
-    "logs:pm2": "pm2 logs"
+    "logs:pm2": "pm2 logs",
+    "postinstall": "prisma generate",
+    "db:push": "prisma db push",
+    "db:studio": "prisma studio"
   },
   "dependencies": {
+    "@ai-lighthouse/scanner": "workspace:*",
     "@openrouter/sdk": "^0.2.11",
+    "@prisma/client": "^6.0.0",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^4.21.2",
@@ -22,15 +28,16 @@
     "pm2": "^5.4.3",
     "rate-limit-redis": "^4.3.1",
     "redis": "^5.10.0",
-    "@ai-lighthouse/scanner": "workspace:*",
     "tsx": "^4.19.2",
     "winston": "^3.19.0",
     "zod": "^4.2.1"
   },
   "devDependencies": {
+    "@types/cookie-parser": "^1.4.8",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
     "@types/node": "^22.10.2",
+    "prisma": "^6.0.0",
     "typescript": "^5.7.2"
   }
 }
