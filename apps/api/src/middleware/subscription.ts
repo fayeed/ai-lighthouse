@@ -301,6 +301,11 @@ export function canScanMiddleware(
   res: Response,
   next: NextFunction
 ) {
+  // Skip scan limits in development
+  if (config.isDevelopment) {
+    return next();
+  }
+
   const ctx = req.userContext;
 
   if (!ctx) {
