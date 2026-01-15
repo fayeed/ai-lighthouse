@@ -13,7 +13,8 @@
     "logs:pm2": "pm2 logs",
     "postinstall": "prisma generate",
     "db:push": "prisma db push",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "update-plan": "tsx scripts/update-user-plan.ts"
   },
   "dependencies": {
     "@ai-lighthouse/scanner": "workspace:*",
