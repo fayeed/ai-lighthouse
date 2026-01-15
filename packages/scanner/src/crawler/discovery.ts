@@ -23,14 +23,16 @@ export interface DiscoveryOptions {
 
 const DEFAULT_EXCLUDE_PATTERNS = [
   /\.(jpg|jpeg|png|gif|svg|webp|ico|pdf|zip|tar|gz|mp4|mp3|wav|avi|mov)$/i,
+  /\.(xml|rss|atom)$/i, // Exclude XML/RSS/Atom feed files
   /^mailto:/i,
   /^tel:/i,
   /^javascript:/i,
   /^#/,
   /\?.*page=/i, // Pagination links (often duplicates)
-  /\/feed\/?$/i,
-  /\/rss\/?$/i,
-  /\/atom\/?$/i,
+  /\/feed(\/|$)/i,
+  /\/rss(\/|\.xml|$)/i,
+  /\/atom(\/|\.xml|$)/i,
+  /sitemap.*\.xml$/i, // Exclude sitemap files
 ];
 
 /**

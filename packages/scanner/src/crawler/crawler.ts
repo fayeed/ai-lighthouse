@@ -145,24 +145,16 @@ export async function crawlSite(
   // Add start URL
   queue.add(startUrl, 0, 100);
 
-  // Add priority paths
-  const priorityPaths = config.priorityPaths || [
-    '/about', '/pricing', '/features', '/products', '/services',
-    '/contact', '/blog', '/docs', '/faq',
-  ];
-
-  for (const path of priorityPaths) {
-    const url = new URL(path, baseUrl.origin).toString();
-    if (isPathAllowed(path, robotsRules)) {
-      queue.add(url, 1, 50);
-    }
-  }
-
   // Fetch sitemap URLs if enabled
-  if (config.includeSitemap && robotsRules.sitemaps.length > 0) {
-    for (const sitemapUrl of robotsRules.sitemaps.slice(0, 3)) {
-      const sitemapUrls = await fetchSitemapUrls(sitemapUrl, config.maxPages);
-      for (const url of sitemapUrls) {
+  if (config.includeSitemap) {
+    // Use sitemaps from robots.txt, or fallback to standard /sitemap.xml location
+    const sitemapUrls = robotsRules.sitemaps.length > 0
+      ? robotsRules.sitemaps
+      : [`${baseUrl.origin}/sitemap.xml`];
+
+    for (const sitemapUrl of sitemapUrls.slice(0, 3)) {
+      const urls = await fetchSitemapUrls(sitemapUrl, config.maxPages);
+      for (const url of urls) {
         try {
           const pathname = new URL(url).pathname;
           if (isPathAllowed(pathname, robotsRules)) {
