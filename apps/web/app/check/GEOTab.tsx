@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Bot, Eye, Quote, User, Globe, Shield, CheckCircle, XCircle, AlertCircle, Brain, AlertTriangle, Sparkles, BookOpen } from "lucide-react";
+import { Bot, Eye, Quote, User, Globe, Shield, CheckCircle, XCircle, AlertCircle, Brain, AlertTriangle, Sparkles, BookOpen, FileText, Tag, Target, GraduationCap } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 
 type GEOTabProps = {
@@ -80,7 +80,19 @@ export default function GEOTab({ geo, scanResult }: GEOTabProps) {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4">
         <div className="space-y-2">
-          <h3 className="text-lg sm:text-xl font-medium text-white text-left">Generative Engine Optimization</h3>
+          <div className="flex items-center gap-3">
+            <h3 className="text-lg sm:text-xl font-medium text-white text-left">Generative Engine Optimization</h3>
+            {llm.summary ? (
+              <Badge variant="outline" className="text-[9px] text-green-400 border-green-400/30 bg-green-500/10">
+                <Brain className="w-3 h-3 mr-1" />
+                AI Analysis
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="text-[9px] text-yellow-400 border-yellow-400/30 bg-yellow-500/10">
+                Heuristic Mode
+              </Badge>
+            )}
+          </div>
           <p className="text-xs sm:text-sm text-white/40 font-light">
             Optimization for AI systems like ChatGPT, Claude, and Perplexity to cite and reference your content
           </p>
@@ -261,6 +273,81 @@ export default function GEOTab({ geo, scanResult }: GEOTabProps) {
               </li>
             ))}
           </ul>
+        </div>
+      )}
+
+      {/* AI-Suggested SEO Improvements */}
+      {(llm.suggestedTitle || llm.suggestedMeta || llm.keywords?.length > 0) && (
+        <div className="glass p-4 sm:p-6 rounded-xl sm:rounded-2xl border-white/[0.05] space-y-4">
+          <h4 className="text-[10px] uppercase tracking-widest font-bold text-green-400 flex items-center gap-2">
+            <Target className="w-4 h-4" />
+            AI-Suggested SEO Improvements
+          </h4>
+          <div className="space-y-4">
+            {llm.suggestedTitle && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <FileText className="w-3 h-3 text-white/40" />
+                  <span className="text-[10px] text-white/40 uppercase tracking-widest">Suggested Title Tag</span>
+                </div>
+                <p className="text-sm text-white/80 p-3 rounded-lg bg-white/[0.02] border border-white/5">
+                  {llm.suggestedTitle}
+                </p>
+              </div>
+            )}
+            {llm.suggestedMeta && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <FileText className="w-3 h-3 text-white/40" />
+                  <span className="text-[10px] text-white/40 uppercase tracking-widest">Suggested Meta Description</span>
+                </div>
+                <p className="text-sm text-white/80 p-3 rounded-lg bg-white/[0.02] border border-white/5 leading-relaxed">
+                  {llm.suggestedMeta}
+                </p>
+              </div>
+            )}
+            {llm.keywords?.length > 0 && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Tag className="w-3 h-3 text-white/40" />
+                  <span className="text-[10px] text-white/40 uppercase tracking-widest">AI-Detected Keywords</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {llm.keywords.map((keyword: string, idx: number) => (
+                    <span key={idx} className="text-xs px-3 py-1.5 rounded-full bg-green-500/10 text-green-400 border border-green-500/20">
+                      {keyword}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Reading Level Analysis */}
+      {llm.readingLevel && (
+        <div className="glass p-4 sm:p-6 rounded-xl sm:rounded-2xl border-white/[0.05] space-y-4">
+          <h4 className="text-[10px] uppercase tracking-widest font-bold text-white/40 flex items-center gap-2">
+            <GraduationCap className="w-4 h-4" />
+            Reading Level Analysis
+          </h4>
+          <div className="flex items-center gap-4">
+            <div className="text-center">
+              <span className="text-3xl font-display font-medium text-white">{llm.readingLevel.grade}</span>
+              <p className="text-[10px] text-white/40 uppercase tracking-widest mt-1">Grade Level</p>
+            </div>
+            <div className="flex-1 p-3 rounded-lg bg-white/[0.02] border border-white/5">
+              <p className="text-sm text-white/70">{llm.readingLevel.description}</p>
+              <p className="text-xs text-white/40 mt-2">
+                {llm.readingLevel.grade <= 8
+                  ? 'Content is accessible to a wide audience, which is optimal for AI comprehension.'
+                  : llm.readingLevel.grade <= 12
+                    ? 'Content is moderately complex. Consider simplifying for broader AI understanding.'
+                    : 'Content is advanced. May limit AI comprehension for general queries.'}
+              </p>
+            </div>
+          </div>
         </div>
       )}
 

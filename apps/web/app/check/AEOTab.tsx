@@ -83,7 +83,19 @@ export default function AEOTab({ aeo, scanResult }: AEOTabProps) {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4">
         <div className="space-y-2">
-          <h3 className="text-lg sm:text-xl font-medium text-white text-left">Answer Engine Optimization</h3>
+          <div className="flex items-center gap-3">
+            <h3 className="text-lg sm:text-xl font-medium text-white text-left">Answer Engine Optimization</h3>
+            {suggestedFAQ.length > 0 ? (
+              <Badge variant="outline" className="text-[9px] text-green-400 border-green-400/30 bg-green-500/10">
+                <Brain className="w-3 h-3 mr-1" />
+                AI Analysis
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="text-[9px] text-yellow-400 border-yellow-400/30 bg-yellow-500/10">
+                Heuristic Mode
+              </Badge>
+            )}
+          </div>
           <p className="text-xs sm:text-sm text-white/40 font-light">
             Optimization for voice search, featured snippets, and answer boxes in search results
           </p>
