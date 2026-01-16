@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ShieldAlert, Info } from "lucide-react";
+import { ShieldAlert, Info, Crown, Sparkles, Bot, MessageCircle } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/Tabs";
 import ShareButton from "@/components/ShareButton";
@@ -68,12 +68,15 @@ export default function AuditReport({ reportData, interpretationMessage, score, 
   };
 
   // Tab configuration with scores
+  // AEO and GEO tabs only shown for Pro users (when enableLLM is true)
   const tabs = [
     { id: "overview", label: "Overview", score: null },
     { id: "seo", label: "SEO", score: seo?.score },
     { id: "pseo", label: "PSEO", score: pseo?.score },
-    { id: "aeo", label: "AEO", score: aeo?.score },
-    { id: "geo", label: "GEO", score: geo?.score },
+    ...(enableLLM ? [
+      { id: "aeo", label: "AEO", score: aeo?.score },
+      { id: "geo", label: "GEO", score: geo?.score },
+    ] : []),
     { id: "issues", label: "Issues", score: issues.length },
   ];
 
@@ -168,13 +171,17 @@ export default function AuditReport({ reportData, interpretationMessage, score, 
             <PSEOTab pseo={pseo} />
           </TabsContent>
 
-          <TabsContent value="aeo" className="space-y-12">
-            <AEOTab aeo={aeo} scanResult={scanResult} />
-          </TabsContent>
+          {enableLLM && (
+            <TabsContent value="aeo" className="space-y-12">
+              <AEOTab aeo={aeo} scanResult={scanResult} />
+            </TabsContent>
+          )}
 
-          <TabsContent value="geo" className="space-y-12">
-            <GEOTab geo={geo} scanResult={scanResult} />
-          </TabsContent>
+          {enableLLM && (
+            <TabsContent value="geo" className="space-y-12">
+              <GEOTab geo={geo} scanResult={scanResult} />
+            </TabsContent>
+          )}
 
           <TabsContent value="issues" className="space-y-12">
             <IssuesTab
@@ -184,6 +191,53 @@ export default function AuditReport({ reportData, interpretationMessage, score, 
             />
           </TabsContent>
         </Tabs>
+
+        {/* Pro Upgrade Banner - Show only for free users */}
+        {!enableLLM && (
+          <div className="mt-12 mb-8">
+            <a
+              href="/login?plan=pro"
+              className="block p-6 sm:p-8 rounded-2xl sm:rounded-3xl bg-gradient-to-r from-teal-500/10 via-purple-500/10 to-teal-500/10 border border-teal-500/20 hover:border-teal-500/40 transition-all group"
+            >
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-teal-500/20 flex items-center justify-center flex-shrink-0">
+                    <Sparkles className="w-6 h-6 text-teal-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-white flex items-center gap-2 mb-2">
+                      Unlock Full AI Analysis
+                      <Crown className="w-5 h-5 text-teal-400" />
+                    </h3>
+                    <p className="text-sm text-white/50 mb-4">
+                      Get deeper insights with AI-powered analysis features
+                    </p>
+                    <div className="flex flex-wrap gap-3">
+                      <div className="flex items-center gap-2 text-xs text-white/60">
+                        <Bot className="w-4 h-4 text-purple-400" />
+                        <span>GEO Analysis</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-white/60">
+                        <MessageCircle className="w-4 h-4 text-blue-400" />
+                        <span>AEO Optimization</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-white/60">
+                        <Sparkles className="w-4 h-4 text-teal-400" />
+                        <span>Content Intelligence</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex-shrink-0">
+                  <span className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-teal-500 text-black font-bold text-sm group-hover:bg-teal-400 transition-colors">
+                    Upgrade to Pro
+                    <span className="text-teal-900">→</span>
+                  </span>
+                </div>
+              </div>
+            </a>
+          </div>
+        )}
 
         {/* Footer Actions */}
         <div className="mt-20 flex flex-col items-center gap-8">

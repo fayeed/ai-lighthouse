@@ -3,11 +3,9 @@
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Cpu, Github, Clock } from "lucide-react";
+import { Github, Clock, Crown, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { Switch } from "@/components/ui/Switch";
 import { Input } from "@/components/ui/Input";
-import ModelSelector, { ModelConfig } from "@/components/ModelSelector";
 import { trackEvent } from "@/components/Analytics";
 import RecentScans, { saveRecentScan } from "@/components/RecentScans";
 import FAQ from "@/components/FAQ";
@@ -30,28 +28,16 @@ export default function CheckPageContent() {
   const [progress, setProgress] = useState(0);
   const [interpretationMessage, setInterpretationMessage] = useState<string>('');
   const [score, setScore] = useState<number>(0);
-  const [enableLLM, setEnableLLM] = useState(true);
-  const [activeTab, setActiveTab] = useState('overview');
-  const [showScoringGuide, setShowScoringGuide] = useState(false);
-  const [showWarningModal, setShowWarningModal] = useState(false);
-  const [warningMessage, setWarningMessage] = useState<{ message: string; details?: string } | null>(null);
-  const [viewMode, setViewMode] = useState<'simple' | 'complex'>('simple');
-  const [modelConfig, setModelConfig] = useState<ModelConfig>({
-    provider: 'openrouter',
-    model: 'meta-llama/llama-3.3-70b-instruct:free',
-  });
+  // Free tier: AI is disabled - only SEO/PSEO analysis
+  const enableLLM = false;
   const [isFormExpanded, setIsFormExpanded] = useState(true);
 
   // Auto-trigger analysis from URL parameter
   useEffect(() => {
     const urlParam = searchParams.get('url');
-    const aiParam = searchParams.get('ai');
     if (urlParam && !hasTriggeredFromUrl.current && !loading && !reportData) {
       hasTriggeredFromUrl.current = true;
       setUrl(urlParam);
-      if (aiParam === 'true') {
-        setEnableLLM(true);
-      }
       // Trigger form submission after URL is set
       setTimeout(() => {
         const form = document.querySelector('form');
@@ -239,30 +225,15 @@ export default function CheckPageContent() {
     setReportData(null);
 
     // Track the analyze event
-    trackEvent.analyzeWebsite(
-      validatedUrl,
-      enableLLM,
-      enableLLM ? modelConfig.provider : undefined,
-      enableLLM ? modelConfig.model : undefined
-    );
+    trackEvent.analyzeWebsite(validatedUrl, false);
 
     try {
-      const requestBody: any = {
+      // Free tier: No AI analysis, only SEO/PSEO
+      const requestBody = {
         url: validatedUrl,
-        enableLLM,
+        enableLLM: false,
         minImpactScore: 5,
       };
-
-      if (enableLLM) {
-        requestBody.llmProvider = modelConfig.provider;
-        requestBody.llmModel = modelConfig.model;
-        
-        if (modelConfig.provider === 'ollama') {
-          requestBody.llmBaseUrl = modelConfig.baseUrl || 'http://localhost:11434';
-        } else if (modelConfig.apiKey) {
-          requestBody.llmApiKey = modelConfig.apiKey;
-        }
-      }
 
       // Create abort controller for cancellation
       abortControllerRef.current = new AbortController();
@@ -525,33 +496,39 @@ export default function CheckPageContent() {
                   </div>
                 )}
 
-                {/* AI-powered Configuration - Show when form is expanded */}
+                {/* Pro Upgrade Banner */}
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.2 }}
-                  className="space-y-4 pt-6 border-t border-white/5"
+                  className="pt-6 border-t border-white/5"
                 >
-                  <div className="flex items-center justify-between p-6 rounded-2xl bg-white/[0.02] border border-white/5">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-xl bg-white/[0.05] flex items-center justify-center">
-                        <Cpu className="w-5 h-5 text-white/40" />
+                  <a
+                    href="/login?plan=pro"
+                    className="block p-6 rounded-2xl bg-gradient-to-r from-teal-500/10 to-purple-500/10 border border-teal-500/20 hover:border-teal-500/40 transition-all group"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-xl bg-teal-500/20 flex items-center justify-center">
+                          <Sparkles className="w-5 h-5 text-teal-400" />
+                        </div>
+                        <div className="text-left">
+                          <h3 className="text-sm font-bold text-white/90 flex items-center gap-2">
+                            Unlock AI-Powered Analysis
+                            <Crown className="w-4 h-4 text-teal-400" />
+                          </h3>
+                          <p className="text-[10px] uppercase tracking-widest font-bold text-white/40">
+                            GEO • AEO • Content Intelligence • Hallucination Detection
+                          </p>
+                        </div>
                       </div>
-                      <div className="text-left">
-                        <h3 className="text-sm font-bold text-white/80">AI-powered analysis</h3>
-                        <p className="text-[10px] uppercase tracking-widest font-bold text-white/20">(enabled by default - deeper insights)</p>
+                      <div className="text-right">
+                        <span className="text-xs font-bold text-teal-400 group-hover:text-teal-300 transition-colors">
+                          Upgrade to Pro →
+                        </span>
                       </div>
                     </div>
-                    <Switch checked={enableLLM} onCheckedChange={setEnableLLM} />
-                  </div>
-
-                  <ModelSelector
-                    value={modelConfig}
-                    onChange={setModelConfig}
-                    enableLLM={enableLLM}
-                    modelConfig={modelConfig}
-                    provider={modelConfig.provider}
-                  />
+                  </a>
                 </motion.div>
               </div>
             )}

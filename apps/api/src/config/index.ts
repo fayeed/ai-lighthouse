@@ -14,8 +14,13 @@ export const config = {
   // Redis
   redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
 
-  // CORS
-  corsOrigin: process.env.CORS_ORIGIN || '*',
+  // CORS - parse comma-separated origins into array, or use wildcard for single '*'
+  corsOrigin: (() => {
+    const origin = process.env.CORS_ORIGIN || '*';
+    if (origin === '*') return '*';
+    const origins = origin.split(',').map(o => o.trim()).filter(Boolean);
+    return origins.length === 1 ? origins[0] : origins;
+  })(),
 
   // Cache - can be disabled via CACHE_ENABLED=false
   cache: {

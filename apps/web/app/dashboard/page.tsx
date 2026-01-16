@@ -169,7 +169,7 @@ export default function DashboardPage() {
             <div className="flex items-center gap-4">
               <span className="text-white/40 text-sm">{session.user?.email}</span>
               <Button
-                onClick={() => router.push('/check')}
+                onClick={() => router.push('/dashboard/scan')}
                 className="bg-white text-black hover:bg-white/90 rounded-lg px-6 py-2 text-sm font-medium"
               >
                 New Scan
@@ -343,7 +343,7 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-display font-bold">Recent Scans</h2>
             <Button
-              onClick={() => router.push('/check')}
+              onClick={() => router.push('/dashboard/scan')}
               className="bg-white/5 text-white hover:bg-white/10 rounded-lg px-4 py-2 text-sm font-medium border border-white/10 flex items-center gap-2"
             >
               <Plus className="w-4 h-4" />
@@ -359,7 +359,7 @@ export default function DashboardPage() {
                 Run your first AI readiness scan to see results here.
               </p>
               <Button
-                onClick={() => router.push('/check')}
+                onClick={() => router.push('/dashboard/scan')}
                 className="bg-white text-black hover:bg-white/90 rounded-lg px-6 py-2 text-sm font-medium"
               >
                 Start Your First Scan
