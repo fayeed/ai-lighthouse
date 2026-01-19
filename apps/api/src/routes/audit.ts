@@ -700,22 +700,41 @@ auditRouter.get('/scan/:scanId', async (req, res) => {
 
     const reportJson = report.reportJson as any;
 
-    res.json({
-      success: true,
-      scanId: scan.id,
-      url: scan.url,
-      status: scan.status,
-      createdAt: scan.createdAt,
-      result: {
+    // Check if this is a crawl scan (FULL_CRAWL type)
+    if (scan.scanType === 'FULL_CRAWL') {
+      // For crawl scans, reportJson contains the crawlResult directly
+      res.json({
+        success: true,
+        scanId: scan.id,
         url: scan.url,
-        aiReadiness: reportJson?.aiReadiness || {
-          overall: scan.overallScore,
-          grade: scan.grade,
+        status: scan.status,
+        scanType: scan.scanType,
+        createdAt: scan.createdAt,
+        result: {
+          url: scan.url,
+          crawlResult: reportJson,
         },
-        auditReport: reportJson?.auditReport,
-        scanResult: reportJson?.scanResult,
-      },
-    });
+      });
+    } else {
+      // For single page scans
+      res.json({
+        success: true,
+        scanId: scan.id,
+        url: scan.url,
+        status: scan.status,
+        scanType: scan.scanType,
+        createdAt: scan.createdAt,
+        result: {
+          url: scan.url,
+          aiReadiness: reportJson?.aiReadiness || {
+            overall: scan.overallScore,
+            grade: scan.grade,
+          },
+          auditReport: reportJson?.auditReport,
+          scanResult: reportJson?.scanResult,
+        },
+      });
+    }
   } catch (error: any) {
     logger.error('Error fetching scan', { scanId, error: error.message });
     res.status(500).json({ error: 'Failed to fetch scan' });

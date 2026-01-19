@@ -104,8 +104,15 @@ export default function DashboardScanPage() {
         const data = await response.json();
         if (data.result) {
           setReportData(data.result);
-          setScore(Math.round(data.result.aiReadiness?.overall ?? 0));
-          setInterpretationMessage(generateInterpretationMessage(data.result));
+          // Handle score differently for crawl vs single page scans
+          if (data.result.crawlResult) {
+            const crawlScore = data.result.crawlResult.aggregatedScores?.overall ?? 0;
+            setScore(Math.round(crawlScore));
+            setInterpretationMessage(`AI Readiness: ${Math.round(crawlScore)}/100 – Site-wide analysis of ${data.result.crawlResult.pagesScanned} pages`);
+          } else {
+            setScore(Math.round(data.result.aiReadiness?.overall ?? 0));
+            setInterpretationMessage(generateInterpretationMessage(data.result));
+          }
         }
       } catch (err: any) {
         setError(err.message || 'Failed to load scan');
