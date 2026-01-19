@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft,
@@ -49,11 +49,13 @@ interface CrawlProgress {
 
 export default function DashboardScanPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { data: session, status } = useSession();
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
+  const [loadingExistingScan, setLoadingExistingScan] = useState(false);
   const [loadingStep, setLoadingStep] = useState('starting');
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [loadingMessage, setLoadingMessage] = useState('');
@@ -82,13 +84,46 @@ export default function DashboardScanPage() {
   const [crawlProgress, setCrawlProgress] = useState<CrawlProgress | null>(null);
   const [excludePatternInput, setExcludePatternInput] = useState('');
 
+  // Fetch existing scan if scanId is provided
+  useEffect(() => {
+    const scanId = searchParams.get('scanId');
+    if (!scanId || status !== 'authenticated') return;
+
+    const fetchScan = async () => {
+      setLoadingExistingScan(true);
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002'}/api/audit/scan/${scanId}`,
+          { credentials: 'include' }
+        );
+
+        if (!response.ok) {
+          throw new Error('Failed to load scan');
+        }
+
+        const data = await response.json();
+        if (data.result) {
+          setReportData(data.result);
+          setScore(Math.round(data.result.aiReadiness?.overall ?? 0));
+          setInterpretationMessage(generateInterpretationMessage(data.result));
+        }
+      } catch (err: any) {
+        setError(err.message || 'Failed to load scan');
+      } finally {
+        setLoadingExistingScan(false);
+      }
+    };
+
+    fetchScan();
+  }, [searchParams, status]);
+
   // Redirect to login if not authenticated
   if (status === 'unauthenticated') {
     router.push('/login?callbackUrl=/dashboard/scan');
     return null;
   }
 
-  if (status === 'loading') {
+  if (status === 'loading' || loadingExistingScan) {
     return (
       <div className="min-h-screen bg-[#050505] flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-white/40" />
@@ -715,6 +750,7 @@ export default function DashboardScanPage() {
                     progress={loadingProgress}
                     message={loadingMessage}
                     enableLLM={enableLLM}
+                    isCrawlMode={scanMode === 'crawl'}
                   />
                   <button
                     onClick={cancelAnalysis}

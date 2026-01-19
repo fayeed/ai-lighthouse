@@ -442,7 +442,7 @@ export default function DashboardPage() {
                       <td className="p-4">
                         {scan.status === 'COMPLETED' && (
                           <Button
-                            onClick={() => router.push(`/check?scanId=${scan.id}`)}
+                            onClick={() => router.push(`/dashboard/scan?scanId=${scan.id}`)}
                             className="bg-white/5 text-white hover:bg-white/10 rounded-lg px-3 py-1.5 text-xs border border-white/10"
                           >
                             <ExternalLink className="w-3 h-3" />

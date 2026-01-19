@@ -355,6 +355,10 @@ auditRouter.post('/stream', canScanMiddleware, enforceLLMAccess, validateRequest
         hallucinationReport: result.hallucinationReport,
         mirrorReport: result.mirrorReport,
         scoring: result.scoring,
+        seo: result.seo,
+        pseo: result.pseo,
+        aeo: result.aeo,
+        geo: result.geo,
       },
       duration,
       enableLLM
@@ -570,6 +574,10 @@ auditRouter.post('/', canScanMiddleware, enforceLLMAccess, cacheMiddleware(1800)
         hallucinationReport: result.hallucinationReport,
         mirrorReport: result.mirrorReport,
         scoring: result.scoring,
+        seo: result.seo,
+        pseo: result.pseo,
+        aeo: result.aeo,
+        geo: result.geo,
       },
       duration,
       enableLLM
@@ -664,6 +672,53 @@ auditRouter.get('/stats', async (req, res) => {
         total: 0
       }
     });
+  }
+});
+
+// GET /api/audit/scan/:scanId - Get a saved scan from database
+auditRouter.get('/scan/:scanId', async (req, res) => {
+  const { scanId } = req.params;
+
+  try {
+    const scan = await prisma.scan.findUnique({
+      where: { id: scanId },
+      include: {
+        pageResults: true,
+        reports: true,
+      },
+    });
+
+    if (!scan) {
+      return res.status(404).json({ error: 'Scan not found' });
+    }
+
+    // Get the report JSON which contains the full scan result
+    const report = scan.reports[0];
+    if (!report) {
+      return res.status(404).json({ error: 'Scan report not found' });
+    }
+
+    const reportJson = report.reportJson as any;
+
+    res.json({
+      success: true,
+      scanId: scan.id,
+      url: scan.url,
+      status: scan.status,
+      createdAt: scan.createdAt,
+      result: {
+        url: scan.url,
+        aiReadiness: reportJson?.aiReadiness || {
+          overall: scan.overallScore,
+          grade: scan.grade,
+        },
+        auditReport: reportJson?.auditReport,
+        scanResult: reportJson?.scanResult,
+      },
+    });
+  } catch (error: any) {
+    logger.error('Error fetching scan', { scanId, error: error.message });
+    res.status(500).json({ error: 'Failed to fetch scan' });
   }
 });
 
