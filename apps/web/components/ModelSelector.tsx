@@ -1,9 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { ChevronDown, Scan } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import { Button } from './ui/Button';
-import { Input } from './ui/Input';
 import { AnimatePresence, motion } from 'framer-motion';
 import ScanEstimate from './ScanEstimate';
 
@@ -30,17 +29,14 @@ const providerModels = {
   ollama: ['qwen2.5:0.5b', 'llama3.2:latest', 'mistral:latest'],
 };
 
-const isDev = process.env.NODE_ENV === 'development';
-
-export default function ModelSelector({ value, onChange, enableLLM, provider, modelConfig }: ModelSelectorProps) {
-  const [showApiKey, setShowApiKey] = useState(false);
+export default function ModelSelector({ value, onChange, enableLLM }: ModelSelectorProps) {
+  const [showModelDropdown, setShowModelDropdown] = useState(false);
 
   const handleProviderChange = (provider: ModelConfig['provider']) => {
     const defaultModel = providerModels[provider][0];
     onChange({
       provider,
       model: defaultModel,
-      apiKey: provider === 'openrouter' || provider === 'ollama' ? undefined : value.apiKey,
       baseUrl: provider === 'ollama' ? 'http://localhost:11434' : undefined,
     });
   };
@@ -48,19 +44,6 @@ export default function ModelSelector({ value, onChange, enableLLM, provider, mo
   const handleModelChange = (model: string) => {
     onChange({ ...value, model });
   };
-
-  const handleApiKeyChange = (apiKey: string) => {
-    onChange({ ...value, apiKey });
-  };
-
-  const handleBaseUrlChange = (baseUrl: string) => {
-    onChange({ ...value, baseUrl });
-  };
-
-  const [showModelDropdown, setShowModelDropdown] = useState(false);
-
-  const needsApiKey = value.provider !== 'openrouter' && value.provider !== 'ollama';
-  const showBaseUrlInput = value.provider === 'ollama';
 
   return (
               <AnimatePresence>
@@ -142,66 +125,6 @@ export default function ModelSelector({ value, onChange, enableLLM, provider, mo
                         </div>
                       </div>
 
-                      {/* API Key Input */}
-                      {needsApiKey && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: "auto" }}
-                          exit={{ opacity: 0, height: 0 }}
-                          className="space-y-2"
-                        >
-                          <div className="flex items-center justify-between">
-                            <p className="text-[10px] uppercase font-bold text-white/20">API Key</p>
-                            <button
-                              type="button"
-                              onClick={() => setShowApiKey(!showApiKey)}
-                              className="text-[10px] text-white/40 hover:text-white/60 transition-colors"
-                            >
-                              {showApiKey ? 'Hide' : 'Show'}
-                            </button>
-                          </div>
-                          <Input
-                            type={showApiKey ? "text" : "password"}
-                            value={value.apiKey || ''}
-                            onChange={(e) => handleApiKeyChange(e.target.value)}
-                            placeholder={`Enter ${value.provider} API key`}
-                            className="bg-white/[0.02] border-white/5 text-xs text-white/60 h-10"
-                          />
-                        </motion.div>
-                      )}
-
-                      {/* Base URL Input for Ollama */}
-                      {showBaseUrlInput && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: "auto" }}
-                          exit={{ opacity: 0, height: 0 }}
-                          className="space-y-2"
-                        >
-                          <p className="text-[10px] uppercase font-bold text-white/20">Base URL</p>
-                          <Input
-                            type="text"
-                            value={value.baseUrl || 'http://localhost:11434'}
-                            onChange={(e) => handleBaseUrlChange(e.target.value)}
-                            placeholder="http://localhost:11434"
-                            className="bg-white/[0.02] border-white/5 text-xs text-white/60 h-10"
-                          />
-                        </motion.div>
-                      )}
-
-                      {/* Info Banner */}
-                      <div className="p-4 rounded-xl bg-yellow-500/5 border border-yellow-500/10 flex gap-3">
-                        <span className="text-yellow-500">💡</span>
-                        <p className="text-[10px] text-yellow-500/80 leading-relaxed font-medium">
-                          <span className="font-bold">Note:</span> {
-                            value.provider === 'openrouter'
-                              ? 'Free models available! No API key required.'
-                              : value.provider === 'ollama'
-                              ? 'Make sure Ollama is running locally on the specified URL.'
-                              : 'API key required for this provider.'
-                          }
-                        </p>
-                      </div>
                     </div>
                     <ScanEstimate
                       enableLLM={true}
