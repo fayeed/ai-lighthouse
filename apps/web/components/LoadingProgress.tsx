@@ -9,11 +9,13 @@ interface LoadingProgressProps {
   progress: number;
   message: string;
   enableLLM: boolean;
+  isCrawlMode?: boolean;
 }
 
 const STEPS = {
   basic: ['fetch', 'parse', 'rules', 'extract', 'processing', 'scoring', 'finalizing'],
   llm: ['fetch', 'parse', 'rules', 'extract', 'llm', 'processing', 'scoring', 'finalizing'],
+  crawl: ['crawling', 'processing', 'finalizing'],
 };
 
 const STEP_LABELS: Record<string, string> = {
@@ -26,6 +28,7 @@ const STEP_LABELS: Record<string, string> = {
   processing: 'Processing results',
   scoring: 'Calculating score',
   finalizing: 'Generating report',
+  crawling: 'Crawling pages',
 };
 
 const FUN_FACTS = [
@@ -51,8 +54,8 @@ const FUN_FACTS = [
   "✨ Fresh content is weighted higher by AI systems",
 ];
 
-export default function LoadingProgress({ currentStep, progress, message, enableLLM }: LoadingProgressProps) {
-  const steps = enableLLM ? STEPS.llm : STEPS.basic;
+export default function LoadingProgress({ currentStep, progress, message, enableLLM, isCrawlMode }: LoadingProgressProps) {
+  const steps = isCrawlMode ? STEPS.crawl : (enableLLM ? STEPS.llm : STEPS.basic);
   const currentIndex = steps.indexOf(currentStep);
   const [factIndex, setFactIndex] = useState(0);
 
