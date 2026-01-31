@@ -155,12 +155,15 @@ export async function analyzeUrlWithRules(url: string, opts?: ScanOptions): Prom
 
       // Process unified result into expected format
       if (unifiedResult) {
+        // Fill in heuristic data for any fields the LLM returned empty
+        const heuristic = runQuickAnalysis($, url);
+
         llm = {
           summary: unifiedResult.summary,
           pageType: unifiedResult.pageType,
-          topEntities: unifiedResult.topEntities,
-          questions: unifiedResult.questions,
-          suggestedFAQ: unifiedResult.suggestedFAQ,
+          topEntities: unifiedResult.topEntities?.length ? unifiedResult.topEntities : (heuristic.topEntities || []),
+          questions: unifiedResult.questions?.length ? unifiedResult.questions : (heuristic.questions || []),
+          suggestedFAQ: unifiedResult.suggestedFAQ?.length ? unifiedResult.suggestedFAQ : (heuristic.suggestedFAQ || []),
           readingLevel: unifiedResult.readingLevel,
           keyTopics: unifiedResult.keyTopics,
           sentiment: unifiedResult.sentiment,

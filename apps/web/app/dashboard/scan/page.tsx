@@ -354,6 +354,10 @@ export default function DashboardScanPage() {
                       input: { final_url: crawlResult.startUrl },
                     },
                     scanResult: {
+                      llm: firstPageResult?.llm || null,
+                      hallucinationReport: firstPageResult?.hallucinationReport || null,
+                      chunking: firstPageResult?.chunking || null,
+                      extractability: firstPageResult?.extractability || null,
                       seo: aggregatedSeo,
                       pseo: aggregatedPseo,
                       aeo: aggregatedAeo,

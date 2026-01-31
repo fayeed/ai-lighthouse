@@ -324,12 +324,18 @@ export function runQuickAnalysis($: CheerioAPI, url: string): Partial<UnifiedAna
   const wordCount = bodyText.split(/\s+/).length;
   const avgWordLength = bodyText.length / Math.max(wordCount, 1);
 
+  // --- Heuristic entity extraction ---
+  const topEntities = extractEntitiesHeuristic($, url);
+
+  // --- Heuristic FAQ and question extraction ---
+  const { questions, suggestedFAQ } = extractFAQsHeuristic($);
+
   return {
     summary: metaDesc || h1 || title || 'No summary available',
     pageType,
     pageTypeInsights: ['Enable AI analysis for page-specific recommendations'],
     keyTopics: keyTopics.slice(0, 5),
-    topEntities: [],
+    topEntities,
     sentiment: 'neutral',
     technicalDepth: avgWordLength > 6 ? 'intermediate' : 'beginner',
     structureQuality: $('h1').length > 0 && $('h2').length > 0 ? 'good' : 'fair',
@@ -340,12 +346,187 @@ export function runQuickAnalysis($: CheerioAPI, url: string): Partial<UnifiedAna
     suggestedTitle: title,
     suggestedMeta: metaDesc,
     keywords: [],
-    questions: [],
-    suggestedFAQ: [],
+    questions,
+    suggestedFAQ,
     hallucinationRisk: {
-      score: 50, // Default medium risk when no LLM analysis
+      score: 50,
       triggers: [],
       recommendations: ['Enable LLM analysis for detailed hallucination risk assessment']
     }
+  };
+}
+
+/**
+ * Heuristic entity extraction from HTML content
+ * Extracts entities from schema.org JSON-LD, meta tags, and prominent text
+ */
+function extractEntitiesHeuristic($: CheerioAPI, url: string): UnifiedAnalysisResult['topEntities'] {
+  const entities: Array<{ name: string; type: string; relevance: number }> = [];
+  const seen = new Set<string>();
+
+  const addEntity = (name: string, type: string, relevance: number) => {
+    const key = name.toLowerCase();
+    if (seen.has(key) || !name || name.length < 2 || name.length > 100) return;
+    seen.add(key);
+    entities.push({ name, type, relevance });
+  };
+
+  // 1. Extract from JSON-LD schema.org
+  $('script[type="application/ld+json"]').each((_, el) => {
+    try {
+      const data = JSON.parse($(el).html() || '');
+      const items = Array.isArray(data) ? data : [data];
+      for (const item of items) {
+        if (item.name) addEntity(item.name, item['@type'] || 'thing', 0.9);
+        if (item.author?.name) addEntity(item.author.name, 'person', 0.8);
+        if (item.publisher?.name) addEntity(item.publisher.name, 'organization', 0.8);
+        if (item.brand?.name) addEntity(item.brand.name, 'organization', 0.7);
+        if (item.about?.name) addEntity(item.about.name, 'topic', 0.7);
+      }
+    } catch { /* ignore invalid JSON-LD */ }
+  });
+
+  // 2. Extract from Open Graph / meta tags
+  const ogSiteName = $('meta[property="og:site_name"]').attr('content');
+  if (ogSiteName) addEntity(ogSiteName, 'organization', 0.85);
+
+  const ogTitle = $('meta[property="og:title"]').attr('content');
+  const articleAuthor = $('meta[name="author"]').attr('content') || $('meta[property="article:author"]').attr('content');
+  if (articleAuthor) addEntity(articleAuthor, 'person', 0.8);
+
+  // 3. Extract from hostname as brand/org
+  try {
+    const hostname = new URL(url).hostname.replace(/^www\./, '');
+    const brandName = hostname.split('.')[0];
+    if (brandName && brandName.length > 2) {
+      addEntity(brandName.charAt(0).toUpperCase() + brandName.slice(1), 'organization', 0.6);
+    }
+  } catch { /* ignore */ }
+
+  // 4. Extract from prominent text (strong/bold tags in main content)
+  $('main strong, article strong, main b, article b').slice(0, 10).each((_, el) => {
+    const text = $(el).text().trim();
+    if (text && text.length >= 2 && text.length <= 50 && !text.includes('\n')) {
+      addEntity(text, 'topic', 0.5);
+    }
+  });
+
+  return entities.slice(0, 7);
+}
+
+/**
+ * Heuristic FAQ and question extraction from HTML content
+ * Extracts from FAQ schema, question headings, and generates from heading content
+ */
+function extractFAQsHeuristic($: CheerioAPI): {
+  questions: UnifiedAnalysisResult['questions'];
+  suggestedFAQ: UnifiedAnalysisResult['suggestedFAQ'];
+} {
+  const suggestedFAQ: UnifiedAnalysisResult['suggestedFAQ'] = [];
+  const questions: UnifiedAnalysisResult['questions'] = [];
+  const seenQuestions = new Set<string>();
+
+  // 1. Extract from FAQPage JSON-LD schema
+  $('script[type="application/ld+json"]').each((_, el) => {
+    try {
+      const data = JSON.parse($(el).html() || '');
+      const items = Array.isArray(data) ? data : [data];
+      for (const item of items) {
+        if (item['@type'] === 'FAQPage' && item.mainEntity) {
+          const faqEntities = Array.isArray(item.mainEntity) ? item.mainEntity : [item.mainEntity];
+          for (const faq of faqEntities) {
+            if (faq.name && faq.acceptedAnswer?.text) {
+              const q = faq.name.trim();
+              if (seenQuestions.has(q.toLowerCase())) continue;
+              seenQuestions.add(q.toLowerCase());
+              suggestedFAQ.push({
+                question: q,
+                suggestedAnswer: faq.acceptedAnswer.text.trim().slice(0, 300),
+                importance: 'high' as const,
+              });
+            }
+          }
+        }
+      }
+    } catch { /* ignore invalid JSON-LD */ }
+  });
+
+  // 2. Extract from question-style headings (h2, h3, h4)
+  const questionPatterns = [
+    /^what\s/i, /^how\s/i, /^why\s/i, /^when\s/i, /^where\s/i, /^who\s/i,
+    /^is\s/i, /^are\s/i, /^can\s/i, /^does\s/i, /^do\s/i, /^should\s/i,
+    /\?$/
+  ];
+
+  $('h2, h3, h4').each((_, el) => {
+    const text = $(el).text().trim();
+    if (!text || text.length > 120) return;
+
+    const isQuestion = questionPatterns.some(p => p.test(text));
+    if (!isQuestion) return;
+    if (seenQuestions.has(text.toLowerCase())) return;
+    seenQuestions.add(text.toLowerCase());
+
+    // Get the answer from the next sibling paragraph
+    const nextP = $(el).next('p').text().trim();
+
+    // Determine category from question text
+    let category: 'what' | 'why' | 'how' | 'when' | 'where' | 'who' = 'what';
+    if (/^how\s/i.test(text)) category = 'how';
+    else if (/^why\s/i.test(text)) category = 'why';
+    else if (/^when\s/i.test(text)) category = 'when';
+    else if (/^where\s/i.test(text)) category = 'where';
+    else if (/^who\s/i.test(text)) category = 'who';
+
+    questions.push({
+      question: text,
+      category,
+      difficulty: 'basic',
+    });
+
+    if (nextP && nextP.length >= 20) {
+      suggestedFAQ.push({
+        question: text,
+        suggestedAnswer: nextP.slice(0, 300),
+        importance: nextP.length >= 50 ? 'medium' as const : 'low' as const,
+      });
+    }
+  });
+
+  // 3. Generate implied questions from non-question headings
+  if (questions.length < 3) {
+    $('h2, h3').each((_, el) => {
+      if (questions.length >= 6) return;
+      const text = $(el).text().trim();
+      if (!text || text.length > 80 || text.length < 5) return;
+      if (seenQuestions.has(text.toLowerCase())) return;
+
+      // Skip headings that are already questions
+      if (questionPatterns.some(p => p.test(text))) return;
+
+      // Generate a "What is" or "What about" question
+      const generatedQ = `What is ${text.toLowerCase()}?`;
+      if (seenQuestions.has(generatedQ.toLowerCase())) return;
+      seenQuestions.add(generatedQ.toLowerCase());
+
+      const nextP = $(el).next('p').text().trim();
+      if (nextP && nextP.length >= 30) {
+        questions.push({
+          question: generatedQ,
+          category: 'what',
+          difficulty: 'basic',
+        });
+        suggestedFAQ.push({
+          question: generatedQ,
+          suggestedAnswer: nextP.slice(0, 300),
+          importance: 'low' as const,
+        });
+      }
+    });
+  }
+
+  return {
+    questions: questions.slice(0, 8),
+    suggestedFAQ: suggestedFAQ.slice(0, 6),
   };
 }
