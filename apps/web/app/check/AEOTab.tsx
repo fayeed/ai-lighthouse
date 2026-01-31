@@ -1,10 +1,12 @@
 import { motion } from "framer-motion";
 import { MessageCircle, HelpCircle, List, Mic, CheckCircle, XCircle, AlertCircle, Brain, Lightbulb } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
+import ProGate from "@/components/ProGate";
 
 type AEOTabProps = {
   aeo: any;
   scanResult?: any; // For LLM analysis data
+  enableLLM?: boolean;
 };
 
 const MetricCard = ({ label, value, icon: Icon, color, achieved }: { label: string; value: string | number; icon: any; color: string; achieved?: boolean }) => (
@@ -51,11 +53,12 @@ const IssueItem = ({ issue }: { issue: any }) => (
   </motion.div>
 );
 
-export default function AEOTab({ aeo, scanResult }: AEOTabProps) {
+export default function AEOTab({ aeo, scanResult, enableLLM = true }: AEOTabProps) {
   // Extract LLM analysis data (questions and FAQs)
   const llm = scanResult?.llm || {};
   const suggestedFAQ = llm.suggestedFAQ || [];
   const llmQuestions = llm.questions || [];
+  const isGated = !enableLLM;
 
   if (!aeo && suggestedFAQ.length === 0) {
     return (
@@ -138,72 +141,85 @@ export default function AEOTab({ aeo, scanResult }: AEOTabProps) {
       </div>
 
       {/* AI-Suggested FAQs */}
-      {suggestedFAQ.length > 0 && (
-        <div className="glass p-4 sm:p-6 rounded-xl sm:rounded-2xl border-white/[0.05] space-y-4">
-          <h4 className="text-[10px] uppercase tracking-widest font-bold text-primary flex items-center gap-2">
-            <Brain className="w-4 h-4" />
-            AI-Suggested FAQ Content
-          </h4>
-          <p className="text-xs text-white/50">Questions users are likely asking that your content should answer</p>
-          <div className="space-y-4">
-            {suggestedFAQ.map((faq: any, idx: number) => (
-              <div key={idx} className="p-4 rounded-xl bg-white/[0.02] border border-white/5">
-                <div className="flex items-start gap-3">
-                  <div className={`p-1.5 rounded-lg flex-shrink-0 ${
-                    faq.importance === 'high' ? 'bg-red-500/20 text-red-400' :
-                    faq.importance === 'medium' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-blue-500/20 text-blue-400'
-                  }`}>
-                    <HelpCircle className="w-3 h-3" />
-                  </div>
-                  <div className="space-y-2 flex-1">
-                    <p className="text-sm text-white font-medium">{faq.question}</p>
-                    <p className="text-xs text-white/50 leading-relaxed">{faq.suggestedAnswer}</p>
-                    <Badge variant="outline" className={`text-[9px] ${
-                      faq.importance === 'high' ? 'text-red-400 border-red-400/30' :
-                      faq.importance === 'medium' ? 'text-yellow-400 border-yellow-400/30' : 'text-blue-400 border-blue-400/30'
+      <ProGate enabled={isGated} teaser="AI identified FAQ opportunities for your content">
+        {(suggestedFAQ.length > 0 || isGated) && (
+          <div className="glass p-4 sm:p-6 rounded-xl sm:rounded-2xl border-white/[0.05] space-y-4">
+            <h4 className="text-[10px] uppercase tracking-widest font-bold text-primary flex items-center gap-2">
+              <Brain className="w-4 h-4" />
+              AI-Suggested FAQ Content
+            </h4>
+            <p className="text-xs text-white/50">Questions users are likely asking that your content should answer</p>
+            <div className="space-y-4">
+              {(suggestedFAQ.length > 0 ? suggestedFAQ : [
+                { question: 'What does this product do and how does it work?', suggestedAnswer: 'This analysis identifies the key questions your audience is asking and suggests optimized FAQ content to improve your visibility in AI answer engines.', importance: 'high' },
+                { question: 'How can I improve my search rankings?', suggestedAnswer: 'Focus on creating concise, direct answers to common questions in your niche. Structure content with clear headings and use FAQ schema markup.', importance: 'medium' },
+                { question: 'What are the pricing options available?', suggestedAnswer: 'Detailed pricing and feature comparison information helps AI systems provide accurate answers when users ask about your offerings.', importance: 'low' },
+              ]).map((faq: any, idx: number) => (
+                <div key={idx} className="p-4 rounded-xl bg-white/[0.02] border border-white/5">
+                  <div className="flex items-start gap-3">
+                    <div className={`p-1.5 rounded-lg flex-shrink-0 ${
+                      faq.importance === 'high' ? 'bg-red-500/20 text-red-400' :
+                      faq.importance === 'medium' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-blue-500/20 text-blue-400'
                     }`}>
-                      {faq.importance} priority
-                    </Badge>
+                      <HelpCircle className="w-3 h-3" />
+                    </div>
+                    <div className="space-y-2 flex-1">
+                      <p className="text-sm text-white font-medium">{faq.question}</p>
+                      <p className="text-xs text-white/50 leading-relaxed">{faq.suggestedAnswer}</p>
+                      <Badge variant="outline" className={`text-[9px] ${
+                        faq.importance === 'high' ? 'text-red-400 border-red-400/30' :
+                        faq.importance === 'medium' ? 'text-yellow-400 border-yellow-400/30' : 'text-blue-400 border-blue-400/30'
+                      }`}>
+                        {faq.importance} priority
+                      </Badge>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </ProGate>
 
       {/* User Questions AI Identified */}
-      {llmQuestions.length > 0 && (
-        <div className="glass p-4 sm:p-6 rounded-xl sm:rounded-2xl border-white/[0.05] space-y-4">
-          <h4 className="text-[10px] uppercase tracking-widest font-bold text-white/40 flex items-center gap-2">
-            <Lightbulb className="w-4 h-4" />
-            Questions Users Would Ask
-          </h4>
-          <p className="text-xs text-white/50">Key questions AI systems identify as important for this content</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {llmQuestions.map((q: any, idx: number) => (
-              <div key={idx} className="p-3 rounded-lg bg-white/[0.02] border border-white/5 flex items-start gap-3">
-                <Badge variant="outline" className={`text-[9px] flex-shrink-0 ${
-                  q.category === 'how' ? 'text-purple-400 border-purple-400/30' :
-                  q.category === 'what' ? 'text-blue-400 border-blue-400/30' :
-                  q.category === 'why' ? 'text-green-400 border-green-400/30' : 'text-white/40 border-white/20'
-                }`}>
-                  {q.category}
-                </Badge>
-                <div className="flex-1">
-                  <p className="text-xs text-white/70">{q.question}</p>
-                  <span className={`text-[9px] ${
-                    q.difficulty === 'basic' ? 'text-green-400/60' :
-                    q.difficulty === 'intermediate' ? 'text-yellow-400/60' : 'text-red-400/60'
+      <ProGate enabled={isGated} teaser="AI detected key questions users would ask about your content">
+        {(llmQuestions.length > 0 || isGated) && (
+          <div className="glass p-4 sm:p-6 rounded-xl sm:rounded-2xl border-white/[0.05] space-y-4">
+            <h4 className="text-[10px] uppercase tracking-widest font-bold text-white/40 flex items-center gap-2">
+              <Lightbulb className="w-4 h-4" />
+              Questions Users Would Ask
+            </h4>
+            <p className="text-xs text-white/50">Key questions AI systems identify as important for this content</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {(llmQuestions.length > 0 ? llmQuestions : [
+                { question: 'How does this service compare to competitors?', category: 'how', difficulty: 'intermediate' },
+                { question: 'What are the main features and benefits?', category: 'what', difficulty: 'basic' },
+                { question: 'Why should I choose this over alternatives?', category: 'why', difficulty: 'intermediate' },
+                { question: 'How do I get started with the product?', category: 'how', difficulty: 'basic' },
+              ]).map((q: any, idx: number) => (
+                <div key={idx} className="p-3 rounded-lg bg-white/[0.02] border border-white/5 flex items-start gap-3">
+                  <Badge variant="outline" className={`text-[9px] flex-shrink-0 ${
+                    q.category === 'how' ? 'text-purple-400 border-purple-400/30' :
+                    q.category === 'what' ? 'text-blue-400 border-blue-400/30' :
+                    q.category === 'why' ? 'text-green-400 border-green-400/30' : 'text-white/40 border-white/20'
                   }`}>
-                    {q.difficulty}
-                  </span>
+                    {q.category}
+                  </Badge>
+                  <div className="flex-1">
+                    <p className="text-xs text-white/70">{q.question}</p>
+                    <span className={`text-[9px] ${
+                      q.difficulty === 'basic' ? 'text-green-400/60' :
+                      q.difficulty === 'intermediate' ? 'text-yellow-400/60' : 'text-red-400/60'
+                    }`}>
+                      {q.difficulty}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </ProGate>
 
       {/* Detailed Analysis */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
