@@ -4,7 +4,7 @@
  */
 
 import { CheerioAPI } from 'cheerio';
-import { ScanResult, ScanOptions, Issue } from '../types.js';
+import { ScanResult, ScanOptions, Issue, BrokenLinkDetail } from '../types.js';
 import { fetchHtml, parseHtml } from '../utils.js';
 import { analyzeUrlWithRules } from '../scanWithRules.js';
 import { CrawlQueue, CrawlQueueOptions } from './queue.js';
@@ -73,6 +73,7 @@ export interface CrawlResult {
   // Aggregated analysis
   siteAnalysis: {
     totalLinks: { internal: number; external: number; broken: number };
+    brokenLinks?: BrokenLinkDetail[];
     totalImages: { total: number; withAlt: number; withoutAlt: number };
     schemaTypes: string[];
     commonIssues: { issue: string; count: number; severity: string }[];
@@ -383,8 +384,9 @@ function aggregateCrawlResults(
     .slice(0, 50);
 
   // Aggregate site-wide analysis
-  const siteAnalysis = {
+  const siteAnalysis: CrawlResult['siteAnalysis'] = {
     totalLinks: { internal: 0, external: 0, broken: 0 },
+    brokenLinks: [] as BrokenLinkDetail[],
     totalImages: { total: 0, withAlt: 0, withoutAlt: 0 },
     schemaTypes: [] as string[],
     commonIssues: [] as { issue: string; count: number; severity: string }[],
@@ -392,6 +394,7 @@ function aggregateCrawlResults(
   };
 
   const schemaSet = new Set<string>();
+  const brokenUrlSet = new Set<string>();
 
   for (const page of successfulPages) {
     const result = page.scanResult!;
@@ -404,6 +407,16 @@ function aggregateCrawlResults(
       siteAnalysis.totalImages.total += result.seo.images.total;
       siteAnalysis.totalImages.withAlt += result.seo.images.withAlt;
       siteAnalysis.totalImages.withoutAlt += result.seo.images.withoutAlt;
+
+      // Collect broken link details (deduplicated by URL)
+      if (result.seo.links.brokenDetails) {
+        for (const bl of result.seo.links.brokenDetails) {
+          if (!brokenUrlSet.has(bl.url)) {
+            brokenUrlSet.add(bl.url);
+            siteAnalysis.brokenLinks!.push(bl);
+          }
+        }
+      }
     }
 
     // Collect schema types
@@ -413,6 +426,9 @@ function aggregateCrawlResults(
       }
     }
   }
+
+  // Count failed pages as broken internal links
+  siteAnalysis.totalLinks.broken += failedPages.length;
 
   siteAnalysis.schemaTypes = Array.from(schemaSet);
 

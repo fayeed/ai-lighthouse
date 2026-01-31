@@ -36,7 +36,16 @@ export interface IssueLocation {
   url?: string;
   selector?: string;
   textSnippet?: string;
-  line?: number; 
+  line?: number;
+}
+
+export interface BrokenLinkDetail {
+  url: string;
+  sourceUrl: string;
+  anchorText: string;
+  statusCode: number;
+  error?: string;
+  isInternal: boolean;
 }
 
 export enum EFFORT_LEVEL {
@@ -86,7 +95,10 @@ export interface ScanOptions {
   enableExtractability?: boolean; // Enable extractability mapping
   enableLLM?: boolean; // Enable LLM comprehension analysis
   enableHallucinationDetection?: boolean; // Enable hallucination trigger detection
-  
+  enableBrokenLinkCheck?: boolean; // Enable broken link detection (default: true)
+  brokenLinkTimeout?: number; // Timeout per link check in ms (default: 5000)
+  brokenLinkConcurrency?: number; // Max concurrent link checks (default: 5)
+
   // Filtering options to reduce noise
   minImpactScore?: number; // Minimum impact score to include (default: 8)
   minConfidence?: number; // Minimum confidence to include (default: 0.7)
@@ -417,6 +429,7 @@ export interface SEOAnalysis {
     external: number;
     broken: number;
     nofollow: number;
+    brokenDetails?: BrokenLinkDetail[];
   };
 
   canonical: {

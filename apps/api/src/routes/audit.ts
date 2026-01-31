@@ -285,6 +285,7 @@ auditRouter.post('/stream', canScanMiddleware, enforceLLMAccess, validateRequest
           parse: 'Parsing HTML structure...',
           rules: 'Running audit rules...',
           extract: 'Analyzing extractability...',
+          links: 'Checking for broken links...',
           llm: 'AI analyzing content...',
           processing: 'Processing results...',
           scoring: 'Calculating score...',

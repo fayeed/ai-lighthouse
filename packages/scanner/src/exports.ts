@@ -136,6 +136,7 @@ export type {
 export type {
   Issue,
   IssueLocation,
+  BrokenLinkDetail,
   ScanOptions,
   ScanResult,
   ScoringResult,

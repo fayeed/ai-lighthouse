@@ -139,6 +139,26 @@ export default function SEOTab({ seo }: SEOTabProps) {
               <span className="text-xs text-white">{links?.nofollow || 0}</span>
             </div>
           </div>
+          {links?.brokenDetails?.length > 0 && (
+            <div className="border-t border-white/[0.05] pt-3 space-y-2">
+              <p className="text-[10px] uppercase tracking-widest font-bold text-red-400/60">Broken Link Details</p>
+              {links.brokenDetails.slice(0, 5).map((bl: any, idx: number) => (
+                <div key={idx} className="flex items-center justify-between gap-2">
+                  <span className="text-[11px] text-white/50 truncate flex-1" title={bl.url}>
+                    {bl.anchorText || new URL(bl.url).pathname}
+                  </span>
+                  <span className="text-[11px] text-red-400 font-mono flex-shrink-0">
+                    {bl.statusCode || 'timeout'}
+                  </span>
+                </div>
+              ))}
+              {links.brokenDetails.length > 5 && (
+                <p className="text-[10px] text-white/30">
+                  +{links.brokenDetails.length - 5} more broken links
+                </p>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Image Statistics */}

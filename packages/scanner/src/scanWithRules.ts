@@ -281,7 +281,7 @@ export async function analyzeUrlWithRules(url: string, opts?: ScanOptions): Prom
   reportProgress('scoring', 95);
 
   // Run optimization analysis (SEO, PSEO, AEO, GEO)
-  const seo = analyzeSEO({ $, url });
+  const seo = await analyzeSEO({ $, url, options, onProgress: reportProgress });
   const pseo = analyzePSEO({ $, url });
   const aeo = analyzeAEO({ $, url });
   const geo = analyzeGEO({ $, url });

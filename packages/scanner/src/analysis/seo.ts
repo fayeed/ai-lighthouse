@@ -4,19 +4,22 @@
  */
 
 import type { CheerioAPI } from 'cheerio';
-import { SEOAnalysis, SEOIssue, Issue, CATEGORY, SEVERITY } from '../types.js';
+import { SEOAnalysis, SEOIssue, ScanOptions, Issue, CATEGORY, SEVERITY } from '../types.js';
 import { getLetterGrade } from '../scoring.js';
+import { validateLinks, type LinkToValidate } from '../utils/link-validator.js';
 
 interface SEOAnalysisContext {
   $: CheerioAPI;
   url: string;
   response?: Response;
+  options?: ScanOptions;
+  onProgress?: (step: string, progress: number) => void;
 }
 
 /**
  * Perform comprehensive SEO analysis
  */
-export function analyzeSEO(ctx: SEOAnalysisContext): SEOAnalysis {
+export async function analyzeSEO(ctx: SEOAnalysisContext): Promise<SEOAnalysis> {
   const { $, url } = ctx;
   const issues: SEOIssue[] = [];
   const recommendations: string[] = [];
@@ -229,11 +232,91 @@ export function analyzeSEO(ctx: SEOAnalysisContext): SEOAnalysis {
     score -= 3;
   }
 
+  // Broken link detection (async)
+  let brokenCount = 0;
+  let brokenDetails: import('../types.js').BrokenLinkDetail[] | undefined;
+
+  if (ctx.options?.enableBrokenLinkCheck !== false) {
+    ctx.onProgress?.('links', 90);
+
+    const linksToCheck: LinkToValidate[] = [];
+    const seenUrls = new Set<string>();
+
+    allLinks.each((_, el) => {
+      const href = $(el).attr('href');
+      if (!href) return;
+
+      let absoluteUrl: string;
+      try {
+        absoluteUrl = new URL(href, url).toString();
+      } catch {
+        return;
+      }
+
+      // Remove hash for dedup
+      try {
+        const urlObj = new URL(absoluteUrl);
+        urlObj.hash = '';
+        absoluteUrl = urlObj.toString();
+      } catch {
+        return;
+      }
+
+      if (seenUrls.has(absoluteUrl)) return;
+      seenUrls.add(absoluteUrl);
+
+      let isInternal = false;
+      try {
+        isInternal = new URL(absoluteUrl).hostname === currentHost;
+      } catch {
+        isInternal = true;
+      }
+
+      linksToCheck.push({
+        url: absoluteUrl,
+        anchorText: $(el).text().trim().slice(0, 100),
+        isInternal,
+        sourceUrl: url,
+      });
+    });
+
+    const validation = await validateLinks(linksToCheck, {
+      timeout: ctx.options?.brokenLinkTimeout ?? 5000,
+      concurrency: ctx.options?.brokenLinkConcurrency ?? 5,
+      userAgent: ctx.options?.userAgent,
+    });
+
+    brokenCount = validation.brokenCount;
+    brokenDetails = validation.brokenLinks;
+
+    if (brokenCount > 0) {
+      const penalty = Math.min(15, brokenCount * 3);
+      score -= penalty;
+
+      for (const bl of validation.brokenLinks.slice(0, 10)) {
+        issues.push({
+          id: 'SEO-020',
+          type: bl.statusCode >= 500 ? 'critical' : 'warning',
+          title: `Broken link (${bl.statusCode || 'timeout'}): ${bl.url}`,
+          description: `Link "${bl.anchorText || bl.url}" returns ${bl.statusCode ? `HTTP ${bl.statusCode}` : bl.error || 'no response'}.`,
+          fix: bl.isInternal
+            ? 'Fix or remove the broken internal link.'
+            : 'Update or remove the broken external link.',
+        });
+      }
+
+      recommendations.push(
+        `Found ${brokenCount} broken link(s). Fix broken links to improve user experience and SEO.`
+      );
+    }
+  }
+
   const links = {
     internal: internalLinks,
     external: externalLinks,
-    broken: 0, // Would need async check
+    broken: brokenCount,
     nofollow: nofollowLinks,
+    brokenDetails,
   };
 
   // Analyze canonical
