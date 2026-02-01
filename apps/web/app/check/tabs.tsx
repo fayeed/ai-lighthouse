@@ -41,6 +41,7 @@ export default function AuditReport({ reportData, interpretationMessage, score, 
   const pseo = scanResult.pseo || null;
   const aeo = scanResult.aeo || null;
   const geo = scanResult.geo || null;
+  const detectedTech = auditReport.detectedTech || scanResult.detectedTech || null;
 
   // Calculate stats
   const overallScore = Math.round(aiReadiness.overall || 0);
@@ -163,7 +164,7 @@ export default function AuditReport({ reportData, interpretationMessage, score, 
           </TabsContent>
 
           <TabsContent value="seo" className="space-y-12">
-            <SEOTab seo={seo} />
+            <SEOTab seo={seo} detectedTech={detectedTech} enableLLM={enableLLM} />
           </TabsContent>
 
           <TabsContent value="pseo" className="space-y-12">
@@ -171,11 +172,11 @@ export default function AuditReport({ reportData, interpretationMessage, score, 
           </TabsContent>
 
           <TabsContent value="aeo" className="space-y-12">
-            <AEOTab aeo={aeo} scanResult={scanResult} enableLLM={enableLLM} />
+            <AEOTab aeo={aeo} scanResult={scanResult} enableLLM={enableLLM} detectedTech={detectedTech} />
           </TabsContent>
 
           <TabsContent value="geo" className="space-y-12">
-            <GEOTab geo={geo} scanResult={scanResult} enableLLM={enableLLM} />
+            <GEOTab geo={geo} scanResult={scanResult} enableLLM={enableLLM} detectedTech={detectedTech} />
           </TabsContent>
 
           <TabsContent value="issues" className="space-y-12">
@@ -183,6 +184,8 @@ export default function AuditReport({ reportData, interpretationMessage, score, 
               issues={issues}
               overallScore={overallScore}
               aiReadiness={aiReadiness}
+              detectedTech={detectedTech}
+              enableLLM={enableLLM}
             />
           </TabsContent>
         </Tabs>

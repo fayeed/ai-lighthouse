@@ -3,7 +3,7 @@
  * Formats scan results into a standardized audit report structure
  */
 
-import { ScanResult, Issue, SEVERITY, CATEGORY } from './types.js';
+import { ScanResult, Issue, SEVERITY, CATEGORY, FixGuide, DetectedTechnology } from './types.js';
 import { v4 as uuidv4 } from 'uuid';
 
 /**
@@ -42,6 +42,7 @@ export interface AuditReport {
     url?: string;
     image?: string;
   }>;
+  detectedTech?: DetectedTechnology;
   issues: Array<{
     id: string;
     severity: string;
@@ -52,6 +53,7 @@ export interface AuditReport {
     category: string;
     scoreImpact?: number; // Estimated score improvement if fixed
     rule_id?: string; // Rule ID for reference
+    cms_guides?: Record<string, FixGuide>; // CMS-specific fix guides
   }>;
   recommendations: Array<{
     issue_id: string;
@@ -244,14 +246,15 @@ function formatIssues(issues: Issue[]): AuditReport['issues'] {
       id: issue.id,
       severity: mapSeverity(issue.severity),
       message: issue.title,
-      evidence: issue.evidence && issue.evidence.length > 0 
-        ? issue.evidence.join(', ') 
+      evidence: issue.evidence && issue.evidence.length > 0
+        ? issue.evidence.join(', ')
         : null,
       suggested_fix: issue.remediation,
       impact: mapSeverity(issue.severity),
       category: mapCategory(issue.category),
       scoreImpact: issue.scoreImpact,
       rule_id: issue.id,
+      cms_guides: issue.cmsGuides,
     }));
 }
 
@@ -311,6 +314,7 @@ export function formatAuditReport(
       status_code: 200, // Would need to be passed from fetch result
       redirect_chain: [],
     },
+    detectedTech: result.detectedTech,
     scores,
     entities,
     issues,

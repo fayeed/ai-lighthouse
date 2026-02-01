@@ -1,9 +1,12 @@
 import { motion } from "framer-motion";
 import { Search, Link, Image, FileText, CheckCircle, XCircle, AlertCircle } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
+import FixGuide from "@/components/FixGuide";
 
 type SEOTabProps = {
   seo: any;
+  detectedTech?: any;
+  enableLLM?: boolean;
 };
 
 const ScoreCard = ({ label, score, icon: Icon, color }: { label: string; score: number; icon: any; color: string }) => (
@@ -21,7 +24,7 @@ const ScoreCard = ({ label, score, icon: Icon, color }: { label: string; score: 
   </div>
 );
 
-const IssueItem = ({ issue }: { issue: any }) => (
+const IssueItem = ({ issue, detectedPlatform, isGated }: { issue: any; detectedPlatform?: string; isGated?: boolean }) => (
   <motion.div
     initial={{ opacity: 0, y: 10 }}
     whileInView={{ opacity: 1, y: 0 }}
@@ -41,12 +44,17 @@ const IssueItem = ({ issue }: { issue: any }) => (
         {issue.fix && (
           <p className="text-[10px] sm:text-[11px] text-primary/80 italic mt-2">Fix: {issue.fix}</p>
         )}
+        {issue.cms_guides && (
+          <FixGuide guides={issue.cms_guides} detectedPlatform={detectedPlatform} isGated={isGated || false} />
+        )}
       </div>
     </div>
   </motion.div>
 );
 
-export default function SEOTab({ seo }: SEOTabProps) {
+export default function SEOTab({ seo, detectedTech, enableLLM = true }: SEOTabProps) {
+  const detectedPlatform = detectedTech?.cms || detectedTech?.framework;
+  const isGated = !enableLLM;
   if (!seo) {
     return (
       <div className="text-center py-12 text-white/40">
@@ -208,7 +216,7 @@ export default function SEOTab({ seo }: SEOTabProps) {
           <h4 className="text-[10px] uppercase tracking-widest font-bold text-white/40">Issues ({issues.length})</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {issues.slice(0, 6).map((issue: any, idx: number) => (
-              <IssueItem key={idx} issue={issue} />
+              <IssueItem key={idx} issue={issue} detectedPlatform={detectedPlatform} isGated={isGated} />
             ))}
           </div>
         </div>

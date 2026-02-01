@@ -17,6 +17,8 @@ import {
   analyzeGEO,
   geoIssuesToScannerIssues,
 } from "./analysis/index.js";
+import { detectTechnology } from "./utils/tech-detector.js";
+import { attachFixGuides } from "./guides/index.js";
 import "./rules/index.js";
 
 export async function analyzeUrlWithRules(url: string, opts?: ScanOptions): Promise<ScanResult> {
@@ -49,10 +51,13 @@ export async function analyzeUrlWithRules(url: string, opts?: ScanOptions): Prom
   reportProgress('parse', 10);
   const $ = parseHtml(html || '');
 
-  const ctx = { 
-    url, 
-    html: html || '', 
-    $, 
+  // Detect CMS/framework technology
+  const detectedTech = detectTechnology($, html || '');
+
+  const ctx = {
+    url,
+    html: html || '',
+    $,
     options,
     response: fetched.response
   };
@@ -313,9 +318,13 @@ export async function analyzeUrlWithRules(url: string, opts?: ScanOptions): Prom
   // Recalculate scoring with filtered issues
   const filteredScoring = calculateScore(filteredIssues);
 
+  // Attach CMS-specific fix guides to issues
+  attachFixGuides(filteredIssues);
+
   return {
     url,
     timestamp: new Date().getTime(),
+    detectedTech: detectedTech.platform ? detectedTech : undefined,
     issues: filteredIssues, // Return filtered issues
     scores,
     scoring: filteredScoring, // Use filtered scoring

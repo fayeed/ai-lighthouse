@@ -1,8 +1,18 @@
 import { motion } from "framer-motion";
-import { Zap, Clock } from "lucide-react";
+import { Zap, Monitor } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
+import FixGuide from "@/components/FixGuide";
 
-const AuditItem = ({ title, score, time, description, fix }: { title: string, score: string, time: string, description: string, fix: string }) => (
+const AuditItem = ({ title, score, time, description, fix, cmsGuides, detectedPlatform, isGated }: {
+  title: string;
+  score: string;
+  time: string;
+  description: string;
+  fix: string;
+  cmsGuides?: Record<string, any>;
+  detectedPlatform?: string;
+  isGated: boolean;
+}) => (
   <motion.div
     initial={{ opacity: 0, y: 10 }}
     whileInView={{ opacity: 1, y: 0 }}
@@ -31,6 +41,11 @@ const AuditItem = ({ title, score, time, description, fix }: { title: string, sc
         {fix}
       </p>
     </div>
+    <FixGuide
+      guides={cmsGuides}
+      detectedPlatform={detectedPlatform}
+      isGated={isGated}
+    />
   </motion.div>
 );
 
@@ -38,19 +53,47 @@ type IssuesTabProps = {
   issues: any[];
   overallScore: number;
   aiReadiness: any;
+  detectedTech?: any;
+  enableLLM?: boolean;
 };
 
-export default function IssuesTab({ issues, overallScore, aiReadiness }: IssuesTabProps) {
+export default function IssuesTab({ issues, overallScore, aiReadiness, detectedTech, enableLLM = true }: IssuesTabProps) {
+  const isGated = !enableLLM;
+  const detectedPlatform = detectedTech?.cms || detectedTech?.framework;
+
   const criticalIssues = issues.filter((i: any) => i.severity === 'critical').length;
   const highIssues = issues.filter((i: any) => i.severity === 'high').length;
   const mediumIssues = issues.filter((i: any) => i.severity === 'medium').length;
   const lowIssues = issues.filter((i: any) => i.severity === 'low').length;
 
+  const renderIssues = (severity: string) =>
+    issues.filter((i: any) => i.severity === severity).map((issue: any, idx: number) => (
+      <AuditItem
+        key={idx}
+        title={issue.message}
+        score={issue.scoreImpact ? `+${issue.scoreImpact}` : '+0'}
+        time={severity === 'critical' ? '~30 min' : severity === 'high' ? '~15 min' : severity === 'medium' ? '~10 min' : '~5 min'}
+        description={issue.evidence || issue.impact || `${severity.charAt(0).toUpperCase() + severity.slice(1)} priority issue`}
+        fix={issue.suggested_fix || 'Review and fix this issue'}
+        cmsGuides={issue.cms_guides}
+        detectedPlatform={detectedPlatform}
+        isGated={isGated}
+      />
+    ));
+
   return (
     <div className="space-y-8 sm:space-y-12">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4">
         <div className="space-y-2">
-          <h3 className="text-lg sm:text-xl font-medium text-white text-left">{issues.length} Issues Found</h3>
+          <div className="flex items-center gap-3">
+            <h3 className="text-lg sm:text-xl font-medium text-white text-left">{issues.length} Issues Found</h3>
+            {detectedTech?.platform && (
+              <Badge variant="outline" className="text-[9px] text-teal-400 border-teal-400/30 bg-teal-500/10">
+                <Monitor className="w-3 h-3 mr-1" />
+                {detectedTech.platform}
+              </Badge>
+            )}
+          </div>
           <p className="text-xs sm:text-sm text-red-400 font-light">
             {criticalIssues} critical • {highIssues} high priority{(criticalIssues + highIssues) > 0 && ' — address these first'}
           </p>
@@ -80,90 +123,50 @@ export default function IssuesTab({ issues, overallScore, aiReadiness }: IssuesT
       </div>
 
       <div className="space-y-8 sm:space-y-12">
-        {/* Critical Issues */}
-        {issues.filter((i: any) => i.severity === 'critical').length > 0 && (
+        {criticalIssues > 0 && (
           <div className="space-y-4 sm:space-y-6 text-left">
             <div className="flex items-center gap-2 text-red-400 text-[9px] sm:text-[10px] font-bold uppercase tracking-widest">
               <span className="w-2 h-2 rounded-full bg-red-500" />
               <span>Critical ({criticalIssues})</span>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-              {issues.filter((i: any) => i.severity === 'critical').map((issue: any, idx: number) => (
-                <AuditItem
-                  key={idx}
-                  title={issue.message}
-                  score={issue.scoreImpact ? `+${issue.scoreImpact}` : '+0'}
-                  time="~30 min"
-                  description={issue.evidence || issue.impact || 'Critical issue that needs immediate attention'}
-                  fix={issue.suggested_fix || 'Review and fix this issue'}
-                />
-              ))}
+              {renderIssues('critical')}
             </div>
           </div>
         )}
 
-        {/* High Priority Issues */}
-        {issues.filter((i: any) => i.severity === 'high').length > 0 && (
+        {highIssues > 0 && (
           <div className="space-y-4 sm:space-y-6 text-left">
             <div className="flex items-center gap-2 text-orange-400 text-[9px] sm:text-[10px] font-bold uppercase tracking-widest">
               <span className="w-2 h-2 rounded-full bg-orange-500" />
               <span>High ({highIssues})</span>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-              {issues.filter((i: any) => i.severity === 'high').map((issue: any, idx: number) => (
-                <AuditItem
-                  key={idx}
-                  title={issue.message}
-                  score={issue.scoreImpact ? `+${issue.scoreImpact}` : '+0'}
-                  time="~15 min"
-                  description={issue.evidence || issue.impact || 'High priority issue'}
-                  fix={issue.suggested_fix || 'Address this issue'}
-                />
-              ))}
+              {renderIssues('high')}
             </div>
           </div>
         )}
 
-        {/* Medium Priority Issues */}
-        {issues.filter((i: any) => i.severity === 'medium').length > 0 && (
+        {mediumIssues > 0 && (
           <div className="space-y-4 sm:space-y-6 text-left">
             <div className="flex items-center gap-2 text-yellow-400 text-[9px] sm:text-[10px] font-bold uppercase tracking-widest">
               <span className="w-2 h-2 rounded-full bg-yellow-500" />
               <span>Medium ({mediumIssues})</span>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-              {issues.filter((i: any) => i.severity === 'medium').map((issue: any, idx: number) => (
-                <AuditItem
-                  key={idx}
-                  title={issue.message}
-                  score={issue.scoreImpact ? `+${issue.scoreImpact}` : '+0'}
-                  time="~10 min"
-                  description={issue.evidence || issue.impact || 'Medium priority issue'}
-                  fix={issue.suggested_fix || 'Consider addressing this issue'}
-                />
-              ))}
+              {renderIssues('medium')}
             </div>
           </div>
         )}
 
-        {/* Low Priority Issues */}
-        {issues.filter((i: any) => i.severity === 'low').length > 0 && (
+        {lowIssues > 0 && (
           <div className="space-y-4 sm:space-y-6 text-left">
             <div className="flex items-center gap-2 text-blue-400 text-[9px] sm:text-[10px] font-bold uppercase tracking-widest">
               <span className="w-2 h-2 rounded-full bg-blue-500" />
               <span>Low ({lowIssues})</span>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-              {issues.filter((i: any) => i.severity === 'low').map((issue: any, idx: number) => (
-                <AuditItem
-                  key={idx}
-                  title={issue.message}
-                  score={issue.scoreImpact ? `+${issue.scoreImpact}` : '+0'}
-                  time="~5 min"
-                  description={issue.evidence || issue.impact || 'Low priority suggestion'}
-                  fix={issue.suggested_fix || 'Optional improvement'}
-                />
-              ))}
+              {renderIssues('low')}
             </div>
           </div>
         )}

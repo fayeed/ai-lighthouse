@@ -137,6 +137,8 @@ export type {
   Issue,
   IssueLocation,
   BrokenLinkDetail,
+  FixGuide,
+  DetectedTechnology,
   ScanOptions,
   ScanResult,
   ScoringResult,
@@ -163,6 +165,12 @@ export {
   analyzeGEO,
   geoIssuesToScannerIssues,
 } from './analysis/index.js';
+
+// Technology Detection
+export { detectTechnology } from './utils/tech-detector.js';
+
+// Fix Guides
+export { getFixGuides, attachFixGuides } from './guides/index.js';
 
 // Utilities
 export {

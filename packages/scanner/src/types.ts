@@ -64,6 +64,21 @@ export enum IMPACT_LEVEL {
   CRITICAL = 'critical' // 41+ impact score
 }
 
+export interface FixGuide {
+  platform: string;       // Display name, e.g. "WordPress"
+  steps: string[];        // Ordered step-by-step instructions
+  codeSnippet?: string;   // Optional code example
+  pluginOrTool?: string;  // e.g. "Yoast SEO" or "next/head"
+}
+
+export interface DetectedTechnology {
+  cms?: string;        // 'wordpress' | 'shopify' | 'wix' | 'squarespace' | 'webflow'
+  framework?: string;  // 'nextjs' | 'nuxtjs' | 'gatsby' | 'react' | 'vue' | 'angular' | 'svelte'
+  platform?: string;   // Combined display label, e.g. "WordPress" or "Next.js"
+  confidence: number;  // 0-1
+  markers: string[];   // Evidence of detection
+}
+
 export interface Issue {
   id: string;
   title: string;
@@ -76,6 +91,9 @@ export interface Issue {
   // Effort/Impact estimation for prioritization
   effortLevel?: EFFORT_LEVEL; // How much work to fix
   impactLevel?: IMPACT_LEVEL; // How much improvement if fixed
+
+  // CMS-specific fix guides
+  cmsGuides?: Record<string, FixGuide>;
 
   location?: IssueLocation;
   evidence?: string[];
@@ -205,6 +223,7 @@ export interface ScanResult {
   url: string;
   timestamp?: number;
   llmLimitExceeded?: boolean; // Flag if LLM rate limit was hit
+  detectedTech?: DetectedTechnology; // Detected CMS/framework
   
   // ===== ISSUES & SCORING =====
   issues: Issue[];

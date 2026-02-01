@@ -2,11 +2,13 @@ import { motion } from "framer-motion";
 import { MessageCircle, HelpCircle, List, Mic, CheckCircle, XCircle, AlertCircle, Brain, Lightbulb } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import ProGate from "@/components/ProGate";
+import FixGuide from "@/components/FixGuide";
 
 type AEOTabProps = {
   aeo: any;
   scanResult?: any; // For LLM analysis data
   enableLLM?: boolean;
+  detectedTech?: any;
 };
 
 const MetricCard = ({ label, value, icon: Icon, color, achieved }: { label: string; value: string | number; icon: any; color: string; achieved?: boolean }) => (
@@ -28,7 +30,7 @@ const MetricCard = ({ label, value, icon: Icon, color, achieved }: { label: stri
   </div>
 );
 
-const IssueItem = ({ issue }: { issue: any }) => (
+const IssueItem = ({ issue, detectedPlatform, isGated }: { issue: any; detectedPlatform?: string; isGated?: boolean }) => (
   <motion.div
     initial={{ opacity: 0, y: 10 }}
     whileInView={{ opacity: 1, y: 0 }}
@@ -48,17 +50,21 @@ const IssueItem = ({ issue }: { issue: any }) => (
         {issue.fix && (
           <p className="text-[10px] sm:text-[11px] text-primary/80 italic mt-2">Fix: {issue.fix}</p>
         )}
+        {issue.cms_guides && (
+          <FixGuide guides={issue.cms_guides} detectedPlatform={detectedPlatform} isGated={isGated || false} />
+        )}
       </div>
     </div>
   </motion.div>
 );
 
-export default function AEOTab({ aeo, scanResult, enableLLM = true }: AEOTabProps) {
+export default function AEOTab({ aeo, scanResult, enableLLM = true, detectedTech }: AEOTabProps) {
   // Extract LLM analysis data (questions and FAQs)
   const llm = scanResult?.llm || {};
   const suggestedFAQ = llm.suggestedFAQ || [];
   const llmQuestions = llm.questions || [];
   const isGated = !enableLLM;
+  const detectedPlatform = detectedTech?.cms || detectedTech?.framework;
 
   if (!aeo && suggestedFAQ.length === 0) {
     return (
@@ -391,7 +397,7 @@ export default function AEOTab({ aeo, scanResult, enableLLM = true }: AEOTabProp
           <h4 className="text-[10px] uppercase tracking-widest font-bold text-white/40">Issues ({issues.length})</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {issues.slice(0, 6).map((issue: any, idx: number) => (
-              <IssueItem key={idx} issue={issue} />
+              <IssueItem key={idx} issue={issue} detectedPlatform={detectedPlatform} isGated={isGated} />
             ))}
           </div>
         </div>
