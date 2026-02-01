@@ -17,6 +17,7 @@ import {
   Zap
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import ScoreHistoryChart from '@/components/ScoreHistoryChart';
 
 interface SubscriptionDetails {
   plan: 'FREE' | 'PRO' | 'ENTERPRISE';
@@ -38,6 +39,20 @@ interface SubscriptionDetails {
   };
 }
 
+interface ScoreHistoryData {
+  points: Array<{
+    id: string;
+    domain: string;
+    score: number;
+    grade: string;
+    scanType: string;
+    date: string;
+  }>;
+  domains: string[];
+  plan: 'FREE' | 'PRO' | 'ENTERPRISE';
+  daysLimit: number | null;
+}
+
 interface RecentScan {
   id: string;
   url: string;
@@ -54,6 +69,7 @@ export default function DashboardPage() {
   const { data: session, status } = useSession();
   const [subscription, setSubscription] = useState<SubscriptionDetails | null>(null);
   const [recentScans, setRecentScans] = useState<RecentScan[]>([]);
+  const [scoreHistory, setScoreHistory] = useState<ScoreHistoryData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const showSuccess = searchParams.get('success') === 'true';
@@ -82,9 +98,10 @@ export default function DashboardPage() {
 
   async function fetchData() {
     try {
-      const [subRes, scansRes] = await Promise.all([
+      const [subRes, scansRes, historyRes] = await Promise.all([
         fetch('/api/subscription'),
         fetch('/api/scans/recent'),
+        fetch('/api/scans/history'),
       ]);
 
       if (subRes.ok) {
@@ -93,6 +110,10 @@ export default function DashboardPage() {
 
       if (scansRes.ok) {
         setRecentScans(await scansRes.json());
+      }
+
+      if (historyRes.ok) {
+        setScoreHistory(await historyRes.json());
       }
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
@@ -148,7 +169,7 @@ export default function DashboardPage() {
   const scansRemaining = subscription
     ? subscription.limits.scansPerMonth - subscription.usage.scansUsed
     : 0;
-  const isUnlimited = subscription?.limits.scansPerMonth >= 999999;
+  const isUnlimited = subscription?.limits?.scansPerMonth! >= 999999;
 
   return (
     <div className="min-h-screen bg-[#050505] text-white font-sans">
@@ -331,6 +352,23 @@ export default function DashboardPage() {
                 Upgrade Now - $29/mo
               </Button>
             </div>
+          </motion.div>
+        )}
+
+        {/* Score Trends Chart */}
+        {scoreHistory && scoreHistory.points.length >= 2 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.45 }}
+            className="mb-8"
+          >
+            <ScoreHistoryChart
+              points={scoreHistory.points}
+              domains={scoreHistory.domains}
+              plan={scoreHistory.plan}
+              daysLimit={scoreHistory.daysLimit}
+            />
           </motion.div>
         )}
 
