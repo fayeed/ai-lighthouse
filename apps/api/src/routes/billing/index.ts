@@ -12,6 +12,36 @@ import { cancelDrip } from '../../services/drip.js';
 
 export const billingRouter = express.Router();
 
+// Internal API secret for web app proxy requests
+const INTERNAL_API_SECRET = process.env.INTERNAL_API_SECRET;
+
+/**
+ * Middleware that accepts either regular auth OR internal web app requests
+ */
+async function requireAuthOrInternal(req: express.Request, res: express.Response, next: express.NextFunction) {
+  const internalSecret = req.headers['x-internal-secret'] as string;
+  const userId = req.headers['x-user-id'] as string;
+
+  // Check for internal web app request
+  if (INTERNAL_API_SECRET && internalSecret === INTERNAL_API_SECRET && userId) {
+    // Fetch user from database
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, email: true, name: true },
+    });
+
+    if (!user) {
+      return res.status(401).json({ error: 'User not found' });
+    }
+
+    (req as any).user = user;
+    return next();
+  }
+
+  // Fall back to regular auth
+  return requireAuth(req, res, next);
+}
+
 // Dodo Payments configuration
 const DODO_API_KEY = process.env.DODO_API_KEY!;
 const DODO_WEBHOOK_SECRET = process.env.DODO_WEBHOOK_SECRET!;
@@ -76,7 +106,7 @@ async function dodoRequest(endpoint: string, options: RequestInit = {}) {
  * POST /api/billing/checkout
  * Create a checkout session for subscription
  */
-billingRouter.post('/checkout', requireAuth, async (req, res) => {
+billingRouter.post('/checkout', requireAuthOrInternal, async (req, res) => {
   try {
     const user = (req as any).user;
     const { plan, interval = 'monthly' } = req.body;
@@ -183,7 +213,7 @@ billingRouter.post('/checkout', requireAuth, async (req, res) => {
  * GET /api/billing/portal
  * Create a billing portal session for managing subscription
  */
-billingRouter.get('/portal', requireAuth, async (req, res) => {
+billingRouter.post('/portal', requireAuthOrInternal, async (req, res) => {
   try {
     const user = (req as any).user;
 

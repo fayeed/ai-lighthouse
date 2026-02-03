@@ -5,7 +5,7 @@
 
 import { NextResponse } from 'next/server';
 import { getServerSession } from '@/lib/auth';
-import { getSubscriptionDetails } from '@/lib/dodo';
+import { prisma } from '@/lib/prisma';
 
 export async function GET() {
   try {
@@ -18,7 +18,9 @@ export async function GET() {
       );
     }
 
-    const subscription = await getSubscriptionDetails(session.user.id);
+    const subscription = await prisma.subscription.findUnique({
+      where: { userId: session.user.id },
+    });
 
     if (!subscription) {
       // Return default free subscription if none exists
@@ -43,7 +45,37 @@ export async function GET() {
       });
     }
 
-    return NextResponse.json(subscription);
+    // Get current usage
+    const now = new Date();
+    const usage = await prisma.usageRecord.findUnique({
+      where: {
+        userId_month_year: {
+          userId: session.user.id,
+          month: now.getMonth() + 1,
+          year: now.getFullYear(),
+        },
+      },
+    });
+
+    return NextResponse.json({
+      plan: subscription.plan,
+      status: subscription.status,
+      billingInterval: subscription.billingInterval,
+      currentPeriodEnd: subscription.currentPeriodEnd,
+      cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
+      limits: {
+        scansPerMonth: subscription.scansPerMonth,
+        pagesPerScan: subscription.pagesPerScan,
+        llmAnalysisEnabled: subscription.llmAnalysisEnabled,
+        fullCrawlEnabled: subscription.fullCrawlEnabled,
+        apiAccessEnabled: subscription.apiAccessEnabled,
+      },
+      usage: {
+        scansUsed: usage?.scansUsed || 0,
+        pagesScanned: usage?.pagesScanned || 0,
+        llmCalls: usage?.llmCalls || 0,
+      },
+    });
   } catch (error) {
     console.error('Subscription fetch error:', error);
     return NextResponse.json(
