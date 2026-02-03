@@ -71,6 +71,7 @@ function DashboardContent() {
   const [recentScans, setRecentScans] = useState<RecentScan[]>([]);
   const [scoreHistory, setScoreHistory] = useState<ScoreHistoryData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const showSuccess = searchParams.get('success') === 'true';
   const upgradeParam = searchParams.get('upgrade');
@@ -141,16 +142,21 @@ function DashboardContent() {
 
   async function handleManageBilling() {
     try {
+      setError(null);
       const response = await fetch('/api/billing/portal', {
         method: 'POST',
       });
 
-      if (response.ok) {
-        const { url } = await response.json();
-        window.location.href = url;
+      const data = await response.json();
+
+      if (response.ok && data.url) {
+        window.location.href = data.url;
+      } else {
+        setError(data.error || 'Failed to open billing portal');
       }
-    } catch (error) {
-      console.error('Failed to open billing portal:', error);
+    } catch (err) {
+      console.error('Failed to open billing portal:', err);
+      setError('Failed to open billing portal. Please try again.');
     }
   }
 
@@ -209,6 +215,23 @@ function DashboardContent() {
             className="mb-8 p-4 rounded-xl bg-teal-500/10 border border-teal-500/20 text-teal-400"
           >
             Welcome to Pro! Your subscription is now active. Enjoy unlimited scans and advanced features.
+          </motion.div>
+        )}
+
+        {/* Error Message */}
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 flex items-center justify-between"
+          >
+            <span>{error}</span>
+            <button
+              onClick={() => setError(null)}
+              className="text-red-400 hover:text-red-300 text-sm underline"
+            >
+              Dismiss
+            </button>
           </motion.div>
         )}
 

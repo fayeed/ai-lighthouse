@@ -433,6 +433,7 @@ billingRouter.post('/webhooks', express.raw({ type: 'application/json' }), async
             plan: plan as any,
             status: subscriptionData.status === 'active' ? 'ACTIVE' : 'PAST_DUE',
             dodoSubscriptionId: subscriptionData.id,
+            dodoCustomerId: subscriptionData.customer_id,
             billingInterval: subscriptionData.metadata?.interval === 'yearly' ? 'YEARLY' : 'MONTHLY',
             currentPeriodStart: new Date(subscriptionData.current_period_start * 1000),
             currentPeriodEnd: new Date(subscriptionData.current_period_end * 1000),

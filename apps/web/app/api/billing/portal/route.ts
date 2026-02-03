@@ -28,8 +28,19 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ url: portalUrl });
   } catch (error) {
     console.error('Portal error:', error);
+
+    const message = error instanceof Error ? error.message : 'Failed to create portal session';
+
+    // Provide more specific error messages
+    if (message.includes('No subscription found')) {
+      return NextResponse.json(
+        { error: 'No billing account found. Please contact support if you believe this is an error.' },
+        { status: 400 }
+      );
+    }
+
     return NextResponse.json(
-      { error: 'Failed to create portal session' },
+      { error: message },
       { status: 500 }
     );
   }
