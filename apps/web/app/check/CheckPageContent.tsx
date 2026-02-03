@@ -28,6 +28,8 @@ export default function CheckPageContent() {
   const [progress, setProgress] = useState(0);
   const [interpretationMessage, setInterpretationMessage] = useState<string>('');
   const [score, setScore] = useState<number>(0);
+  const [warningMessage, setWarningMessage] = useState<{ message: string; details?: string } | null>(null);
+  const [showWarningModal, setShowWarningModal] = useState(false);
   // Free tier: AI is disabled - only SEO/PSEO analysis
   const enableLLM = false;
   const [isFormExpanded, setIsFormExpanded] = useState(true);
