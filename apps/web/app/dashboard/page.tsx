@@ -72,6 +72,9 @@ function DashboardContent() {
   const [scoreHistory, setScoreHistory] = useState<ScoreHistoryData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [scansPage, setScansPage] = useState(1);
+  const [scansTotalPages, setScansTotalPages] = useState(1);
+  const [scansTotal, setScansTotal] = useState(0);
 
   const showSuccess = searchParams.get('success') === 'true';
   const upgradeParam = searchParams.get('upgrade');
@@ -97,11 +100,25 @@ function DashboardContent() {
     }
   }, [upgradeParam, status]);
 
+  async function fetchScans(page: number = 1) {
+    try {
+      const res = await fetch(`/api/scans/recent?page=${page}&limit=10`);
+      if (res.ok) {
+        const data = await res.json();
+        setRecentScans(data.scans);
+        setScansPage(data.pagination.page);
+        setScansTotalPages(data.pagination.totalPages);
+        setScansTotal(data.pagination.total);
+      }
+    } catch (err) {
+      console.error('Failed to fetch scans:', err);
+    }
+  }
+
   async function fetchData() {
     try {
-      const [subRes, scansRes, historyRes] = await Promise.all([
+      const [subRes, historyRes] = await Promise.all([
         fetch('/api/subscription'),
-        fetch('/api/scans/recent'),
         fetch('/api/scans/history'),
       ]);
 
@@ -109,13 +126,11 @@ function DashboardContent() {
         setSubscription(await subRes.json());
       }
 
-      if (scansRes.ok) {
-        setRecentScans(await scansRes.json());
-      }
-
       if (historyRes.ok) {
         setScoreHistory(await historyRes.json());
       }
+
+      await fetchScans(1);
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
     } finally {
@@ -514,6 +529,34 @@ function DashboardContent() {
                   ))}
                 </tbody>
               </table>
+
+              {/* Pagination Controls */}
+              {scansTotalPages > 1 && (
+                <div className="flex items-center justify-between p-4 border-t border-white/10">
+                  <div className="text-sm text-white/40">
+                    Showing {((scansPage - 1) * 10) + 1}-{Math.min(scansPage * 10, scansTotal)} of {scansTotal} scans
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      onClick={() => fetchScans(scansPage - 1)}
+                      disabled={scansPage <= 1}
+                      className="bg-white/5 text-white hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed rounded-lg px-3 py-1.5 text-xs border border-white/10"
+                    >
+                      Previous
+                    </Button>
+                    <span className="text-sm text-white/60 px-2">
+                      Page {scansPage} of {scansTotalPages}
+                    </span>
+                    <Button
+                      onClick={() => fetchScans(scansPage + 1)}
+                      disabled={scansPage >= scansTotalPages}
+                      className="bg-white/5 text-white hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed rounded-lg px-3 py-1.5 text-xs border border-white/10"
+                    >
+                      Next
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </motion.div>
