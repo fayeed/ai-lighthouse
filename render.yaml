@@ -1,3 +1,10 @@
+databases:
+  - name: ai-lighthouse-db
+    region: oregon
+    plan: free
+    databaseName: lighthouse
+    user: lighthouse
+
 services:
   - type: web
     name: ai-lighthouse-api
@@ -9,6 +16,10 @@ services:
     healthCheckPath: /health
     autoDeploy: true
     envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ai-lighthouse-db
+          property: connectionString
       - key: OPENROUTER_API_KEY
         sync: false
       - key: PORT
@@ -20,6 +31,16 @@ services:
           type: redis
           name: ai-lighthouse-kv
           property: connectionString
+      - key: CRON_SECRET
+        generateValue: true
+      - key: RESEND_API_KEY
+        sync: false
+      - key: RESEND_AUDIENCE_ID
+        sync: false
+      - key: RESEND_WEBHOOK_SECRET
+        sync: false
+      - key: NEXT_PUBLIC_BASE_URL
+        sync: false
 
   - type: redis
     name: ai-lighthouse-kv
