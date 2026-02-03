@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, Suspense } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -47,7 +47,7 @@ interface CrawlProgress {
   queueSize: number;
 }
 
-export default function DashboardScanPage() {
+function DashboardScanContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: session, status } = useSession();
@@ -785,5 +785,17 @@ export default function DashboardScanPage() {
         )}
       </main>
     </div>
+  );
+}
+
+export default function DashboardScanPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-white/40" />
+      </div>
+    }>
+      <DashboardScanContent />
+    </Suspense>
   );
 }
