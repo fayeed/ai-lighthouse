@@ -22,6 +22,7 @@ import {
   incrementUsage,
   TIER_LIMITS
 } from '../middleware/subscription.js';
+import { enrollUser } from '../services/drip.js';
 
 export const auditRouter = express.Router();
 
@@ -48,19 +49,10 @@ async function getAuditJob(jobId: string) {
 
 // Trigger drip email enrollment (fire-and-forget)
 async function triggerDripEnrollment(userId: string, scanId: string) {
-  try {
-    const webUrl = process.env.WEB_URL || 'http://localhost:3000';
-    fetch(`${webUrl}/api/drip/enroll`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.CRON_SECRET}`,
-      },
-      body: JSON.stringify({ userId, scanId }),
-    }).catch((err) => console.error('Drip enrollment request failed:', err));
-  } catch (error) {
-    console.error('Drip enrollment trigger failed:', error);
-  }
+  // Fire-and-forget: call directly, don't await
+  enrollUser(userId, scanId).catch((err) => {
+    console.error('Drip enrollment failed:', err);
+  });
 }
 
 // Increment scan counter

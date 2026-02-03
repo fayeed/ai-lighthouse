@@ -1,29 +1,42 @@
 /**
- * Resend email service wrapper.
- * Handles sending transactional emails and managing Audience contacts.
+ * Resend email service for the API server.
+ * Handles sending HTML emails and managing Audience contacts.
  */
 
 import { Resend } from 'resend';
-import React from 'react';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+let resend: Resend | null = null;
+
+function getResend(): Resend | null {
+  if (!resend && process.env.RESEND_API_KEY) {
+    resend = new Resend(process.env.RESEND_API_KEY);
+  }
+  return resend;
+}
+
 const AUDIENCE_ID = process.env.RESEND_AUDIENCE_ID || '';
 const FROM = process.env.RESEND_FROM_EMAIL || 'AI Lighthouse <hello@ailighthouse.com>';
 
 /**
- * Send a transactional email using a React Email template.
+ * Send an HTML email via Resend.
  */
 export async function sendEmail(
   to: string,
   subject: string,
-  react: React.ReactElement
+  html: string
 ): Promise<{ id: string } | null> {
+  const client = getResend();
+  if (!client) {
+    console.warn('Resend API key not configured, skipping email send');
+    return null;
+  }
+
   try {
-    const { data, error } = await resend.emails.send({
+    const { data, error } = await client.emails.send({
       from: FROM,
       to,
       subject,
-      react,
+      html,
     });
 
     if (error) {
@@ -42,10 +55,11 @@ export async function sendEmail(
  * Add a contact to the Resend Audience for drip tracking.
  */
 export async function addToAudience(email: string, firstName?: string) {
-  if (!AUDIENCE_ID) return;
+  const client = getResend();
+  if (!client || !AUDIENCE_ID) return;
 
   try {
-    await resend.contacts.create({
+    await client.contacts.create({
       audienceId: AUDIENCE_ID,
       email,
       firstName: firstName || undefined,
@@ -59,10 +73,11 @@ export async function addToAudience(email: string, firstName?: string) {
  * Remove a contact from the Resend Audience (e.g. on upgrade).
  */
 export async function removeFromAudience(email: string) {
-  if (!AUDIENCE_ID) return;
+  const client = getResend();
+  if (!client || !AUDIENCE_ID) return;
 
   try {
-    await resend.contacts.remove({
+    await client.contacts.remove({
       audienceId: AUDIENCE_ID,
       email,
     });

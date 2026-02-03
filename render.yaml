@@ -39,7 +39,9 @@ services:
         sync: false
       - key: RESEND_WEBHOOK_SECRET
         sync: false
-      - key: NEXT_PUBLIC_BASE_URL
+      - key: RESEND_FROM_EMAIL
+        sync: false
+      - key: BASE_URL
         sync: false
 
   - type: redis

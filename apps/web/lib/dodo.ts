@@ -353,15 +353,7 @@ async function handleSubscriptionUpdate(subscription: DodoSubscription): Promise
     },
   });
 
-  // Cancel drip campaign when user upgrades to a paid plan
-  if (plan !== 'FREE') {
-    try {
-      const { cancelDrip } = await import('./drip');
-      await cancelDrip(userSubscription.userId);
-    } catch (err) {
-      console.error('Failed to cancel drip on upgrade:', err);
-    }
-  }
+  // Note: Drip campaign cancellation is handled by the API server
 }
 
 /**

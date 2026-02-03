@@ -26,6 +26,9 @@ importers:
       '@prisma/client':
         specifier: ^6.0.0
         version: 6.19.2(prisma@6.19.2(typescript@5.9.2))(typescript@5.9.2)
+      '@react-email/components':
+        specifier: ^1.0.6
+        version: 1.0.6(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       cookie-parser:
         specifier: ^1.4.7
         version: 1.4.7
@@ -44,15 +47,24 @@ importers:
       express-validator:
         specifier: ^7.3.1
         version: 7.3.1
+      node-cron:
+        specifier: ^4.2.1
+        version: 4.2.1
       pm2:
         specifier: ^5.4.3
         version: 5.4.3
       rate-limit-redis:
         specifier: ^4.3.1
         version: 4.3.1(express-rate-limit@8.2.1(express@4.22.1))
+      react:
+        specifier: 19.2.0
+        version: 19.2.0
       redis:
         specifier: ^5.10.0
         version: 5.10.0
+      resend:
+        specifier: ^6.9.1
+        version: 6.9.1(@react-email/render@2.0.4(react-dom@19.2.0(react@19.2.0))(react@19.2.0))
       tsx:
         specifier: ^4.19.2
         version: 4.21.0
@@ -75,6 +87,12 @@ importers:
       '@types/node':
         specifier: ^22.10.2
         version: 22.15.3
+      '@types/node-cron':
+        specifier: ^3.0.11
+        version: 3.0.11
+      '@types/react':
+        specifier: ^19
+        version: 19.2.7
       prisma:
         specifier: ^6.0.0
         version: 6.19.2(typescript@5.9.2)
@@ -1595,6 +1613,9 @@ packages:
 
   '@types/keyv@3.1.4':
     resolution: {integrity: sha512-BQ5aZNSCpj7D6K2ksrRCTmKRLEpnPvWDiLPfoGyhZ++8YtiK9d/3DBKPJgry359X/P1PfruyYwvnvwFjuEiEIg==}
+
+  '@types/node-cron@3.0.11':
+    resolution: {integrity: sha512-0ikrnug3/IyneSHqCBeslAhlK2aBfYek1fGo4bP4QnZPmiqSGRK+Oy7ZMisLWkesffJvQ1cqAcBnJC+8+nxIAg==}
 
   '@types/node@16.18.126':
     resolution: {integrity: sha512-OTcgaiwfGFBKacvfwuHzzn1KLxH/er8mluiy8/uM3sGXHaRe73RrSIj01jow9t4kJEW633Ov+cOexXeiApTyAw==}
@@ -3456,6 +3477,10 @@ packages:
         optional: true
       sass:
         optional: true
+
+  node-cron@4.2.1:
+    resolution: {integrity: sha512-lgimEHPE/QDgFlywTd8yTR61ptugX3Qer29efeyWw2rv259HtGBNn1vZVmp8lB9uo9wC0t/AT4iGqXxia+CJFg==}
+    engines: {node: '>=6.0.0'}
 
   node-fetch-native@1.6.7:
     resolution: {integrity: sha512-g9yhqoedzIUm0nTnTqAQvueMPVOuIY16bqgAJJC8XOOubYFNwz6IER9qs0Gq2Xd0+CecCKFjtdDTMA4u4xG06Q==}
@@ -5805,6 +5830,8 @@ snapshots:
     dependencies:
       '@types/node': 22.15.3
 
+  '@types/node-cron@3.0.11': {}
+
   '@types/node@16.18.126': {}
 
   '@types/node@20.19.25':
@@ -7694,6 +7721,8 @@ snapshots:
     transitivePeerDependencies:
       - '@babel/core'
       - babel-plugin-macros
+
+  node-cron@4.2.1: {}
 
   node-fetch-native@1.6.7: {}
 

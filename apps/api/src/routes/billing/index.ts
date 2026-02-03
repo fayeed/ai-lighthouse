@@ -8,6 +8,7 @@ import crypto from 'crypto';
 import { prisma } from '../../lib/prisma.js';
 import { logger } from '../../utils/logger.js';
 import { getCurrentUser, requireAuth } from '../auth/index.js';
+import { cancelDrip } from '../../services/drip.js';
 
 export const billingRouter = express.Router();
 
@@ -393,7 +394,7 @@ billingRouter.post('/webhooks', express.raw({ type: 'application/json' }), async
 
     // Store webhook event for idempotency
     const existingEvent = await prisma.webhookEvent.findUnique({
-      where: { id: event.id },
+      where: { eventId: event.id },
     });
 
     if (existingEvent) {
@@ -403,9 +404,10 @@ billingRouter.post('/webhooks', express.raw({ type: 'application/json' }), async
 
     await prisma.webhookEvent.create({
       data: {
-        id: event.id,
-        type: event.type,
-        data: event.data,
+        eventId: event.id,
+        eventType: event.type,
+        payload: event.data,
+        processed: true,
         processedAt: new Date(),
       },
     });
@@ -451,6 +453,13 @@ billingRouter.post('/webhooks', express.raw({ type: 'application/json' }), async
         });
 
         logger.info('Subscription updated via webhook', { userId, plan });
+
+        // Cancel drip campaign when user upgrades to paid plan
+        if (plan !== 'FREE') {
+          cancelDrip(userId).catch((err) => {
+            logger.error('Failed to cancel drip on upgrade', { userId, error: String(err) });
+          });
+        }
         break;
       }
 
@@ -462,7 +471,7 @@ billingRouter.post('/webhooks', express.raw({ type: 'application/json' }), async
           await prisma.subscription.update({
             where: { userId },
             data: {
-              status: 'CANCELLED',
+              status: 'CANCELED',
               plan: 'FREE',
               ...PLAN_LIMITS.FREE,
             },

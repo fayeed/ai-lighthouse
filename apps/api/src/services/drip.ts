@@ -1,21 +1,22 @@
 /**
- * Drip email campaign logic.
+ * Drip email campaign service.
  * Handles enrollment, cancellation, retry, unsubscribe, and processing of scheduled emails.
  */
 
-import { prisma } from './prisma';
-import { sendEmail, addToAudience, removeFromAudience } from './email';
-import WelcomeEmail from '@/emails/welcome';
-import SeoDeepDiveEmail from '@/emails/seo-deep-dive';
-import AeoGeoEmail from '@/emails/aeo-geo';
-import CaseStudyEmail from '@/emails/case-study';
-import UpgradeCtaEmail from '@/emails/upgrade-cta';
-import type { DripEmailProps } from '@/emails/types';
-import React from 'react';
+import { prisma } from '../lib/prisma.js';
+import { sendEmail, addToAudience, removeFromAudience } from './email.js';
+import {
+  welcomeEmail,
+  seoDeepDiveEmail,
+  aeoGeoEmail,
+  caseStudyEmail,
+  upgradeCtaEmail,
+} from '../emails/index.js';
+import type { DripEmailProps } from '../emails/types.js';
 
-type TemplateComponent = (props: DripEmailProps) => React.ReactElement;
+type TemplateFunction = (props: DripEmailProps) => string;
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://ailighthouse.com';
+const BASE_URL = process.env.BASE_URL || 'https://ailighthouse.com';
 const MAX_RETRIES = 3;
 const RETRY_DELAY_HOURS = [1, 4, 12]; // Backoff: 1h, 4h, 12h
 
@@ -24,13 +25,13 @@ const DRIP_STEPS: Array<{
   name: string;
   delayDays: number;
   subject: string;
-  template: TemplateComponent;
+  template: TemplateFunction;
 }> = [
-  { index: 0, name: 'welcome',       delayDays: 0,  subject: 'Your AI Readiness Score is in!',             template: WelcomeEmail },
-  { index: 1, name: 'seo_deep_dive', delayDays: 2,  subject: 'What your SEO score really means',           template: SeoDeepDiveEmail },
-  { index: 2, name: 'aeo_geo',       delayDays: 5,  subject: 'Is your site ready for AI search engines?',  template: AeoGeoEmail },
-  { index: 3, name: 'case_study',    delayDays: 7,  subject: 'How sites like yours improved their scores', template: CaseStudyEmail },
-  { index: 4, name: 'upgrade_cta',   delayDays: 10, subject: 'Unlock your full AI optimization toolkit',   template: UpgradeCtaEmail },
+  { index: 0, name: 'welcome',       delayDays: 0,  subject: 'Your AI Readiness Score is in!',             template: welcomeEmail },
+  { index: 1, name: 'seo_deep_dive', delayDays: 2,  subject: 'What your SEO score really means',           template: seoDeepDiveEmail },
+  { index: 2, name: 'aeo_geo',       delayDays: 5,  subject: 'Is your site ready for AI search engines?',  template: aeoGeoEmail },
+  { index: 3, name: 'case_study',    delayDays: 7,  subject: 'How sites like yours improved their scores', template: caseStudyEmail },
+  { index: 4, name: 'upgrade_cta',   delayDays: 10, subject: 'Unlock your full AI optimization toolkit',   template: upgradeCtaEmail },
 ];
 
 /**
@@ -182,8 +183,7 @@ async function processSingleDrip(userId: string, stepIndex: number) {
 
   try {
     const unsubscribeUrl = await getUnsubscribeUrl(userId);
-    const TemplateComponent = step.template;
-    const emailElement = TemplateComponent({
+    const html = step.template({
       userName: drip.user.name || undefined,
       scanUrl: scanData?.url,
       overallScore: scanData?.overallScore,
@@ -192,7 +192,7 @@ async function processSingleDrip(userId: string, stepIndex: number) {
       unsubscribeUrl,
     });
 
-    const result = await sendEmail(drip.user.email, step.subject, emailElement);
+    const result = await sendEmail(drip.user.email, step.subject, html);
 
     if (!result) {
       throw new Error('sendEmail returned null');
@@ -228,7 +228,7 @@ async function processSingleDrip(userId: string, stepIndex: number) {
 }
 
 /**
- * Process all due drip emails. Called by the cron endpoint.
+ * Process all due drip emails. Called by the cron job.
  */
 export async function processDueDrips(): Promise<{
   processed: number;

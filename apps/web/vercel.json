@@ -2,11 +2,5 @@
   "installCommand": "cd ../.. && pnpm install --no-frozen-lockfile",
   "buildCommand": "cd ../.. && pnpm build:web",
   "outputDirectory": ".next",
-  "framework": "nextjs",
-  "crons": [
-    {
-      "path": "/api/cron/drip",
-      "schedule": "0 * * * *"
-    }
-  ]
+  "framework": "nextjs"
 }

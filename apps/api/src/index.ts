@@ -10,7 +10,10 @@ import { gdprRouter } from './routes/gdpr.js';
 import { authRouter } from './routes/auth/index.js';
 import { usersRouter } from './routes/users/index.js';
 import { billingRouter } from './routes/billing/index.js';
+import dripRouter from './routes/drip.js';
 import { healthCheck, livenessProbe, readinessProbe } from './routes/health.js';
+import cron from 'node-cron';
+import { processDueDrips } from './services/drip.js';
 import { logger, requestLogger } from './utils/logger.js';
 import {
   requestTimeout,
@@ -127,6 +130,9 @@ app.use('/api/billing', billingRouter);
 app.use('/api/audit', subscriptionMiddleware, tierBasedRateLimiter, auditRouter);
 app.use('/api/gdpr', gdprRouter);
 
+// Drip campaign routes (unsubscribe, webhook)
+app.use('/api/drip', dripRouter);
+
 // 404 handler
 app.use((req, res) => {
   res.status(404).json({
@@ -177,4 +183,16 @@ app.listen(PORT, () => {
       audit: `http://localhost:${PORT}/api/audit`
     }
   });
+
+  // Schedule drip email processing every hour
+  cron.schedule('0 * * * *', async () => {
+    logger.info('Running drip email cron job');
+    try {
+      const result = await processDueDrips();
+      logger.info('Drip cron completed', result);
+    } catch (error) {
+      logger.error('Drip cron failed', { error: String(error) });
+    }
+  });
+  logger.info('Drip email cron job scheduled (hourly)');
 });

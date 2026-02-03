@@ -20,15 +20,19 @@
     "@ai-lighthouse/scanner": "workspace:*",
     "@openrouter/sdk": "^0.2.11",
     "@prisma/client": "^6.0.0",
+    "@react-email/components": "^1.0.6",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^4.21.2",
     "express-rate-limit": "^8.2.1",
     "express-validator": "^7.3.1",
+    "node-cron": "^4.2.1",
     "pm2": "^5.4.3",
     "rate-limit-redis": "^4.3.1",
+    "react": "19.2.0",
     "redis": "^5.10.0",
+    "resend": "^6.9.1",
     "tsx": "^4.19.2",
     "winston": "^3.19.0",
     "zod": "^4.2.1"
@@ -38,6 +42,8 @@
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
     "@types/node": "^22.10.2",
+    "@types/node-cron": "^3.0.11",
+    "@types/react": "^19",
     "prisma": "^6.0.0",
     "typescript": "^5.7.2"
   }
