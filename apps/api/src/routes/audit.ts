@@ -46,6 +46,23 @@ async function getAuditJob(jobId: string) {
   }
 }
 
+// Trigger drip email enrollment (fire-and-forget)
+async function triggerDripEnrollment(userId: string, scanId: string) {
+  try {
+    const webUrl = process.env.WEB_URL || 'http://localhost:3000';
+    fetch(`${webUrl}/api/drip/enroll`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.CRON_SECRET}`,
+      },
+      body: JSON.stringify({ userId, scanId }),
+    }).catch((err) => console.error('Drip enrollment request failed:', err));
+  } catch (error) {
+    console.error('Drip enrollment trigger failed:', error);
+  }
+}
+
 // Increment scan counter
 async function incrementScanCounter() {
   try {
@@ -365,6 +382,11 @@ auditRouter.post('/stream', canScanMiddleware, enforceLLMAccess, validateRequest
       enableLLM
     );
 
+    // Enroll in drip campaign (non-blocking)
+    if (scanId && userContext?.userId) {
+      triggerDripEnrollment(userContext.userId, scanId);
+    }
+
     sendResult({
       success: true,
       url,
@@ -583,6 +605,11 @@ auditRouter.post('/', canScanMiddleware, enforceLLMAccess, cacheMiddleware(1800)
       duration,
       enableLLM
     );
+
+    // Enroll in drip campaign (non-blocking)
+    if (scanId && userContext?.userId) {
+      triggerDripEnrollment(userContext.userId, scanId);
+    }
 
     // Return comprehensive data (quickWins with score impact are in aiReadiness)
     return res.json({
@@ -1024,6 +1051,11 @@ auditRouter.post('/crawl', canScanMiddleware, enforceFullCrawlAccess, validateRe
       crawlResult,
       enableLLM
     );
+
+    // Enroll in drip campaign (non-blocking)
+    if (scanId && userContext?.userId) {
+      triggerDripEnrollment(userContext.userId, scanId);
+    }
 
     sendResult({
       success: true,

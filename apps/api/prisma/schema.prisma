@@ -30,6 +30,8 @@ model User {
   scans         Scan[]
   apiKeys       ApiKey[]
   usageRecords  UsageRecord[]
+  dripEmails      DripEmail[]
+  dripUnsubscribe DripUnsubscribe?
 
   @@map("users")
 }
@@ -299,6 +301,52 @@ model UsageRecord {
   @@unique([userId, month, year])
   @@index([userId])
   @@map("usage_records")
+}
+
+// ============================================================================
+// DRIP EMAIL CAMPAIGN
+// ============================================================================
+
+enum DripEmailStatus {
+  SCHEDULED
+  SENT
+  CANCELED
+  FAILED
+}
+
+model DripEmail {
+  id          String           @id @default(cuid())
+  userId      String
+  stepIndex   Int
+  stepName    String
+  scheduledAt DateTime
+  sentAt      DateTime?
+  status      DripEmailStatus  @default(SCHEDULED)
+  scanId      String?
+  resendId    String?
+  error       String?
+  retryCount  Int              @default(0)
+
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, stepIndex])
+  @@index([status, scheduledAt])
+  @@index([userId])
+  @@map("drip_emails")
+}
+
+model DripUnsubscribe {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  token     String   @unique @default(cuid())
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("drip_unsubscribes")
 }
 
 // ============================================================================
