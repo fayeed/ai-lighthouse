@@ -8,6 +8,7 @@ import SEOTab from "./SEOTab";
 import PSEOTab from "./PSEOTab";
 import AEOTab from "./AEOTab";
 import GEOTab from "./GEOTab";
+import AnswerGapTab from "./AnswerGapTab";
 import IssuesTab from "./IssuesTab";
 
 type AuditReportProps = {
@@ -41,6 +42,7 @@ export default function AuditReport({ reportData, interpretationMessage, score, 
   const pseo = scanResult.pseo || null;
   const aeo = scanResult.aeo || null;
   const geo = scanResult.geo || null;
+  const answerGap = scanResult.answerGap || null;
   const detectedTech = auditReport.detectedTech || scanResult.detectedTech || null;
 
   // Calculate stats
@@ -75,6 +77,7 @@ export default function AuditReport({ reportData, interpretationMessage, score, 
     { id: "pseo", label: "PSEO", score: pseo?.score },
     { id: "aeo", label: "AEO", score: aeo?.score },
     { id: "geo", label: "GEO", score: geo?.score },
+    { id: "answer-gap", label: "Answer Gaps", score: answerGap?.score },
     { id: "issues", label: "Issues", score: issues.length },
   ];
 
@@ -177,6 +180,10 @@ export default function AuditReport({ reportData, interpretationMessage, score, 
 
           <TabsContent value="geo" className="space-y-12">
             <GEOTab geo={geo} scanResult={scanResult} enableLLM={enableLLM} detectedTech={detectedTech} />
+          </TabsContent>
+
+          <TabsContent value="answer-gap" className="space-y-12">
+            <AnswerGapTab answerGap={answerGap} scanResult={scanResult} enableLLM={enableLLM} />
           </TabsContent>
 
           <TabsContent value="issues" className="space-y-12">

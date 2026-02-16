@@ -16,6 +16,8 @@ import {
   aeoIssuesToScannerIssues,
   analyzeGEO,
   geoIssuesToScannerIssues,
+  analyzeAnswerGap,
+  answerGapIssuesToScannerIssues,
 } from "./analysis/index.js";
 import { detectTechnology } from "./utils/tech-detector.js";
 import { attachFixGuides } from "./guides/index.js";
@@ -288,17 +290,24 @@ export async function analyzeUrlWithRules(url: string, opts?: ScanOptions): Prom
 
   reportProgress('scoring', 95);
 
-  // Run optimization analysis (SEO, PSEO, AEO, GEO)
+  // Run optimization analysis (SEO, PSEO, AEO, GEO, Answer Gap)
   const seo = await analyzeSEO({ $, url, options, onProgress: reportProgress });
   const pseo = analyzePSEO({ $, url });
   const aeo = analyzeAEO({ $, url });
   const geo = analyzeGEO({ $, url });
+  const answerGap = analyzeAnswerGap({
+    $,
+    url,
+    llmQuestions: llm?.questions,
+    llmFAQs: llm?.suggestedFAQ,
+  });
 
   // Add optimization issues to main issues array
   issues.push(...seoIssuesToScannerIssues(seo));
   issues.push(...pseoIssuesToScannerIssues(pseo));
   issues.push(...aeoIssuesToScannerIssues(aeo));
   issues.push(...geoIssuesToScannerIssues(geo));
+  issues.push(...answerGapIssuesToScannerIssues(answerGap));
 
   // Filter issues based on quality thresholds (reduce noise)
   const minImpact = options.minImpactScore ?? 8;
@@ -339,5 +348,6 @@ export async function analyzeUrlWithRules(url: string, opts?: ScanOptions): Prom
     pseo,
     aeo,
     geo,
+    answerGap,
   };
 }

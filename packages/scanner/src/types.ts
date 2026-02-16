@@ -405,6 +405,9 @@ export interface ScanResult {
 
   /** GEO analysis - Generative Engine Optimization */
   geo?: GEOAnalysis;
+
+  /** Answer Gap analysis - Identifies missing or weak content answers */
+  answerGap?: AnswerGapAnalysis;
 }
 
 /**
@@ -654,6 +657,62 @@ export interface GEOAnalysis {
     competitorMentions: number;
     messagingClarity: number;
   };
+
+  issues: SEOIssue[];
+  recommendations: string[];
+}
+
+/**
+ * Answer Gap Analysis
+ * Identifies questions a site should answer and shows which are missing or weak
+ * Bridges AI visibility and content changes
+ */
+export interface AnswerGapAnalysis {
+  score: number; // 0-100 coverage score
+  grade: string;
+
+  // Topic coverage analysis
+  topicCoverage: {
+    identifiedTopics: number;
+    coveredTopics: number;
+    coveragePercentage: number;
+  };
+
+  // Questions the site should answer based on content/industry
+  suggestedQuestions: Array<{
+    question: string;
+    intent: 'informational' | 'navigational' | 'transactional' | 'commercial';
+    priority: 'high' | 'medium' | 'low';
+    topic: string;
+    status: 'answered' | 'weak' | 'missing';
+    currentAnswer?: string; // Existing answer if found (truncated)
+    recommendation?: string;
+  }>;
+
+  // Gap analysis - questions that are missing or weak
+  gaps: Array<{
+    question: string;
+    intent: 'informational' | 'navigational' | 'transactional' | 'commercial';
+    severity: 'critical' | 'important' | 'nice-to-have';
+    reason: string;
+    suggestedContent?: string;
+  }>;
+
+  // Strengths - questions that are well-answered
+  strengths: Array<{
+    question: string;
+    topic: string;
+    quality: 'excellent' | 'good';
+  }>;
+
+  // Topic clusters analysis
+  topicClusters: Array<{
+    topic: string;
+    questionsIdentified: number;
+    questionsAnswered: number;
+    coverageScore: number;
+    status: 'complete' | 'partial' | 'weak' | 'missing';
+  }>;
 
   issues: SEOIssue[];
   recommendations: string[];
