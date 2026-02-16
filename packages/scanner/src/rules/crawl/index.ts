@@ -11,3 +11,4 @@ export { MissingSitemapRule } from './missing-sitemap.js';
 export { MissingMobileViewportRule } from './missing-mobile-viewport.js';
 export { RedirectChainRule } from './redirect-chain.js';
 export { MissingAlternativeAccessRule } from './missing-alternative-access.js';
+export { MissingLlmsTxtRule } from './missing-llms-txt.js';
